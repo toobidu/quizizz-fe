@@ -1,15 +1,19 @@
 import apiInstance from './apiInstance';
 import Cookies from 'js-cookie';
 import authStore from '../stores/authStore';
-import jwtDecode from 'jwt-decode'; 
+import jwtDecode from 'jwt-decode';
+
+let cachedToken = null;
 
 const getToken = () => {
-  const { isAuthenticated, accessToken } = authStore.getState();
-  if (!isAuthenticated) {
-    throw new Error('Người dùng chưa đăng nhập');
-  }
-  const tokenSources = [accessToken, localStorage.getItem('accessToken'), Cookies.get('accessToken')];
-  const token = tokenSources.find(t => t && /^eyJ/.test(t)); 
+  if (cachedToken) return cachedToken;
+
+  const tokenSources = [
+    localStorage.getItem('accessToken'),
+    Cookies.get('accessToken'),
+    authStore.getState().accessToken,
+  ];
+  const token = tokenSources.find((t) => t && /^eyJ/.test(t));
   if (!token) {
     throw new Error('Không tìm thấy token đăng nhập hợp lệ');
   }
@@ -18,14 +22,18 @@ const getToken = () => {
     if (decoded.exp * 1000 < Date.now()) {
       throw new Error('Token đã hết hạn');
     }
+    cachedToken = token;
+    setTimeout(() => (cachedToken = null), 1000); // Reset cache sau 1s
+    return token;
   } catch (error) {
+    cachedToken = null;
     throw new Error('Token không hợp lệ');
   }
-  return token;
 };
 
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validatePhone = (phone) => /^\+?\d{10,15}$/.test(phone);
+const validateFullName = (fullName) => fullName?.trim().length >= 2;
 
 const profileApi = {
   getMyProfile: async () => {
@@ -34,7 +42,7 @@ const profileApi = {
       const response = await apiInstance.get('/profile/me', {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Cache-Control': 'max-age=300', 
+          'Cache-Control': 'max-age=300',
         },
       });
       const data = response.data;
@@ -141,6 +149,9 @@ const profileApi = {
   updateProfile: async (profileData) => {
     try {
       const { fullName, email, phoneNumber, address } = profileData;
+      if (fullName && !validateFullName(fullName)) {
+        throw new Error('Họ tên phải có ít nhất 2 ký tự');
+      }
       if (email && !validateEmail(email)) {
         throw new Error('Email không hợp lệ');
       }

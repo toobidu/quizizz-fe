@@ -1,5 +1,6 @@
 import axios from 'axios';
-import axiosRetry from 'axios-retry'; 
+import axiosRetry from 'axios-retry';
+import authStore from '../stores/authStore';
 
 const apiInstance = axios.create({
   baseURL: '/api',
@@ -11,7 +12,7 @@ const apiInstance = axios.create({
 
 axiosRetry(apiInstance, {
   retries: 3,
-  retryDelay: (retryCount) => retryCount * 1000,
+  retryDelay: (retryCount) => Math.pow(2, retryCount) * 1000, 
   retryCondition: (error) => error.response?.status >= 500 || !error.response,
 });
 
@@ -36,7 +37,10 @@ apiInstance.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = authStore.getState().refreshToken;
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
         const response = await apiInstance.post('/auth/refresh-token', { refreshToken });
         const { accessToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
@@ -45,8 +49,9 @@ apiInstance.interceptors.response.use(
       } catch (refreshError) {
         console.error('Refresh token error:', refreshError);
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         authStore.getState().clearUser();
-        window.location.href = '/login';
+        window.dispatchEvent(new Event('auth:unauthorized'));
         return Promise.reject(refreshError);
       }
     }

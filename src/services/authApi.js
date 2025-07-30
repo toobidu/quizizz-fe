@@ -1,22 +1,20 @@
 import api from './apiInstance';
 import authStore from '../stores/authStore';
+import debounce from 'lodash/debounce';
 
-const login = async (payload) => {
+const login = debounce(async (payload) => {
   try {
     if (!payload.username || !payload.password) {
       throw new Error('Vui lòng cung cấp đầy đủ thông tin đăng nhập');
     }
     const res = await api.post('/auth/login', payload);
     const { accessToken, refreshToken, user } = res.data?.data || {};
-
     if (!accessToken || !refreshToken || !user) {
       throw new Error('Đăng nhập thất bại: Không nhận được token hoặc thông tin người dùng');
     }
-
     localStorage.setItem('accessToken', accessToken);
-    authStore.getState().setRefreshToken(refreshToken); 
+    localStorage.setItem('refreshToken', refreshToken);
     authStore.getState().setUser(user);
-
     return {
       status: res.status,
       message: res.data.message || 'Đăng nhập thành công',
@@ -30,12 +28,22 @@ const login = async (payload) => {
     console.error('Login API error:', error);
     throw new Error(errorMessage);
   }
-};
+}, 500);
 
 const register = async (payload) => {
   try {
-    if (!payload.username || !payload.password || !payload.email) {
+    const { username, password, email } = payload;
+    if (!username || !password || !email) {
       throw new Error('Vui lòng cung cấp đầy đủ thông tin đăng ký');
+    }
+    if (username.length < 3) {
+      throw new Error('Tên đăng nhập phải có ít nhất 3 ký tự');
+    }
+    if (password.length < 6) {
+      throw new Error('Mật khẩu phải có ít nhất 6 ký tự');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error('Email không hợp lệ');
     }
     const res = await api.post('/auth/register', payload);
     return {
@@ -58,6 +66,7 @@ const logout = async () => {
   try {
     await api.post('/auth/logout');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     authStore.getState().clearUser();
   } catch (error) {
     console.error('Logout API error:', error);
@@ -65,7 +74,7 @@ const logout = async () => {
   }
 };
 
-const forgotPassword = async (email) => {
+const forgotPassword = debounce(async (email) => {
   try {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error('Email không hợp lệ');
@@ -86,9 +95,9 @@ const forgotPassword = async (email) => {
     console.error('Forgot password API error:', error);
     throw new Error(errorMessage);
   }
-};
+}, 1000);
 
-const verifyOtp = async (email, otpCode) => {
+const verifyOtp = debounce(async (email, otpCode) => {
   try {
     if (!email || !otpCode) {
       throw new Error('Vui lòng cung cấp email và mã OTP');
@@ -109,12 +118,15 @@ const verifyOtp = async (email, otpCode) => {
     console.error('Verify OTP API error:', error);
     throw new Error(errorMessage);
   }
-};
+}, 1000);
 
-const resetPassword = async (email, otpCode, newPassword) => {
+const resetPassword = debounce(async (email, otpCode, newPassword) => {
   try {
     if (!email || !otpCode || !newPassword) {
       throw new Error('Vui lòng cung cấp đầy đủ thông tin');
+    }
+    if (newPassword.length < 6) {
+      throw new Error('Mật khẩu mới phải có ít nhất 6 ký tự');
     }
     const res = await api.post('/forgot-password/reset', {
       email,
@@ -137,7 +149,7 @@ const resetPassword = async (email, otpCode, newPassword) => {
     console.error('Reset password API error:', error);
     throw new Error(errorMessage);
   }
-};
+}, 1000);
 
 export default {
   login,
