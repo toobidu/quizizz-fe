@@ -2,41 +2,62 @@ import api from './apiInstance';
 import authStore from '../stores/authStore';
 
 const login = async (payload) => {
-    const res = await api.post('/auth/login', payload);
-    const { accessToken, refreshToken, user } = res.data?.data || {};
+    try {
+        const res = await api.post('/auth/login', payload);
+        const { accessToken, refreshToken, user } = res.data?.data || {};
 
-    if (!accessToken || !refreshToken) {
-        throw new Error('Đăng nhập thất bại: Không nhận được token hoặc thông tin người dùng');
+        if (!accessToken || !refreshToken || !user) {
+            throw new Error('Đăng nhập thất bại: Không nhận được token hoặc thông tin người dùng');
+        }
+
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        authStore.getState().setUser(user);
+
+        return res.data;
+    } catch (error) {
+        const errorMessage =
+            error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+        console.error('Login API error:', error);
+        throw new Error(errorMessage);
     }
-
-    localStorage.setItem('accessToken', accessToken);
-    authStore.getState().setUser(user); 
-
-    return res.data;
 };
 
 const register = async (payload) => {
-    const res = await api.post('/auth/register', payload);
-    return res.data;
+    try {
+        const res = await api.post('/auth/register', payload);
+        return res.data;
+    } catch (error) {
+        const errorMessage =
+            error.response?.data?.message || error.message || 'Đăng ký thất bại';
+        console.error('Register API error:', error);
+        throw new Error(errorMessage);
+    }
 };
 
 const logout = async () => {
     try {
-        await api.post('/auth/logout'); 
+        await api.post('/auth/logout');
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         authStore.getState().clearUser();
     } catch (error) {
-        console.error('Logout failed:', error);
+        console.error('Logout API error:', error);
         throw new Error(error.response?.data?.message || 'Đăng xuất thất bại');
     }
 };
 
 const forgotPassword = async (email) => {
     try {
-        const res = await api.post('/forgot-password/send-otp', { email }); 
+        const res = await api.post('/forgot-password/send-otp', { email });
         return res.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Không thể gửi OTP. Vui lòng thử lại.');
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            'Không thể gửi OTP';
+        console.error('Forgot password API error:', error);
+        throw new Error(errorMessage);
     }
 };
 
@@ -45,7 +66,12 @@ const verifyOtp = async (email, otpCode) => {
         const res = await api.post('/forgot-password/verify-otp', { email, otpCode });
         return res.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Mã OTP không hợp lệ. Vui lòng thử lại.');
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            'Mã OTP không hợp lệ';
+        console.error('Verify OTP API error:', error);
+        throw new Error(errorMessage);
     }
 };
 
@@ -59,7 +85,12 @@ const resetPassword = async (email, otpCode, newPassword) => {
         });
         return res.data;
     } catch (error) {
-        throw new Error(error.response?.data?.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.');
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            'Không thể đặt lại mật khẩu';
+        console.error('Reset password API error:', error);
+        throw new Error(errorMessage);
     }
 };
 
