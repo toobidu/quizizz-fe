@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import axiosRetry from 'axios-retry'; 
 
 const apiInstance = axios.create({
   baseURL: '/api',
@@ -7,6 +7,12 @@ const apiInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+});
+
+axiosRetry(apiInstance, {
+  retries: 3,
+  retryDelay: (retryCount) => retryCount * 1000,
+  retryCondition: (error) => error.response?.status >= 500 || !error.response,
 });
 
 apiInstance.interceptors.request.use(
@@ -30,7 +36,8 @@ apiInstance.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const response = await apiInstance.post('/auth/refresh-token');
+        const refreshToken = authStore.getState().refreshToken;
+        const response = await apiInstance.post('/auth/refresh-token', { refreshToken });
         const { accessToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -38,8 +45,7 @@ apiInstance.interceptors.response.use(
       } catch (refreshError) {
         console.error('Refresh token error:', refreshError);
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        Cookies.remove('refreshToken');
+        authStore.getState().clearUser();
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

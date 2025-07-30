@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import authApi from '../services/authApi';
+import jwtDecode from 'jwt-decode';
+import debounce from 'lodash/debounce';
 
 const authStore = create((set) => ({
   user: null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 
@@ -27,12 +29,20 @@ const authStore = create((set) => ({
 
   initialize: async () => {
     const token = localStorage.getItem('accessToken');
-    if (!token) {
+    const refreshToken = localStorage.getItem('refreshToken'); 
+    if (!token || !refreshToken) {
       set({ user: null, isAuthenticated: false });
       return;
     }
 
     try {
+      const decoded = jwtDecode(token);
+      if (decoded.exp * 1000 < Date.now()) {
+        set({ user: null, isAuthenticated: false });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        return;
+      }
       set({ isLoading: true });
       const response = await authApi.getUser();
       set({ user: response.data, isAuthenticated: true, isLoading: false });
@@ -44,22 +54,27 @@ const authStore = create((set) => ({
     }
   },
 
-  login: async (username, password) => {
+  login: debounce(async (username, password) => {
     try {
       set({ isLoading: true, error: null });
       const response = await authApi.login({ username, password });
-      set({ isLoading: false });
+      const { accessToken, refreshToken, user } = response.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      set({ user, isAuthenticated: true, isLoading: false });
       return response;
     } catch (error) {
       set({ isLoading: false, error: error.message });
       throw error;
     }
-  },
+  }, 500),
 
   logout: async () => {
     try {
       set({ isLoading: true, error: null });
       await authApi.logout();
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       set({ user: null, isAuthenticated: false, isLoading: false });
     } catch (error) {
       set({ isLoading: false, error: error.message });
@@ -67,5 +82,11 @@ const authStore = create((set) => ({
     }
   },
 }));
+
+window.addEventListener('storage', (event) => {
+  if (event.key === 'accessToken' && !event.newValue) {
+    authStore.getState().clearUser();
+  }
+});
 
 export default authStore;

@@ -1,12 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  FaEnvelope, FaExclamationCircle, FaExclamationTriangle, FaHome, FaLock, FaPhoneAlt, FaUser
-} from 'react-icons/fa';
+import { FaEnvelope, FaExclamationCircle, FaExclamationTriangle, FaHome, FaLock, FaPhoneAlt, FaUser } from 'react-icons/fa';
 import { FaBrain } from 'react-icons/fa6';
 import authApi from '../../services/authApi.js';
-import '../../styles/pages/auth/Register.css';
+import authStore from '../../stores/authStore.js';
 import Decoration from '../../components/Decoration.jsx';
+import '../../styles/pages/auth/Register.css';
 
 function Register() {
   const navigate = useNavigate();
@@ -17,88 +16,69 @@ function Register() {
     phoneNumber: '',
     address: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState({ success: false, message: '' });
   const firstErrorInputRef = useRef(null);
+  const { isAuthenticated } = authStore();
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-  };
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
+    setSubmitStatus({ success: false, message: '' });
+  }, []);
 
-  const validate = () => {
+  const validateField = useCallback((name, value) => {
+    switch (name) {
+      case 'username':
+        if (!value.trim()) return 'Vui lòng nhập tên người dùng';
+        if (value.length < 3) return 'Tên người dùng phải có ít nhất 3 ký tự';
+        return '';
+      case 'fullName':
+        if (!value.trim()) return 'Vui lòng nhập họ tên';
+        return '';
+      case 'email':
+        if (!value) return 'Vui lòng nhập email';
+        if (!/\S+@\S+\.\S+/.test(value)) return 'Email không hợp lệ';
+        return '';
+      case 'phoneNumber':
+        if (!value.trim()) return 'Vui lòng nhập số điện thoại';
+        if (!/^\d{10}$/.test(value)) return 'Số điện thoại phải có 10 chữ số';
+        return '';
+      case 'address':
+        if (!value.trim()) return 'Vui lòng nhập địa chỉ';
+        return '';
+      case 'password':
+        if (!value) return 'Vui lòng nhập mật khẩu';
+        if (value.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự';
+        return '';
+      case 'confirmPassword':
+        if (value !== formData.password) return 'Mật khẩu không khớp';
+        return '';
+      default:
+        return '';
+    }
+  }, [formData.password]);
+
+  const validateForm = useCallback(() => {
     const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = 'Vui lòng nhập tên người dùng';
-    else if (formData.username.length < 3) newErrors.username = 'Tên người dùng phải có ít nhất 3 ký tự';
-
-    if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
-
-    if (!formData.email) newErrors.email = 'Vui lòng nhập email';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email không hợp lệ';
-
-    if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Vui lòng nhập số điện thoại';
-    else if (!/^\d{10}$/.test(formData.phoneNumber)) newErrors.phoneNumber = 'Số điện thoại phải có 10 chữ số';
-
-    if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ';
-
-    if (!formData.password) newErrors.password = 'Vui lòng nhập mật khẩu';
-    else if (formData.password.length < 6) newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Mật khẩu không khớp';
-
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
+    });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData, validateField]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) {
-      const firstErrorKey = Object.keys(errors)[0];
-      if (firstErrorKey) firstErrorInputRef.current = document.getElementById(firstErrorKey);
-      firstErrorInputRef.current?.focus();
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await authApi.register({
-        username: formData.username,
-        full_name: formData.fullName,
-        email: formData.email,
-        phone_number: formData.phoneNumber,
-        address: formData.address,
-        password: formData.password,
-        confirm_password: formData.confirmPassword
-      });
-
-      setSubmitStatus({ success: true, message: 'Đăng ký thành công! Đang chuyển hướng...' });
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
-      if (error.response?.status === 400) {
-        if (errorMessage.toLowerCase().includes('email')) {
-          setErrors(prev => ({ ...prev, email: 'Email đã tồn tại' }));
-          firstErrorInputRef.current = document.getElementById('email');
-        } else if (errorMessage.toLowerCase().includes('username')) {
-          setErrors(prev => ({ ...prev, username: 'Tên người dùng đã tồn tại' }));
-          firstErrorInputRef.current = document.getElementById('username');
-        } else {
-          setSubmitStatus({ success: false, message: errorMessage });
-        }
-      } else {
-        setSubmitStatus({ success: false, message: errorMessage });
-      }
-      firstErrorInputRef.current?.focus();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Focus vào input lỗi đầu tiên khi errors thay đổi
   useEffect(() => {
     const firstErrorKey = Object.keys(errors)[0];
     if (firstErrorKey) {
@@ -106,6 +86,60 @@ function Register() {
       firstErrorInputRef.current?.focus();
     }
   }, [errors]);
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!validateForm()) {
+        const firstErrorKey = Object.keys(errors)[0];
+        if (firstErrorKey) {
+          firstErrorInputRef.current = document.getElementById(firstErrorKey);
+          firstErrorInputRef.current?.focus();
+        }
+        return;
+      }
+
+      setIsSubmitting(true);
+      setSubmitStatus({ success: false, message: '' });
+
+      try {
+        await authApi.register({
+          username: formData.username,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone_number: formData.phoneNumber,
+          address: formData.address,
+          password: formData.password,
+          confirm_password: formData.confirmPassword,
+        });
+
+        setSubmitStatus({ success: true, message: 'Đăng ký thành công! Chuyển hướng sau 3 giây...' });
+        setTimeout(() => navigate('/login'), 3000);
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+        if (error.response?.status === 400) {
+          const newErrors = {};
+          if (error.response?.data?.field === 'email') {
+            newErrors.email = 'Email đã tồn tại';
+            firstErrorInputRef.current = document.getElementById('email');
+          } else if (error.response?.data?.field === 'username') {
+            newErrors.username = 'Tên người dùng đã tồn tại';
+            firstErrorInputRef.current = document.getElementById('username');
+          } else {
+            setSubmitStatus({ success: false, message: errorMessage });
+          }
+          setErrors((prev) => ({ ...prev, ...newErrors }));
+          firstErrorInputRef.current?.focus();
+        } else {
+          setSubmitStatus({ success: false, message: errorMessage });
+        }
+        console.error('Register error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [formData, validateForm, navigate]
+  );
 
   return (
     <div className="register-container">
@@ -128,165 +162,45 @@ function Register() {
             ) : (
               <FaExclamationTriangle size={20} color="#dc2626" />
             )}
-            {submitStatus.message}
+            <span>{submitStatus.message}</span>
           </div>
         )}
 
         <form className="register-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="register-label" htmlFor="username">
-              <FaUser size={16} color="#667eea" />
-              Tên người dùng
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              className={`input ${errors.username ? 'input-error' : ''}`}
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Nhập tên người dùng"
-              disabled={isSubmitting}
-            />
-            {errors.username && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.username}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="fullName">
-              <FaUser size={16} color="#667eea" />
-              Họ tên
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              className={`input ${errors.fullName ? 'input-error' : ''}`}
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Nhập họ tên"
-              disabled={isSubmitting}
-            />
-            {errors.fullName && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.fullName}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="email">
-              <FaEnvelope size={16} color="#667eea" />
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className={`input ${errors.email ? 'input-error' : ''}`}
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="example@email.com"
-              disabled={isSubmitting}
-            />
-            {errors.email && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.email}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="phoneNumber">
-              <FaPhoneAlt size={16} color="#667eea" />
-              Số điện thoại
-            </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              className={`input ${errors.phoneNumber ? 'input-error' : ''}`}
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              placeholder="Nhập số điện thoại (10 chữ số)"
-              disabled={isSubmitting}
-            />
-            {errors.phoneNumber && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.phoneNumber}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="address">
-              <FaHome size={16} color="#667eea" />
-              Địa chỉ
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              className={`input ${errors.address ? 'input-error' : ''}`}
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Nhập địa chỉ"
-              disabled={isSubmitting}
-            />
-            {errors.address && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.address}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="password">
-              <FaLock size={16} color="#667eea" />
-              Mật khẩu
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className={`input ${errors.password ? 'input-error' : ''}`}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu"
-              disabled={isSubmitting}
-            />
-            {errors.password && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.password}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="register-label" htmlFor="confirmPassword">
-              <FaLock size={16} color="#667eea" />
-              Xác nhận mật khẩu
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              className={`input ${errors.confirmPassword ? 'input-error' : ''}`}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Nhập lại mật khẩu"
-              disabled={isSubmitting}
-            />
-            {errors.confirmPassword && (
-              <div className="error-message">
-                <FaExclamationCircle size={16} color="#dc2626" />
-                {errors.confirmPassword}
-              </div>
-            )}
-          </div>
+          {[
+            { name: 'username', label: 'Tên người dùng', icon: FaUser, type: 'text', placeholder: 'Nhập tên người dùng' },
+            { name: 'fullName', label: 'Họ tên', icon: FaUser, type: 'text', placeholder: 'Nhập họ tên' },
+            { name: 'email', label: 'Email', icon: FaEnvelope, type: 'email', placeholder: 'example@email.com' },
+            { name: 'phoneNumber', label: 'Số điện thoại', icon: FaPhoneAlt, type: 'tel', placeholder: 'Nhập số điện thoại (10 chữ số)' },
+            { name: 'address', label: 'Địa chỉ', icon: FaHome, type: 'text', placeholder: 'Nhập địa chỉ' },
+            { name: 'password', label: 'Mật khẩu', icon: FaLock, type: 'password', placeholder: 'Nhập mật khẩu' },
+            { name: 'confirmPassword', label: 'Xác nhận mật khẩu', icon: FaLock, type: 'password', placeholder: 'Nhập lại mật khẩu' },
+          ].map(({ name, label, icon: Icon, type, placeholder }) => (
+            <div className="form-group" key={name}>
+              <label className="register-label" htmlFor={name}>
+                <Icon size={16} color="#667eea" />
+                {label}
+              </label>
+              <input
+                type={type}
+                id={name}
+                name={name}
+                className={`input ${errors[name] ? 'input-error' : ''}`}
+                value={formData[name]}
+                onChange={handleChange}
+                placeholder={placeholder}
+                disabled={isSubmitting}
+                autoComplete={name.includes('password') ? name : 'off'}
+              />
+              {errors[name] && (
+                <div className="error-message">
+                  <FaExclamationCircle size={16} color="#dc2626" />
+                  {errors[name]}
+                </div>
+              )}
+            </div>
+          ))}
+
           <button className="submit-button" type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
@@ -298,9 +212,11 @@ function Register() {
             )}
           </button>
         </form>
+
         <div className="divider">
           <span>hoặc</span>
         </div>
+
         <div className="login-link">
           <span>Đã có tài khoản?</span>
           <Link to="/login">Đăng nhập ngay</Link>
