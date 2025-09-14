@@ -45,9 +45,7 @@ const profileApi = {
         },
       });
       const data = response.data;
-      console.log('Profile API raw response:', response);
-      console.log('Profile API data:', data);
-
+   
       if (response.status === 200 && data.data) {
         authStore.getState().setUser(data.data);
       }

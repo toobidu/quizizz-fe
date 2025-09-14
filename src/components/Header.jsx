@@ -25,7 +25,6 @@ function Header() {
             await logout();
             navigate('/'); // Redirect to home page after logout
         } catch (error) {
-            console.error('Logout error:', error);
             // Still navigate to home even if logout API fails
             navigate('/');
         }
@@ -58,11 +57,9 @@ function Header() {
                         new URL(response.data); // validate URL
                         setAvatarUrl(response.data);
                     } catch {
-                        console.warn("Invalid avatar URL received:", response.data);
                     }
                 }
             } catch (error) {
-                console.error("Error refreshing avatar:", error);
             }
         };
 

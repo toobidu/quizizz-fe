@@ -17,7 +17,6 @@ function Welcome() {
             try {
                 await authStore.getState().initialize();
             } catch (error) {
-                console.error('Auth initialization error:', error);
             } finally {
                 setIsInitialized(true);
             }

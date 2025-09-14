@@ -29,7 +29,6 @@ const ProtectedRoute = ({ children }) => {
       try {
         await authStore.getState().initialize();
       } catch (error) {
-        console.error('Auth initialization error:', error);
       } finally {
         setIsInitialized(true);
       }
@@ -55,7 +54,6 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    console.log('🚫 ProtectedRoute: User not authenticated, redirecting to /');
     return <Navigate to="/" replace />;
   }
 

@@ -152,8 +152,8 @@ const getAvatar = async () => {
     return {
       status: res.status,
       message: res.data.message || 'Lấy avatar thành công',
-      data: res.data.data, // URL của avatar
-      isSuccess: res.status === 200 && res.data.data, // Check HTTP status and data existence
+      data: res.data.data, // Presigned URL của avatar
+      isSuccess: res.status === 200 && res.data.data,
       timestamp: res.data.timestamp || new Date().toISOString(),
     };
   } catch (error) {
