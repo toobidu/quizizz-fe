@@ -1,0 +1,256 @@
+/* Keyframes */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(15px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-15px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes spinner-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Container & Background */
+.dh-hero-section {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 20px;
+    margin: 2.5rem 0 2rem 0;
+    padding: 3rem 2rem;
+    color: var(--surface);
+    position: relative;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.dh-hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="30" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.5;
+}
+
+.dh-hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.dh-hero-left {
+    flex: 1;
+    text-align: left;
+}
+
+.dh-hero-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.dh-hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.dh-hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.dh-hero-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.dh-hero-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: var(--shadow-light);
+}
+
+.dh-hero-button.primary {
+    background: var(--accent);
+    color: var(--surface);
+}
+
+.dh-hero-button.primary:hover {
+    background: color-mix(in srgb, var(--accent) 90%, black);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(var(--accent-rgb), 0.3);
+}
+
+.dh-hero-button.secondary {
+    background: rgba(var(--surface-rgb), 0.2);
+    color: var(--surface);
+}
+
+.dh-hero-button.secondary:hover {
+    background: rgba(var(--surface-rgb), 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-light);
+}
+
+.dh-hero-decoration {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: float 6s ease-in-out infinite;
+}
+
+.dh-brain-icon-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dh-brain-icon-main {
+    font-size: 10rem;
+    color: var(--accent);
+    animation: pulse 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), 0.3));
+    z-index: 10;
+}
+
+.dh-hero-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--accent);
+    color: var(--surface);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-light);
+    animation: fadeInRight 0.8s ease-out 0.6s both;
+    z-index: 3;
+}
+
+.dh-badge-icon {
+    font-size: 1.2rem;
+}
+
+.dh-hero-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.dh-particle {
+    position: absolute;
+    background: rgba(var(--surface-rgb), 0.3);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.dh-hero-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.dh-hero-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(var(--surface-rgb), 0.08);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--surface);
+}
+
+/* Generate 10 random particles */
+.dh-particle-1 { width: 15px; height: 15px; top: 10%; left: 10%; animation: float 8s ease-in-out infinite; }
+.dh-particle-2 { width: 10px; height: 10px; top: 20%; right: 20%; animation: float 9s ease-in-out infinite 1s; }
+.dh-particle-3 { width: 12px; height: 12px; bottom: 15%; left: 30%; animation: float 7s ease-in-out infinite 0.5s; }
+.dh-particle-4 { width: 8px; height: 8px; bottom: 30%; right: 10%; animation: float 10s ease-in-out infinite 2s; }
+.dh-particle-5 { width: 20px; height: 20px; top: 40%; left: 5%; animation: float 12s ease-in-out infinite 1.5s; }
+.dh-particle-6 { width: 14px; height: 14px; top: 70%; right: 15%; animation: float 9s ease-in-out infinite 0.7s; }
+.dh-particle-7 { width: 10px; height: 10px; top: 60%; left: 50%; animation: float 11s ease-in-out infinite 2.5s; }
+.dh-particle-8 { width: 18px; height: 18px; bottom: 10%; right: 30%; animation: float 8s ease-in-out infinite 1.2s; }
+.dh-particle-9 { width: 12px; height: 12px; top: 30%; left: 70%; animation: float 10s ease-in-out infinite 0.3s; }
+.dh-particle-10 { width: 16px; height: 16px; bottom: 40%; left: 20%; animation: float 7s ease-in-out infinite 1.8s; }
+
+@media (max-width: 992px) {
+    .dh-hero-content { flex-direction: column; text-align: center; }
+    .dh-hero-left { text-align: center; }
+    .dh-hero-actions { justify-content: center; }
+    .dh-hero-decoration { width: 220px; height: 220px; margin-top: 2rem; }
+    .dh-brain-icon-main { font-size: 6rem; }
+}
+
+@media (max-width: 768px) {
+    .dh-hero-section { margin: 1rem 0; padding: 2rem 1rem; }
+    .dh-hero-title { font-size: 2rem; }
+    .dh-hero-actions { flex-direction: column; align-items: center; }
+    .dh-hero-button { width: 100%; justify-content: center; }
+    .dh-hero-decoration { width: 180px; height: 180px; }
+    .dh-brain-icon-main { font-size: 5rem; }
+}
+
+@media (max-width: 480px) {
+    .dh-hero-decoration { width: 150px; height: 150px; }
+    .dh-brain-icon-main { font-size: 4rem; }
+    .dh-hero-badge { position: static; margin: 1rem auto; width: fit-content; transform: none; }
+    .dh-hero-right { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+}

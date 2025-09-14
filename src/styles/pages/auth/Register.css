@@ -1,0 +1,313 @@
+/* Keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-15px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+/* Container & Background */
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-color), var(--bg-color));
+    padding: 2rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Card */
+.register-card {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 450px;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Header */
+.register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.register-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.logo-icon {
+    /* Đề xuất thêm SVG hoặc hình ảnh logo */
+}
+
+.logo-text {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.register-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Form */
+.register-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.register-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: var(--surface-elevated);
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
+    transform: translateY(-2px);
+}
+
+.input-error {
+    border-color: var(--danger);
+    background: rgba(var(--danger), 0.1);
+}
+
+.input-error:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(var(--danger), 0.1);
+}
+
+.input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Error Messages */
+.error-message {
+    color: var(--danger);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+/* Submit Button */
+.submit-button {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: var(--surface);
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow);
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(var(--primary), 0.3);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+.submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(var(--surface), 0.3);
+    border-top: 2px solid var(--surface);
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+}
+
+/* Status/Error */
+.register-error {
+    color: var(--danger);
+    background: rgba(var(--danger), 0.1);
+    border: 1px solid rgba(var(--danger), 0.5);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.register-error.register-success {
+    color: var(--success);
+    background: rgba(var(--success), 0.1);
+    border: 1px solid rgba(var(--success), 0.5);
+}
+
+/* Divider */
+.divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.divider span {
+    background: var(--surface);
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Login Link */
+.login-link {
+    text-align: center;
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.login-link a {
+    color: var(--link);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.login-link a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .register-container { padding: 1rem; }
+    .register-card { padding: 2rem 1.5rem; border-radius: 16px; }
+    .register-title { font-size: 1.5rem; }
+    .logo-text { font-size: 1.75rem; }
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+    .register-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+    }
+
+    .register-title {
+        color: var(--text-color);
+    }
+
+    .register-label {
+        color: var(--text-secondary);
+    }
+
+    .input {
+        background: var(--surface-elevated);
+        border-color: var(--border);
+        color: var(--text-color);
+    }
+
+    .input:focus {
+        background: var(--surface);
+    }
+
+    .input::placeholder {
+        color: var(--text-muted);
+    }
+
+    .divider span {
+        background: var(--surface);
+    }
+
+    .login-link {
+        color: var(--text-muted);
+    }
+
+    .login-link a {
+        color: var(--link);
+    }
+
+    .login-link a:hover {
+        color: var(--link-hover);
+    }
+}
+
+/* Accessibility */
+.input:focus-visible,
+.submit-button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}

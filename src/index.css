@@ -1,0 +1,102 @@
+:root {
+  /* Base colors */
+  --primary: #4f46e5;
+  /* Màu tím đậm hơn, hiện đại */
+  --primary-dark: #3730a3;
+  /* Tông đậm hơn cho hover/active */
+  --accent: #f59e0b;
+  /* Vàng cam ấm, nổi bật */
+  --success: #10b981;
+  /* Xanh lá cho trạng thái thành công */
+  --warning: #f97316;
+  /* Cam cho cảnh báo */
+  --danger: #dc2626;
+  /* Đỏ đậm hơn, dễ nhận diện */
+
+  /* Backgrounds */
+  --bg-color: #fafafa;
+  /* Trắng nhạt, sạch sẽ */
+  --surface: #ffffff;
+  /* Bề mặt trắng tinh cho card, modal */
+  --surface-elevated: #f8fafc;
+  /* Bề mặt nổi cho tooltip, dropdown */
+  --footer-bg: #f1f5f9;
+  /* Xám nhạt cho footer */
+  --card-bg: #ffffff;
+  /* Trắng cho card */
+
+  /* Text */
+  --text-color: #1f2937;
+  /* Xám đậm, dễ đọc */
+  --text-secondary: #6b7280;
+  /* Xám trung tính cho văn bản phụ */
+  --text-muted: #9ca3af;
+  /* Xám nhạt cho placeholder, disabled */
+  --footer-text: #374151;
+  /* Tương phản tốt với footer-bg */
+
+  /* Links */
+  --link: #4f46e5;
+  /* Đồng bộ với primary */
+  --link-hover: #7c3aed;
+  /* Tím sáng hơn khi hover */
+
+  /* Border & shadow */
+  --border: #e5e7eb;
+  /* Xám nhạt, nhẹ nhàng */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* Bóng mềm mại hơn */
+}
+
+[data-theme="dark"] {
+  /* Base colors */
+  --primary: #a5b4fc;
+  /* Tím nhạt, nổi bật trên nền tối */
+  --primary-dark: #818cf8;
+  /* Tím đậm hơn cho hover */
+  --accent: #fbbf24;
+  /* Vàng sáng hơn, tránh chói */
+  --success: #34d399;
+  /* Xanh lá sáng hơn */
+  --warning: #fb923c;
+  /* Cam sáng, dễ nhìn */
+  --danger: #f87171;
+  /* Đỏ nhạt hơn, tránh quá gắt */
+
+  /* Backgrounds */
+  --bg-color: #111827;
+  /* Xám đậm, thân thiện với OLED */
+  --surface: #1f2937;
+  /* Bề mặt tối, tương phản tốt */
+  --surface-elevated: #374151;
+  /* Bề mặt nổi cho modal, tooltip */
+  --footer-bg: #1f2937;
+  /* Tối hơn, đồng bộ với surface */
+  --card-bg: #1f2937;
+  /* Tối, phù hợp với card */
+
+  /* Text */
+  --text-color: #e5e7eb;
+  /* Trắng nhạt, dễ đọc */
+  --text-secondary: #9ca3af;
+  /* Xám nhạt cho văn bản phụ */
+  --text-muted: #6b7280;
+  /* Xám đậm hơn cho placeholder */
+  --footer-text: #d1d5db;
+  /* Trắng xám, tương phản tốt */
+
+  /* Links */
+  --link: #a5b4fc;
+  /* Đồng bộ với primary */
+  --link-hover: #fbbf24;
+  /* Chuyển sang accent khi hover */
+
+  /* Border & shadow */
+  --border: #374151;
+  /* Xám đậm, không quá nổi bật */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* Bóng đậm hơn cho dark mode */
+}
+
+/* Import responsive utilities */
+@import './styles/responsive.css';

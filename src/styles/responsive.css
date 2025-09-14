@@ -1,0 +1,159 @@
+/* Responsive Utilities */
+
+/* Hide elements on specific screen sizes */
+@media (max-width: 768px) {
+    .hidden-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .hidden-desktop {
+        display: none !important;
+    }
+}
+
+/* Container utilities */
+@media (max-width: 768px) {
+    .container-mobile {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-mobile-sm {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+}
+
+/* Text utilities for mobile */
+@media (max-width: 768px) {
+    .text-center-mobile {
+        text-align: center !important;
+    }
+
+    .text-left-mobile {
+        text-align: left !important;
+    }
+}
+
+/* Flex utilities for mobile */
+@media (max-width: 768px) {
+    .flex-column-mobile {
+        flex-direction: column !important;
+    }
+
+    .flex-center-mobile {
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .flex-space-between-mobile {
+        justify-content: space-between !important;
+    }
+}
+
+/* Spacing utilities for mobile */
+@media (max-width: 768px) {
+    .mb-mobile-1 {
+        margin-bottom: 0.25rem !important;
+    }
+
+    .mb-mobile-2 {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .mb-mobile-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .mb-mobile-4 {
+        margin-bottom: 1rem !important;
+    }
+
+    .mt-mobile-1 {
+        margin-top: 0.25rem !important;
+    }
+
+    .mt-mobile-2 {
+        margin-top: 0.5rem !important;
+    }
+
+    .mt-mobile-3 {
+        margin-top: 0.75rem !important;
+    }
+
+    .mt-mobile-4 {
+        margin-top: 1rem !important;
+    }
+
+    .p-mobile-1 {
+        padding: 0.25rem !important;
+    }
+
+    .p-mobile-2 {
+        padding: 0.5rem !important;
+    }
+
+    .p-mobile-3 {
+        padding: 0.75rem !important;
+    }
+
+    .p-mobile-4 {
+        padding: 1rem !important;
+    }
+}
+
+/* Button utilities for mobile */
+@media (max-width: 768px) {
+    .btn-full-mobile {
+        width: 100% !important;
+    }
+
+    .btn-block-mobile {
+        display: block !important;
+        width: 100% !important;
+    }
+}
+
+/* Touch-friendly sizes for mobile */
+@media (max-width: 768px) {
+    .touch-target {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* Improve tap targets on mobile */
+@media (max-width: 768px) {
+
+    a,
+    button,
+    input,
+    select,
+    textarea {
+        touch-action: manipulation;
+    }
+}
+
+/* Smooth scrolling for mobile */
+@media (max-width: 768px) {
+    html {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+}
