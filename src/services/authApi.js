@@ -104,7 +104,7 @@ const getUser = async () => {
       status: res.status,
       message: res.data.message || 'Lấy thông tin người dùng thành công',
       data: res.data.data,
-      isSuccess: res.data.status === 0,
+      isSuccess: res.status === 200 && res.data.data,
       timestamp: res.data.timestamp || new Date().toISOString(),
     };
   } catch (error) {
@@ -138,7 +138,7 @@ const refreshToken = async () => {
       status: res.status,
       message: res.data.message || 'Refresh token thành công',
       data: res.data.data,
-      isSuccess: res.data.status === 0,
+      isSuccess: res.status === 200 && res.data.data,
       timestamp: res.data.timestamp || new Date().toISOString(),
     };
   } catch (error) {

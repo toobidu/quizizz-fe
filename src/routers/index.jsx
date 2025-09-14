@@ -5,6 +5,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Welcome from "../pages/Welcome";
 import Dashboard from "../pages/Dashboard";
+import Profile from "../pages/Profile";
 import ErrorPage from "../pages/ErrorPage";
 import AboutPage from "../pages/footer/AboutPage";
 import BlogPage from "../pages/footer/BlogPage";
@@ -71,6 +72,7 @@ const router = createBrowserRouter([
       { path: "register", element: <Register /> },
       { path: "forgot-password", element: <ForgotPassword /> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
+      { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
       { path: "about", element: <AboutPage /> },
       { path: "blog", element: <BlogPage /> },
       { path: "contact", element: <ContactPage /> },

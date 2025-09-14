@@ -24,7 +24,7 @@ function Dashboard() {
     }, [isAuthenticated, user]);
 
     // Prepare user data for components
-    const userName = user?.fullName || user?.username || 'User';
+    const userName = user?.username || 'User';
     const stats = user?.stats || {
         gamesPlayed: 0,
         highScore: 0,

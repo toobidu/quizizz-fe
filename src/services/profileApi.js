@@ -45,8 +45,10 @@ const profileApi = {
         },
       });
       const data = response.data;
+      console.log('Profile API raw response:', response);
+      console.log('Profile API data:', data);
 
-      if (data.status === 0 && data.data) {
+      if (response.status === 200 && data.data) {
         authStore.getState().setUser(data.data);
       }
 
@@ -54,7 +56,7 @@ const profileApi = {
         status: response.status,
         message: data.message || 'Success',
         data: data.data,
-        isSuccess: data.status === 0,
+        isSuccess: response.status === 200 && data.data,
         timestamp: data.timestamp || new Date().toISOString(),
       };
     } catch (error) {
@@ -234,13 +236,14 @@ const profileApi = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        responseType: 'blob', // Lấy avatar dưới dạng blob
       });
       return {
         status: response.status,
-        message: response.data.message || 'Success',
-        data: response.data.data, // URL của avatar
-        isSuccess: response.data.status === 0,
-        timestamp: response.data.timestamp || new Date().toISOString(),
+        message: 'Avatar loaded successfully',
+        data: response.data, // Blob data của avatar
+        isSuccess: response.status === 200,
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       const errorMessage =
