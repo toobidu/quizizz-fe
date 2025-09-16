@@ -1,0 +1,170 @@
+/* Profile Header Styles */
+.pf-profile-header {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.pf-avatar-section {
+    flex-shrink: 0;
+    position: relative;
+}
+
+.pf-avatar-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--surface);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pf-avatar-fallback {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    border: 4px solid var(--surface);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.pf-user-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.pf-username {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.pf-fullname {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.pf-user-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pf-join-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.pf-meta-icon {
+    color: var(--primary);
+}
+
+.pf-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pf-avatar-loading {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    border: 4px solid var(--surface);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Avatar Upload Styles */
+.pf-avatar-upload {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.pf-avatar-upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    position: relative;
+}
+
+.pf-avatar-upload-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.pf-avatar-upload-btn:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Hidden file input */
+.pf-avatar-upload input[type="file"] {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pf-profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .pf-avatar-image,
+    .pf-avatar-fallback {
+        width: 100px;
+        height: 100px;
+    }
+
+    .pf-username {
+        font-size: 2rem;
+    }
+
+    .pf-actions {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pf-profile-header {
+        padding: 1.5rem;
+    }
+}

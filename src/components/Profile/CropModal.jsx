@@ -1,6 +1,7 @@
 import { FiX, FiSave, FiLoader } from 'react-icons/fi';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import '../../styles/components/profile/CropModal.css';
 
 const CropModal = ({
     showCropModal,

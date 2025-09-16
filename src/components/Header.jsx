@@ -19,6 +19,35 @@ function Header() {
     const error = authStore((state) => state.error);
     const logout = authStore((state) => state.logout);
 
+    // Function to fetch fresh avatar
+    const fetchFreshAvatar = async () => {
+        try {
+            setAvatarLoading(true);
+            const response = await authApi.getAvatar();
+
+            if (response.isSuccess && response.data) {
+                setAvatarUrl(response.data);
+            } else {
+                // Try to use data anyway if HTTP status is 200
+                if (response.status === 200 && response.data) {
+                    // Validate URL format before using
+                    try {
+                        new URL(response.data);
+                        setAvatarUrl(response.data);
+                    } catch (urlError) {
+                        setAvatarUrl(null);
+                    }
+                } else {
+                    setAvatarUrl(null);
+                }
+            }
+        } catch (error) {
+            setAvatarUrl(null);
+        } finally {
+            setAvatarLoading(false);
+        }
+    };
+
     // Handle logout with navigation
     const handleLogout = async () => {
         try {
@@ -30,9 +59,20 @@ function Header() {
         }
     };
 
-    // Debug user state changes
+    // Listen for avatar update events from Profile page
     useEffect(() => {
-    }, [user, isAuthenticated, isLoading]);
+        const handleAvatarUpdate = () => {
+            if (isAuthenticated && user) {
+                fetchFreshAvatar();
+            }
+        };
+
+        window.addEventListener('avatarUpdated', handleAvatarUpdate);
+
+        return () => {
+            window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+        };
+    }, [isAuthenticated, user]);
 
     // Initialize auth store
     useEffect(() => {
@@ -90,11 +130,8 @@ function Header() {
 
     // Get avatar from user profile data
     useEffect(() => {
-
         if (isAuthenticated && user) {
-            // Check if user profile already contains avatarURL
             if (user.avatarURL) {
-
                 // Check if URL is expired (simple check based on timestamp)
                 try {
                     const url = new URL(user.avatarURL);
@@ -106,10 +143,7 @@ function Header() {
 
                         if (diffMinutes > 50) { // If URL is older than 50 minutes (buffer for 1 hour expiry)
                             fetchFreshAvatar();
-                        } else {
-                            setAvatarUrl(user.avatarURL);
-                            setAvatarLoading(false);
-                        }
+                        } 
                     } else {
                         // No date param, assume it's valid for now
                         setAvatarUrl(user.avatarURL);
@@ -125,34 +159,6 @@ function Header() {
         } else {
             setAvatarUrl(null);
             setAvatarLoading(false);
-        }
-
-        async function fetchFreshAvatar() {
-            try {
-                setAvatarLoading(true);
-                const response = await authApi.getAvatar();
-
-                if (response.isSuccess && response.data) {
-                    setAvatarUrl(response.data);
-                } else {
-                    // Try to use data anyway if HTTP status is 200
-                    if (response.status === 200 && response.data) {
-                        // Validate URL format before using
-                        try {
-                            new URL(response.data);
-                            setAvatarUrl(response.data);
-                        } catch (urlError) {
-                            setAvatarUrl(null);
-                        }
-                    } else {
-                        setAvatarUrl(null);
-                    }
-                }
-            } catch (error) {
-                setAvatarUrl(null);
-            } finally {
-                setAvatarLoading(false);
-            }
         }
     }, [isAuthenticated, user]);
 

@@ -1,0 +1,126 @@
+/* Main Layout */
+.mp-main-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--surface);
+}
+
+.mp-main-content {
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .dh-hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .dh-hero-left {
+        text-align: center;
+    }
+
+    .dh-hero-actions {
+        justify-content: center;
+    }
+
+    .dh-hero-decoration {
+        width: 220px;
+        height: 220px;
+        margin-top: 2rem;
+    }
+
+    .dh-brain-icon-main {
+        font-size: 6rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .mp-main-content {
+        padding: 0 1rem;
+    }
+
+    .dh-hero-section {
+        margin: 1rem 0;
+        padding: 2rem 1rem;
+    }
+
+    .dh-hero-title {
+        font-size: 2rem;
+    }
+
+    .dh-hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dh-hero-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ds-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .ds-stat-card {
+        padding: 1.5rem;
+    }
+
+    .qa-actions-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .dh-hero-decoration {
+        width: 180px;
+        height: 180px;
+    }
+
+    .dh-hero-brain-icon-main {
+        font-size: 5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dh-hero-decoration {
+        width: 150px;
+        height: 150px;
+    }
+
+    .dh-hero-brain-icon-main {
+        font-size: 4rem;
+    }
+
+    .dh-hero-badge {
+        position: static;
+        margin: 1rem auto;
+        width: fit-content;
+        transform: none;
+    }
+
+    .dh-hero-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+    .mp-main-layout {
+        background: var(--surface);
+    }
+}
+
+/* Accessibility */
+.mp-main-content:focus-visible {
+    outline: none;
+}

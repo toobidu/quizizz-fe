@@ -45,7 +45,7 @@ const profileApi = {
         },
       });
       const data = response.data;
-   
+
       if (response.status === 200 && data.data) {
         authStore.getState().setUser(data.data);
       }
@@ -146,7 +146,7 @@ const profileApi = {
 
   updateProfile: async (profileData) => {
     try {
-      const { fullName, email, phoneNumber, address } = profileData;
+      const { fullName, email, phoneNumber, address, dob } = profileData;
       if (fullName && !validateFullName(fullName)) {
         throw new Error('Họ tên phải có ít nhất 2 ký tự');
       }
@@ -162,25 +162,42 @@ const profileApi = {
         email: email?.trim(),
         phoneNumber: phoneNumber?.trim(),
         address: address?.trim(),
+        dob: dob, // Thêm trường dob
       };
-      const response = await apiInstance.put('/profile/update', requestData, {
+      console.log('📤 Updating profile with data:', requestData);
+
+      // Sửa endpoint từ /profile/update thành /profile theo API spec
+      const response = await apiInstance.put('/profile', requestData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
+
+      console.log('📥 Profile update response:', response.data);
+
       const data = response.data;
-      if (data.isSuccess && data.data) {
-        authStore.getState().setUser(data.data);
+
+      // Kiểm tra response theo format mới
+      if (response.status === 200 && data.status === 200) {
+        console.log('✅ Profile updated successfully');
+        // Cập nhật user state
+        if (data.data) {
+          authStore.getState().setUser(data.data);
+        }
+
+        return {
+          status: response.status,
+          message: data.message || 'Cập nhật hồ sơ thành công',
+          data: data.data,
+          isSuccess: true,
+          timestamp: new Date().toISOString(),
+        };
+      } else {
+        throw new Error(data.message || 'Cập nhật thất bại');
       }
-      return {
-        status: response.status,
-        message: data.message || 'Cập nhật hồ sơ thành công',
-        data: data.data,
-        isSuccess: data.isSuccess,
-        timestamp: data.timestamp || new Date().toISOString(),
-      };
     } catch (error) {
+      console.error('❌ Profile update error:', error);
       const errorMessage =
         error.response?.data?.message || error.message || 'Lỗi khi cập nhật thông tin hồ sơ';
       return {

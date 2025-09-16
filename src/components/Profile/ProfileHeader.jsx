@@ -1,5 +1,6 @@
 import { FiUser, FiCalendar, FiEdit, FiLock, FiLoader, FiCamera } from 'react-icons/fi';
 import { formatDate, getAvatarUrl } from '../../utils/profileUtils';
+import '../../styles/components/profile/ProfileHeader.css';
 
 const ProfileHeader = ({
     profileData,
@@ -12,7 +13,8 @@ const ProfileHeader = ({
     setIsChangingPassword,
     handleFileSelect,
     uploadingAvatar,
-    setUser
+    setUser,
+    handleOpenPasswordModal
 }) => {
     return (
         <div className="pf-profile-header">
@@ -27,7 +29,6 @@ const ProfileHeader = ({
                         alt={`${profileData.username}'s avatar`}
                         className="pf-avatar-image"
                         onError={(e) => {
-                            console.error('Avatar presigned URL failed:', avatarUrl, e);
                             // setAvatarUrl(null); // Có thể thêm logic này sau
                         }}
                     />
@@ -37,7 +38,6 @@ const ProfileHeader = ({
                         alt={`${profileData.username}'s avatar`}
                         className="pf-avatar-image"
                         onError={(e) => {
-                            console.error('Fallback avatar URL failed:', getAvatarUrl(profileData.avatarURL), e);
                         }}
                     />
                 ) : null}
@@ -88,7 +88,7 @@ const ProfileHeader = ({
                             <button className="pf-edit-btn" onClick={() => setIsEditing(true)}>
                                 <FiEdit className="pf-btn-icon" /> Cập nhật thông tin
                             </button>
-                            <button className="pf-edit-btn" onClick={() => setIsChangingPassword(true)}>
+                            <button className="pf-edit-btn" onClick={handleOpenPasswordModal}>
                                 <FiLock className="pf-btn-icon" /> Đổi mật khẩu
                             </button>
                         </>

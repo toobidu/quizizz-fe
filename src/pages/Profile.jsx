@@ -10,14 +10,17 @@ import { useAvatarUpload } from '../hooks/useAvatarUpload';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import ProfileDetails from '../components/Profile/ProfileDetails';
 import ProfileStats from '../components/Profile/ProfileStats';
+import SuccessModal from '../components/Profile/SuccessModal';
 import EditActions from '../components/Profile/EditActions';
-import PasswordChangeForm from '../components/Profile/PasswordChangeForm';
+import PasswordChangeModal from '../components/Profile/PasswordChangeModal';
 import '../styles/pages/Profile.css';
+import Decoration from '../components/Decoration';
 
 function Profile() {
   const { isAuthenticated, user, setUser } = authStore();
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Custom hooks
   const { profileData, loading, isOwnProfile, setProfileData, setError: setProfileError } = useProfileData();
@@ -34,6 +37,23 @@ function Profile() {
 
   const handleChangePassword = () => {
     passwordChange.handleChangePassword(setError, setSuccessMessage);
+  };
+
+  const handleOpenPasswordModal = () => {
+    setShowPasswordModal(true);
+  };
+
+  const handleClosePasswordModal = () => {
+    setShowPasswordModal(false);
+    // Reset form errors when closing
+    passwordChange.setFormErrors({});
+  };
+
+  const handlePasswordSubmit = () => {
+    passwordChange.handleChangePassword(setError, setSuccessMessage);
+    if (!passwordChange.updateLoading) {
+      setShowPasswordModal(false);
+    }
   };
 
   if (loading) {
@@ -58,16 +78,12 @@ function Profile() {
 
   return (
     <div className="pf-layout">
+      <Decoration />
       <main className="pf-content">
-        {successMessage && (
-          <div className="pf-success-toast">
-            <span>{successMessage}</span>
-          </div>
-        )}
-        {error && (
+        {(error || avatarUpload.uploadError) && (
           <div className="pf-error-container">
             <FaExclamationTriangle />
-            <span>{error}</span>
+            <span>{error || avatarUpload.uploadError}</span>
           </div>
         )}
 
@@ -98,6 +114,7 @@ function Profile() {
               setIsChangingPassword={passwordChange.setIsChangingPassword}
               handleFileSelect={(event) => avatarUpload.handleFileSelect(event, setUser)}
               uploadingAvatar={avatarUpload.uploadingAvatar}
+              handleOpenPasswordModal={handleOpenPasswordModal}
             />
 
             {/* Profile Details */}
@@ -116,25 +133,34 @@ function Profile() {
               isChangingPassword={passwordChange.isChangingPassword}
               updateLoading={profileEdit.updateLoading || passwordChange.updateLoading}
               handleUpdateProfile={handleUpdateProfile}
-              handleChangePassword={handleChangePassword}
+              handleOpenPasswordModal={handleOpenPasswordModal}
               setIsEditing={profileEdit.setIsEditing}
               setIsChangingPassword={passwordChange.setIsChangingPassword}
               setFormErrors={() => { }} // Có thể implement sau
-            />
-
-            {/* Password Change Form */}
-            <PasswordChangeForm
-              isChangingPassword={passwordChange.isChangingPassword}
-              passwordData={passwordChange.passwordData}
-              formErrors={passwordChange.formErrors}
-              updateLoading={passwordChange.updateLoading}
-              handlePasswordChange={passwordChange.handlePasswordChange}
             />
 
             {/* Profile Stats */}
             <ProfileStats profileData={profileData} />
           </div>
         )}
+
+        {/* Success Modal for Avatar Upload */}
+        <SuccessModal
+          show={avatarUpload.showSuccessModal}
+          message={avatarUpload.successMessage}
+          onClose={avatarUpload.closeSuccessModal}
+        />
+
+        {/* Password Change Modal */}
+        <PasswordChangeModal
+          showModal={showPasswordModal}
+          onClose={handleClosePasswordModal}
+          passwordData={passwordChange.passwordData}
+          formErrors={passwordChange.formErrors}
+          updateLoading={passwordChange.updateLoading}
+          handlePasswordChange={passwordChange.handlePasswordChange}
+          handleSubmit={handlePasswordSubmit}
+        />
       </main>
     </div>
   );

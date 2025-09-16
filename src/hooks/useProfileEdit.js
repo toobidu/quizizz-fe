@@ -6,7 +6,9 @@ export const useProfileEdit = (profileData, setProfileData) => {
     const [formData, setFormData] = useState({
         fullName: '',
         phoneNumber: '',
-        address: ''
+        address: '',
+        email: '',
+        dob: ''
     });
     const [formErrors, setFormErrors] = useState({});
     const [updateLoading, setUpdateLoading] = useState(false);
@@ -18,6 +20,8 @@ export const useProfileEdit = (profileData, setProfileData) => {
                 fullName: profileData.fullName || '',
                 phoneNumber: profileData.phoneNumber || '',
                 address: profileData.address || '',
+                email: profileData.email || '',
+                dob: profileData.dob ? profileData.dob.split('T')[0] : '' // Format date for input
             });
         }
     }, [profileData]);
@@ -25,9 +29,19 @@ export const useProfileEdit = (profileData, setProfileData) => {
     const validateProfile = useCallback(() => {
         const errors = {};
         if (!formData.fullName.trim()) errors.fullName = 'Vui lòng nhập họ tên';
+        if (!formData.email.trim()) errors.email = 'Vui lòng nhập email';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Email không hợp lệ';
         if (!formData.phoneNumber.trim()) errors.phoneNumber = 'Vui lòng nhập số điện thoại';
         else if (!/^\d{10}$/.test(formData.phoneNumber)) errors.phoneNumber = 'Số điện thoại phải có 10 chữ số';
         if (!formData.address.trim()) errors.address = 'Vui lòng nhập địa chỉ';
+        if (!formData.dob) errors.dob = 'Vui lòng chọn ngày sinh';
+        else {
+            const birthDate = new Date(formData.dob);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear();
+            if (age < 13) errors.dob = 'Bạn phải từ 13 tuổi trở lên';
+            if (birthDate > today) errors.dob = 'Ngày sinh không được lớn hơn ngày hiện tại';
+        }
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     }, [formData]);
@@ -50,7 +64,8 @@ export const useProfileEdit = (profileData, setProfileData) => {
                 fullName: formData.fullName,
                 phoneNumber: formData.phoneNumber,
                 address: formData.address,
-                email: profileData.email,
+                email: formData.email,
+                dob: formData.dob // Thêm dob vào request
             };
 
             const result = await profileApi.updateProfile(updateData);

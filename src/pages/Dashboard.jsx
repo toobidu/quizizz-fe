@@ -5,6 +5,7 @@ import StatsSection from './dashboard/StatsSection';
 import QuickActionsSection from './dashboard/QuickActionsSection';
 import authStore from '../stores/authStore';
 import profileApi from '../services/profileApi';
+import Decoration from "../components/Decoration";
 
 function Dashboard() {
     const { user, isAuthenticated, isLoading } = authStore();
@@ -34,6 +35,7 @@ function Dashboard() {
 
     return (
         <div className="mp-main-layout">
+            <Decoration />
             <main className="mp-main-content">
                 <HeroSection userName={userName} stats={stats} />
                 <StatsSection stats={stats} loading={isLoading} />

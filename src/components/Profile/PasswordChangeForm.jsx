@@ -1,4 +1,4 @@
-import { FaExclamationTriangle } from 'react-icons/fa';
+import '../../styles/components/profile/PasswordChangeForm.css';
 
 const PasswordChangeForm = ({
     isChangingPassword,

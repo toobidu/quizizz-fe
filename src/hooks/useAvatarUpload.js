@@ -10,6 +10,7 @@ export const useAvatarUpload = (profileData) => {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // State cho avatar
     const [avatarUrl, setAvatarUrl] = useState(null);
@@ -46,7 +47,6 @@ export const useAvatarUpload = (profileData) => {
             const response = await authApi.getAvatar();
 
             if (response.isSuccess && response.data) {
-                console.log('Avatar presigned URL received:', response.data);
                 setAvatarUrl(response.data);
                 return;
             }
@@ -54,23 +54,52 @@ export const useAvatarUpload = (profileData) => {
             if (response.status === 200 && response.data) {
                 try {
                     new URL(response.data);
-                    console.log('Avatar presigned URL validated and set');
                     setAvatarUrl(response.data);
                 } catch (urlError) {
-                    console.warn("Invalid presigned URL received:", response.data, urlError);
                     setAvatarUrl(null);
                 }
             } else {
-                console.log('Failed to fetch avatar:', response.message);
                 setAvatarUrl(null);
             }
         } catch (error) {
-            console.error('Error fetching avatar:', error);
             setAvatarUrl(null);
         } finally {
             setAvatarLoading(false);
         }
     }, [avatarUrl, avatarLoading, profileData?.avatarURL]);
+
+    // Hàm refresh avatar (luôn fetch lại từ API)
+    const refreshAvatar = useCallback(async () => {
+        try {
+            setAvatarLoading(true);
+
+            const response = await authApi.getAvatar();
+
+            if (response.isSuccess && response.data) {
+                setAvatarUrl(response.data);
+                return response.data;
+            }
+
+            if (response.status === 200 && response.data) {
+                try {
+                    new URL(response.data);
+                    setAvatarUrl(response.data);
+                    return response.data;
+                } catch (urlError) {
+                    setAvatarUrl(null);
+                    return null;
+                }
+            } else {
+                setAvatarUrl(null);
+                return null;
+            }
+        } catch (error) {
+            setAvatarUrl(null);
+            return null;
+        } finally {
+            setAvatarLoading(false);
+        }
+    }, []);
 
     // Fetch avatar khi có profileData
     useEffect(() => {
@@ -106,6 +135,7 @@ export const useAvatarUpload = (profileData) => {
             // Set loading state
             setUploadingAvatar(true);
             setUploadError('');
+            setSuccessMessage('');
 
             // Tạo FormData
             const formData = new FormData();
@@ -118,24 +148,74 @@ export const useAvatarUpload = (profileData) => {
                 },
             });
 
-            // Kiểm tra response
-            if (response.data?.success && response.data?.data?.avatarUrl) {
-                console.log('Avatar uploaded successfully, avatarUrl:', response.data.data.avatarUrl);
-                setAvatarUrl(response.data.data.avatarUrl);
+            // Kiểm tra response - điều chỉnh logic dựa trên backend response
+            if (response.status === 200 || response.data?.success || response.data?.data?.avatarUrl || response.data?.avatarUrl) {
 
-                // Cập nhật user state
-                if (typeof setUser === 'function') {
-                    setUser(prev => ({ ...prev, avatarURL: response.data.data.avatarUrl }));
+                // Lấy avatarUrl từ response (có thể ở nhiều vị trí khác nhau)
+                const newAvatarUrl = response.data?.data?.avatarUrl || response.data?.avatarUrl || response.data?.url;
+
+                if (newAvatarUrl) {
+                    setAvatarUrl(newAvatarUrl);
+
+                    // Cập nhật user state - lưu filename thay vì full URL
+                    if (typeof setUser === 'function') {
+                        // Extract filename from URL if it's a full URL
+                        let filename = newAvatarUrl;
+                        try {
+                            const url = new URL(newAvatarUrl);
+                            // Nếu là full URL, lấy pathname làm filename
+                            filename = url.pathname.split('/').pop() || newAvatarUrl;
+                        } catch (e) {
+                            // Nếu không phải URL, giữ nguyên
+                            filename = newAvatarUrl;
+                        }
+
+                        setUser(prev => ({ ...prev, avatarURL: filename }));
+                    }
                 }
 
+                // Luôn refresh avatar từ API để đảm bảo có URL mới nhất
+                await refreshAvatar();
+
                 setSuccessMessage('Avatar đã được cập nhật thành công!');
-                setTimeout(() => setSuccessMessage(''), 3000);
+                setShowSuccessModal(true);
+
+                // Trigger Header to refresh avatar immediately
+                window.dispatchEvent(new CustomEvent('avatarUpdated'));
+
+                setTimeout(() => {
+                    setSuccessMessage('');
+                    setShowSuccessModal(false);
+                }, 3000);
+            } else if (response.status === 200) {
+                // Fallback: Nếu status 200 nhưng không có data.success, vẫn xem là thành công
+                const refreshedAvatarUrl = await refreshAvatar();
+
+                // Cập nhật user state với filename từ refreshed avatar
+                if (refreshedAvatarUrl && typeof setUser === 'function') {
+                    try {
+                        const url = new URL(refreshedAvatarUrl);
+                        const filename = url.pathname.split('/').pop() || refreshedAvatarUrl;
+                        setUser(prev => ({ ...prev, avatarURL: filename }));
+                    } catch (e) {
+                        setUser(prev => ({ ...prev, avatarURL: refreshedAvatarUrl }));
+                    }
+                }
+                setSuccessMessage('Avatar đã được cập nhật thành công!');
+                setShowSuccessModal(true);
+
+                // Trigger Header to refresh avatar immediately
+                window.dispatchEvent(new CustomEvent('avatarUpdated'));
+
+                setTimeout(() => {
+                    setSuccessMessage('');
+                    setShowSuccessModal(false);
+                }, 3000);
             } else {
                 throw new Error(response.data?.message || 'Upload failed');
             }
 
         } catch (error) {
-            console.error('Upload error:', error);
             setUploadError(error?.response?.data?.message || error?.message || 'Lỗi khi tải avatar');
         } finally {
             setUploadingAvatar(false);
@@ -143,17 +223,19 @@ export const useAvatarUpload = (profileData) => {
         }
     }, [validateImageFile]);
 
-    // Auto-refresh avatar every 45 minutes
+    // Hàm đóng success modal
+    const closeSuccessModal = useCallback(() => {
+        setShowSuccessModal(false);
+        setSuccessMessage('');
+    }, []);
     useEffect(() => {
         if (!isAuthenticated || !profileData?.avatarURL) return;
 
         const refreshAvatar = async () => {
             try {
-                console.log('Auto-refreshing avatar...');
                 const response = await authApi.getAvatar();
 
                 if (response.isSuccess && response.data) {
-                    console.log('Avatar refreshed with new presigned URL:', response.data);
                     setAvatarUrl(response.data);
                     return;
                 }
@@ -161,14 +243,11 @@ export const useAvatarUpload = (profileData) => {
                 if (response.status === 200 && response.data) {
                     try {
                         new URL(response.data);
-                        console.log('Avatar presigned URL refreshed and validated');
                         setAvatarUrl(response.data);
                     } catch (urlError) {
-                        console.warn("Invalid presigned URL received during refresh:", response.data, urlError);
                     }
                 }
             } catch (error) {
-                console.error("Error refreshing avatar:", error);
             }
         };
 
@@ -189,8 +268,11 @@ export const useAvatarUpload = (profileData) => {
         setUploadError,
         successMessage,
         setSuccessMessage,
+        showSuccessModal,
+        closeSuccessModal,
 
         // Handlers
-        handleFileSelect
+        handleFileSelect,
+        refreshAvatar
     };
 };

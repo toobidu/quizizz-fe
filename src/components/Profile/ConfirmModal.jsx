@@ -1,4 +1,5 @@
 import { FiX, FiSave, FiLoader } from 'react-icons/fi';
+import '../../styles/components/profile/ConfirmModal.css';
 
 const ConfirmModal = ({
     showConfirmModal,

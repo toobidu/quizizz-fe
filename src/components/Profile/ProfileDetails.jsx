@@ -1,5 +1,6 @@
 import { FiUser } from 'react-icons/fi';
 import { getFieldValue, formatDate } from '../../utils/profileUtils';
+import '../../styles/components/profile/ProfileDetails.css';
 
 const ProfileDetails = ({
     profileData,
@@ -9,6 +10,10 @@ const ProfileDetails = ({
     formErrors,
     handleProfileChange
 }) => {
+    if (!profileData) {
+        return null;
+    }
+
     return (
         <div className="pf-profile-details">
             <div className="pf-section">
@@ -41,14 +46,13 @@ const ProfileDetails = ({
                                 type="email"
                                 name="email"
                                 className={`pf-info-input ${formErrors.email ? 'pf-input-error' : ''}`}
-                                value={formData.email || profileData.email || ''}
+                                value={profileData.email || ''}
                                 onChange={handleProfileChange}
-                                placeholder="Nhập email"
-                                disabled
                             />
                         ) : (
                             <p className="pf-info-value">{profileData.email || 'Chưa cập nhật'}</p>
                         )}
+                        {formErrors.email && <span className="pf-error-text">{formErrors.email}</span>}
                     </div>
 
                     <div className="pf-info-card">
@@ -87,11 +91,23 @@ const ProfileDetails = ({
 
                     <div className="pf-info-card">
                         <label className="pf-info-label">Ngày sinh</label>
-                        <p className="pf-info-value">{formatDate(profileData.dob)}</p>
+                        {isOwnProfile && isEditing ? (
+                            <input
+                                type="date"
+                                name="dob"
+                                className={`pf-info-input ${formErrors.dob ? 'pf-input-error' : ''}`}
+                                value={formData.dob}
+                                onChange={handleProfileChange}
+                                placeholder="Chọn ngày sinh"
+                            />
+                        ) : (
+                            <p className="pf-info-value">{formatDate(profileData.dob)}</p>
+                        )}
+                        {formErrors.dob && <span className="pf-error-text">{formErrors.dob}</span>}
                     </div>
                     <div className="pf-info-card">
                         <label className="pf-info-label">Username</label>
-                        <p className="pf-info-value">{profileData.username || 'Chưa cập nhật'}</p>
+                        <p className="pf-info-value pf-readonly-field">{profileData.username || 'Chưa cập nhật'}</p>
                     </div>
                 </div>
             </div>
