@@ -1,12 +1,15 @@
 :root {
   /* Base colors */
   --primary: #4f46e5;
+  --primary-rgb: 79, 70, 229;
   /* Màu tím đậm hơn, hiện đại */
   --primary-dark: #3730a3;
   /* Tông đậm hơn cho hover/active */
+  --primary-hover: #6366f1;
   --accent: #f59e0b;
   /* Vàng cam ấm, nổi bật */
   --success: #10b981;
+  --success-rgb: 16, 185, 129;
   /* Xanh lá cho trạng thái thành công */
   --warning: #f97316;
   /* Cam cho cảnh báo */
@@ -51,12 +54,15 @@
 [data-theme="dark"] {
   /* Base colors */
   --primary: #a5b4fc;
+  --primary-rgb: 165, 180, 252;
   /* Tím nhạt, nổi bật trên nền tối */
   --primary-dark: #818cf8;
   /* Tím đậm hơn cho hover */
+  --primary-hover: #c7d2fe;
   --accent: #fbbf24;
   /* Vàng sáng hơn, tránh chói */
   --success: #34d399;
+  --success-rgb: 52, 211, 153;
   /* Xanh lá sáng hơn */
   --warning: #fb923c;
   /* Cam sáng, dễ nhìn */

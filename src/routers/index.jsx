@@ -16,6 +16,7 @@ import PrivacyPage from "../pages/footer/PrivacyPage";
 import TermsPage from "../pages/footer/TermsPage";
 import FeedbackPage from "../pages/footer/FeedbackPage";
 import ForgotPassword from "../pages/auth/ForgotPassword";
+import RoomsPage from "../pages/room/RoomPage";
 import authStore from "../stores/authStore";
 
 // Protected Route Component
@@ -71,6 +72,7 @@ const router = createBrowserRouter([
       { path: "forgot-password", element: <ForgotPassword /> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
+      { path: "rooms", element: <ProtectedRoute><RoomsPage /></ProtectedRoute> },
       { path: "about", element: <AboutPage /> },
       { path: "blog", element: <BlogPage /> },
       { path: "contact", element: <ContactPage /> },

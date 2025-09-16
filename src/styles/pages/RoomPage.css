@@ -1,0 +1,501 @@
+/* RoomPage Styles */
+.room-page {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.room-header {
+    background: var(--bg-secondary);
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.room-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.room-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.room-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.room-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.room-search {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.room-search input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.room-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.room-search-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.room-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.room-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-button {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.filter-button:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.filter-button.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.room-results-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.room-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.pagination-button {
+    position: relative;
+    padding: 0.875rem 1.25rem;
+    border: none;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    font-weight: 500;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.pagination-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(59, 130, 246, 0.1),
+            rgba(147, 197, 253, 0.15),
+            transparent);
+    transition: left 0.6s ease;
+    z-index: -1;
+}
+
+.pagination-button:hover::before {
+    left: 100%;
+}
+
+.pagination-button:hover {
+    transform: translateY(-2px);
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color, #3b82f6);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow:
+        0 8px 25px rgba(59, 130, 246, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-button:active {
+    transform: translateY(0);
+    transition: all 0.1s ease;
+}
+
+/* Navigation buttons */
+.pagination-nav {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(147, 197, 253, 0.08) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    font-weight: 600;
+    min-width: 100px;
+    gap: 0.5rem;
+}
+
+.pagination-nav:hover {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.2) 0%,
+            rgba(147, 197, 253, 0.15) 100%);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: var(--primary-color, #3b82f6);
+}
+
+.pagination-arrow {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color, #3b82f6);
+    transition: transform 0.2s ease;
+}
+
+.pagination-nav:hover .pagination-arrow {
+    transform: scale(1.1);
+}
+
+.pagination-text {
+    font-weight: 600;
+}
+
+/* Number buttons */
+.pagination-number {
+    min-width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pagination-number:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.pagination-number.active {
+    background: linear-gradient(135deg,
+            var(--primary-color, #3b82f6) 0%,
+            rgba(59, 130, 246, 0.8) 100%);
+    color: white;
+    border-color: var(--primary-color, #3b82f6);
+    font-weight: 700;
+    transform: scale(1.05);
+    box-shadow:
+        0 6px 20px rgba(59, 130, 246, 0.3),
+        0 2px 8px rgba(59, 130, 246, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-number.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Ellipsis */
+.pagination-ellipsis {
+    padding: 0 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    user-select: none;
+    opacity: 0.7;
+}
+
+/* Numbers container */
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+/* Disabled state */
+.pagination-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.pagination-button:disabled:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Info text styling */
+.room-results-info {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.875rem 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.room-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    z-index: 1000;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.room-error {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.room-success {
+    background: #d1fae5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.room-notification button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .room-header-content {
+        padding: 0 1rem;
+    }
+
+    .room-title {
+        font-size: 2rem;
+    }
+
+    .room-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .room-search {
+        min-width: auto;
+    }
+
+    .room-content {
+        padding: 1rem;
+    }
+
+    .room-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .room-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .room-pagination {
+        gap: 0.5rem;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+
+    .pagination-button {
+        padding: 0.75rem 1rem;
+        min-width: 45px;
+        font-size: 0.9rem;
+    }
+
+    .pagination-nav {
+        min-width: 90px;
+        padding: 0.75rem 1rem;
+        gap: 0.25rem;
+    }
+
+    .pagination-nav .pagination-text {
+        display: none;
+    }
+
+    .pagination-numbers {
+        margin: 0 0.5rem;
+        padding: 0.5rem;
+        gap: 0.25rem;
+    }
+
+    .pagination-number {
+        min-width: 44px;
+        height: 44px;
+    }
+
+    .room-results-info {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .room-title {
+        font-size: 1.8rem;
+    }
+
+    .room-subtitle {
+        font-size: 1rem;
+    }
+
+    .room-actions {
+        gap: 0.5rem;
+    }
+
+    .filter-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .room-pagination {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    .pagination-nav {
+        width: 100%;
+        justify-content: center;
+        min-width: auto;
+    }
+
+    .pagination-nav .pagination-text {
+        display: inline;
+    }
+
+    .pagination-numbers {
+        margin: 0;
+        padding: 0.5rem;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .pagination-button {
+        padding: 0.6rem 0.8rem;
+        min-width: 40px;
+        font-size: 0.85rem;
+    }
+
+    .pagination-number {
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .room-results-info {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+}

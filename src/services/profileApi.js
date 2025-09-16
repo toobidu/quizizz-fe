@@ -164,7 +164,6 @@ const profileApi = {
         address: address?.trim(),
         dob: dob, // Thêm trường dob
       };
-      console.log('📤 Updating profile with data:', requestData);
 
       // Sửa endpoint từ /profile/update thành /profile theo API spec
       const response = await apiInstance.put('/profile', requestData, {
@@ -174,13 +173,11 @@ const profileApi = {
         },
       });
 
-      console.log('📥 Profile update response:', response.data);
 
       const data = response.data;
 
       // Kiểm tra response theo format mới
       if (response.status === 200 && data.status === 200) {
-        console.log('✅ Profile updated successfully');
         // Cập nhật user state
         if (data.data) {
           authStore.getState().setUser(data.data);
@@ -197,7 +194,6 @@ const profileApi = {
         throw new Error(data.message || 'Cập nhật thất bại');
       }
     } catch (error) {
-      console.error('❌ Profile update error:', error);
       const errorMessage =
         error.response?.data?.message || error.message || 'Lỗi khi cập nhật thông tin hồ sơ';
       return {
