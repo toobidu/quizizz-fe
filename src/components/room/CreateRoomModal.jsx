@@ -16,10 +16,12 @@ import {
     FiStar,
     FiAlertCircle
 } from 'react-icons/fi';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../styles/components/room/CreateRoomModal.css';
 
 function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     const navigate = useNavigate();
+    const { theme } = useTheme();
 
     const [roomData, setRoomData] = useState({
         name: '',
@@ -143,7 +145,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     if (!onClose) return null;
 
     return (
-        <div className="crm-overlay" onClick={handleOverlayClick}>
+        <div className={`crm-overlay ${theme}`} onClick={handleOverlayClick}>
             <div className="crm-container">
                 <div className="crm-header">
                     <div className="crm-header-content">
@@ -358,23 +360,32 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                             </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="crm-button crm-primary-btn"
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="crm-loading-spinner"></div>
-                                    Đang tạo phòng...
-                                </>
-                            ) : (
-                                <>
-                                    <FiStar style={{ marginRight: '8px' }} />
-                                    Tạo phòng
-                                </>
-                            )}
-                        </button>
+                        <div className="crm-form-actions">
+                            <button
+                                type="button"
+                                className="crm-button crm-secondary-btn"
+                                onClick={handleClose}
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                type="submit"
+                                className="crm-button crm-primary-btn"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>
+                                        <div className="crm-loading-spinner"></div>
+                                        Đang tạo phòng...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiStar style={{ marginRight: '8px' }} />
+                                        Tạo phòng
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </form>
                 )}
             </div>

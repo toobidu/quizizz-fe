@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { FiAlertCircle, FiHash, FiInfo, FiLogIn, FiX, FiKey, FiArrowRight } from 'react-icons/fi';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../styles/components/room/JoinByCodeModal.css';
 
 const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
     const [roomCode, setRoomCode] = useState('');
+    const { theme } = useTheme();
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -14,9 +16,32 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
 
     const handleInputChange = (e) => {
         const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (value.length <= 6) {
-            setRoomCode(value);
+        // Chỉ cho phép nhập đúng 8 ký tự
+        const truncatedValue = value.substring(0, 8);
+        setRoomCode(truncatedValue);
+    };
+
+    const handleKeyDown = (e) => {
+        // Ngăn chặn nhập thêm khi đã đủ 8 ký tự
+        if (roomCode.length >= 8 && e.key !== 'Backspace' && e.key !== 'Delete' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
         }
+    };
+
+    const handlePaste = (e) => {
+        // Ngăn chặn paste khi đã đủ 8 ký tự
+        if (roomCode.length >= 8) {
+            e.preventDefault();
+            return;
+        }
+
+        // Xử lý paste content
+        const paste = e.clipboardData.getData('text');
+        const cleanedPaste = paste.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const combinedValue = roomCode + cleanedPaste;
+        const truncatedValue = combinedValue.substring(0, 8);
+        setRoomCode(truncatedValue);
+        e.preventDefault();
     };
 
     const handleClose = () => {
@@ -26,7 +51,7 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
 
     const handleOverlayClick = (e) => {
         // Chỉ đóng modal khi click vào overlay, không phải vào nội dung modal
-        if (e.target.className === 'jbc-overlay') {
+        if (e.target.className.includes('jbc-overlay')) {
             handleClose();
         }
     };
@@ -34,7 +59,7 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="jbc-overlay" onClick={handleOverlayClick}>
+        <div className={`jbc-overlay ${theme}`} onClick={handleOverlayClick}>
             <div className="jbc-container">
                 <div className="jbc-header">
                     <div className="jbc-header-content">
@@ -55,16 +80,18 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                     <div className="jbc-form-group">
                         <label htmlFor="roomCode">
                             <FiHash style={{ marginRight: '8px' }} />
-                            Mã phòng (6 ký tự)
+                            Mã phòng (8 ký tự)
                         </label>
-                        <div className="jbc-code-input-container">
+                        <div className={`jbc-code-input-container has-${roomCode.length}-char`}>
                             <input
                                 id="roomCode"
                                 type="text"
                                 value={roomCode}
                                 onChange={handleInputChange}
-                                placeholder="ABC123"
-                                maxLength={6}
+                                onKeyDown={handleKeyDown}
+                                onPaste={handlePaste}
+                                placeholder="ABC12345"
+                                maxLength={8}
                                 autoFocus
                                 disabled={loading}
                                 className="jbc-input"
@@ -74,7 +101,12 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                             </div>
                         </div>
                         <div className="jbc-input-hint">
-                            Chỉ nhập chữ cái và số, không có khoảng trắng
+                            {roomCode.length === 8
+                                ? "Mã phòng hợp lệ! Nhấn tham gia để tiếp tục"
+                                : roomCode.length > 0
+                                    ? `Đã nhập ${roomCode.length}/8 ký tự`
+                                    : "Chỉ nhập chữ cái và số, không có khoảng trắng"
+                            }
                         </div>
                     </div>
 
@@ -106,8 +138,8 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                                 </>
                             ) : (
                                 <>
-                                    Tham gia phòng
-                                    <FiArrowRight style={{ marginLeft: '8px' }} />
+                                    Tham gia
+                                    <FiArrowRight style={{ marginLeft: '4px' }} />
                                 </>
                             )}
                         </button>
