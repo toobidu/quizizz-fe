@@ -4,8 +4,10 @@ import { IoClose, IoAdd, IoEnter, IoSearch, IoRefresh } from 'react-icons/io5';
 import CreateRoomModal from '../../components/room/CreateRoomModal.jsx';
 import RoomCard from '../../components/room/RoomCard.jsx';
 import JoinByCodeModal from '../../components/room/JoinByCodeModal.jsx';
+import PlayerList from '../../components/room/PlayerList.jsx';
 import useRoomStore from '../../stores/useRoomStore.js';
-import useUserStore from '../../hooks/useUserStore.js';
+import authStore from '../../stores/authStore.js';
+import useWebSocketCleanup from '../../hooks/useWebSocketCleanup.js';
 import '../../styles/pages/room/RoomPage.css';
 import Decoration from '../../components/Decoration.jsx';
 import SimpleBackground from '../../components/SimpleBackground.jsx';
@@ -13,7 +15,10 @@ import SimpleBackground from '../../components/SimpleBackground.jsx';
 const RoomsPage = () => {
     // Navigation and user management
     const navigate = useNavigate();
-    const { userName, logout } = useUserStore();
+    const { user, logout } = authStore();
+
+    // WebSocket cleanup
+    useWebSocketCleanup();
 
     // Room management state and actions
     const {
@@ -24,7 +29,9 @@ const RoomsPage = () => {
         joinRoom,
         clearError,
         startAutoRefresh,
-        stopAutoRefresh
+        stopAutoRefresh,
+        subscribeToRoomList,
+        unsubscribeFromRoomList
     } = useRoomStore();
 
     // Local component state
@@ -37,26 +44,32 @@ const RoomsPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
-    // Debug: Log rooms changes
+
     useEffect(() => {
     }, [rooms]);
 
-    // Debug: Log currentPage changes
+
     useEffect(() => {
     }, [currentPage]);
 
     /**
      * Initialize room data and auto-refresh on component mount
+     * Setup simple polling for room list updates instead of WebSocket
      * Cleanup auto-refresh on component unmount
      */
     useEffect(() => {
         loadRooms();
-        startAutoRefresh();
+
+        // Simple auto-refresh every 10 seconds instead of WebSocket
+        const refreshInterval = setInterval(() => {
+            loadRooms();
+        }, 10000); // 10 seconds
 
         return () => {
+            clearInterval(refreshInterval);
             stopAutoRefresh();
         };
-    }, [loadRooms, startAutoRefresh, stopAutoRefresh]);
+    }, [loadRooms, stopAutoRefresh]); // Removed WebSocket methods
 
     /**
      * Handle joining a public room
@@ -238,7 +251,17 @@ const RoomsPage = () => {
 
                     <div className="room-wrapper">
                         <div className="room-header">
-                            <h1>Danh sách phòng</h1>
+                            <div className="room-header-left">
+                                <h1>Danh sách phòng</h1>
+                                <button
+                                    className="room-btn-refresh"
+                                    onClick={() => loadRooms()}
+                                    disabled={loading}
+                                    title="Refresh danh sách phòng"
+                                >
+                                    <IoRefresh className={`room-refresh-icon ${loading ? 'spinning' : ''}`} />
+                                </button>
+                            </div>
 
                             <div className="room-actions">
                                 <button
@@ -268,6 +291,10 @@ const RoomsPage = () => {
                                     value={searchQuery}
                                     onChange={handleSearchChange}
                                 />
+                            </div>
+                            <div className="room-status-info">
+                                <span className="status-indicator">●</span>
+                                <span>Tự động cập nhật mỗi 10 giây</span>
                             </div>
                         </div>
 
@@ -369,7 +396,7 @@ const RoomsPage = () => {
                         setShowCreateModal(false);
                         loadRooms();
                     }}
-                    onNavigateToRoom={(roomCode) => navigate(`/room/${roomCode}`)}
+                    onNavigateToRoom={(roomCode) => navigate(`/waiting-room/${roomCode}`)}
                 />
             )}
 

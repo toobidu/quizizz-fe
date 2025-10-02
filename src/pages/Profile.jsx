@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { FiLoader } from 'react-icons/fi';
+import { FiEdit, FiMail, FiUser, FiCalendar, FiCamera, FiSettings, FiSave, FiX, FiCheck, FiLock, FiEye, FiEyeOff, FiRefreshCw, FiUpload, FiLoader } from 'react-icons/fi';
 import authStore from '../stores/authStore';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useProfileData } from '../hooks/useProfileData';
@@ -84,19 +84,6 @@ function Profile() {
           <div className="pf-error-container">
             <FaExclamationTriangle />
             <span>{error || avatarUpload.uploadError}</span>
-          </div>
-        )}
-
-        {/* Debug info */}
-        {!profileData && !loading && (
-          <div style={{ padding: '2rem', background: '#f0f0f0', borderRadius: '8px', marginBottom: '2rem' }}>
-            <h3>Debug Info:</h3>
-            <p><strong>isAuthenticated:</strong> {isAuthenticated ? 'true' : 'false'}</p>
-            <p><strong>user:</strong> {JSON.stringify(user, null, 2)}</p>
-            <p><strong>profileData:</strong> {JSON.stringify(profileData, null, 2)}</p>
-            <p><strong>isOwnProfile:</strong> {isOwnProfile ? 'true' : 'false'}</p>
-            <p><strong>Loading:</strong> {loading ? 'true' : 'false'}</p>
-            <p><strong>Error:</strong> {error || 'None'}</p>
           </div>
         )}
 

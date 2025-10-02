@@ -38,6 +38,12 @@
     gap: 1.5rem;
 }
 
+.room-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .room-header h1 {
     color: var(--text-color);
     font-size: 2.2rem;
@@ -47,6 +53,51 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.room-btn-refresh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+.room-btn-refresh:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.4);
+}
+
+.room-btn-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.room-refresh-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.room-refresh-icon.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .room-actions {
@@ -139,12 +190,49 @@
 /* Search and filters */
 .room-filter {
     margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .room-search-container {
     position: relative;
+    flex: 1;
     max-width: 500px;
-    margin: 0 auto;
+}
+
+.room-status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    white-space: nowrap;
+}
+
+.status-indicator {
+    color: #4CAF50;
+    font-size: 0.8rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .room-search-icon {

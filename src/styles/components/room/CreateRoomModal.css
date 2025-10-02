@@ -778,6 +778,46 @@
     }
 }
 
+/* Topic description */
+.crm-topic-description {
+    margin-top: 8px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    border-left: 3px solid var(--primary);
+}
+
+/* Input hint */
+.crm-input-hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Loading animation */
+.crm-loading {
+    animation: crmSpin 1s linear infinite;
+}
+
+@keyframes crmSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Dark mode for new styles */
+.crm-overlay.dark .crm-topic-description {
+    background: #374151;
+    color: #d1d5db;
+}
+
 @media (max-width: 480px) {
     .crm-container {
         width: 98%;

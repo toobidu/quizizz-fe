@@ -9,4 +9,10 @@ export default defineConfig({
     },
     historyApiFallback: true,
   },
+  define: {
+    global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['sockjs-client', '@stomp/stompjs']
+  }
 })

@@ -50,7 +50,19 @@ const authStore = create((set) => ({
     }
 
     try {
-      const decoded = jwtDecode(token);
+      let decoded;
+      try {
+        decoded = jwtDecode(token);
+      } catch (decodeError) {
+        // Token không hợp lệ, clear và return
+        Cookies.remove('accessToken');
+        Cookies.remove('refreshToken');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        set({ user: null, isAuthenticated: false });
+        return;
+      }
+
       if (decoded.exp * 1000 < Date.now()) {
         // Token hết hạn, thử refresh
         const refreshResponse = await authApi.refreshToken();
@@ -74,7 +86,12 @@ const authStore = create((set) => ({
       Cookies.remove('refreshToken');
       sessionStorage.removeItem('accessToken');
       sessionStorage.removeItem('refreshToken');
-      set({ user: null, isAuthenticated: false, error: error.message, isLoading: false });
+      // Chỉ set error nếu đã có token (đã từng đăng nhập)
+      if (token) {
+        set({ user: null, isAuthenticated: false, error: error.message, isLoading: false });
+      } else {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      }
     }
   },
 

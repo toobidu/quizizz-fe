@@ -1,0 +1,265 @@
+/* Player List Styles */
+.player-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.player-list-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.player-list-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.player-list-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Player Item */
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.player-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.player-item.host {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.1));
+    border-color: #ffc107;
+}
+
+/* Player Avatar */
+.player-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.host-crown {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ffc107;
+    border-radius: 50%;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+    color: #000;
+    border: 2px solid white;
+}
+
+/* Player Info */
+.player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.player-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.host-badge {
+    background: #ffc107;
+    color: #000;
+    padding: 0.125rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.player-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Join Indicator */
+.join-indicator {
+    background: var(--success);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Empty State */
+.empty-player-list {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-secondary);
+}
+
+.empty-player-list svg {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-player-list p {
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.empty-player-list span {
+    font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Player Animation States */
+.player-item.joining {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.player-item.leaving {
+    animation: slideOutToLeft 0.4s ease-in forwards;
+}
+
+.player-item.joining::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent);
+    animation: shimmer 0.8s ease;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .player-list {
+        padding: 1rem;
+    }
+
+    .player-item {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .player-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .player-name {
+        font-size: 0.9rem;
+    }
+
+    .host-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+    }
+}

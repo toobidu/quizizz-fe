@@ -1,0 +1,469 @@
+/* GameRoom.css */
+.game-room {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    color: white;
+}
+
+/* Loading State */
+.game-room.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner {
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top: 5px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Waiting Room */
+.game-room.waiting {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.waiting-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+}
+
+.waiting-container h2 {
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.game-info {
+    margin: 30px 0;
+    text-align: left;
+}
+
+.status {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.players-list {
+    margin-top: 20px;
+}
+
+.player-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.player-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.player-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.player-status.active {
+    background: #4CAF50;
+}
+
+.player-status.disconnected {
+    background: #f44336;
+}
+
+.waiting-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.start-btn {
+    font-size: 1.2em;
+    padding: 15px 30px;
+}
+
+/* Playing State */
+.game-room.playing {
+    padding: 20px;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.timer {
+    font-size: 1.5em;
+    transition: all 0.3s ease;
+}
+
+.timer.urgent {
+    color: #ff4444;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.question-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.question-image {
+    margin-bottom: 20px;
+}
+
+.question-image img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 10px;
+}
+
+.question-text {
+    font-size: 2em;
+    margin-bottom: 30px;
+    line-height: 1.4;
+}
+
+.options-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+    max-width: 800px;
+    margin: 0 auto 30px;
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid transparent;
+    border-radius: 15px;
+    color: white;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.option-btn:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.option-btn.selected {
+    background: #4CAF50;
+    border-color: #45a049;
+    transform: scale(1.02);
+}
+
+.option-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.option-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.option-text {
+    flex: 1;
+}
+
+.question-actions {
+    text-align: center;
+}
+
+.submit-btn {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    background: #4CAF50;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.submit-btn:hover:not(.disabled) {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.submit-btn.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Player Status */
+.players-status {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.player-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.player-status.answered {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+.player-status.waiting {
+    background: rgba(255, 193, 7, 0.3);
+}
+
+.mini-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.player-name {
+    flex: 1;
+    font-size: 0.9em;
+}
+
+.status-indicator {
+    font-size: 1.2em;
+}
+
+/* Results State */
+.game-room.results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.results-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
+}
+
+.results-container h2 {
+    font-size: 3em;
+    margin-bottom: 30px;
+}
+
+.final-leaderboard {
+    margin: 30px 0;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.result-item:hover {
+    transform: translateY(-2px);
+}
+
+.rank-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.player-details h3 {
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.player-details p {
+    margin: 5px 0;
+    opacity: 0.8;
+}
+
+.results-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-room {
+        padding: 10px;
+    }
+
+    .waiting-container,
+    .results-container {
+        padding: 20px;
+    }
+
+    .question-container {
+        padding: 20px;
+    }
+
+    .question-text {
+        font-size: 1.5em;
+    }
+
+    .options-container {
+        grid-template-columns: 1fr;
+    }
+
+    .game-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .players-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .results-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}

@@ -14,14 +14,19 @@ import {
     FiZap,
     FiChevronDown,
     FiStar,
-    FiAlertCircle
+    FiAlertCircle,
+    FiLoader
 } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
+import useRoomStore from '../../stores/useRoomStore';
+import useTopics from '../../hooks/useTopics';
 import '../../styles/components/room/CreateRoomModal.css';
 
 function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     const navigate = useNavigate();
     const { theme } = useTheme();
+    const { createRoom, createRoomViaWebSocket, joinRoom, isLoading, error: storeError } = useRoomStore();
+    const { topics, loading: loadingTopics, error: topicsError, getTopicById } = useTopics();
 
     const [roomData, setRoomData] = useState({
         name: '',
@@ -29,23 +34,33 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
         maxPlayers: 2,
         timeLimit: 60,
         questionCount: 10,
-        topic: '',
-        gameMode: '1vs1'
+        topicId: '',
+        gameMode: 'ONE_VS_ONE'
     });
 
-    const [loading, setLoading] = useState(false);
     const [roomCode, setRoomCode] = useState('');
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
-    const [topics, setTopics] = useState([
-        { id: '1', name: 'Toán học' },
-        { id: '2', name: 'Khoa học' },
-        { id: '3', name: 'Lịch sử' },
-        { id: '4', name: 'Địa lý' },
-        { id: '5', name: 'Ngữ văn' },
-        { id: '6', name: 'Tiếng Anh' },
-        { id: '7', name: 'Kiến thức chung' }
-    ]);
+
+    // Room mode options
+    const roomModes = [
+        {
+            value: 'ONE_VS_ONE',
+            label: '1vs1',
+            description: 'Đấu một đối một',
+            icon: FiUsers,
+            maxPlayers: 2,
+            minPlayers: 2
+        },
+        {
+            value: 'BATTLE_ROYAL',
+            label: 'Battle Royal',
+            description: 'Nhiều người chơi cùng lúc',
+            icon: FiZap,
+            maxPlayers: 999, // Không giới hạn max
+            minPlayers: 3
+        }
+    ];
 
     useEffect(() => {
         if (onClose) {
@@ -62,22 +77,42 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
         const { name, value, type, checked } = e.target;
 
         if (name === 'gameMode') {
-            if (value === '1vs1') {
+            const selectedMode = roomModes.find(mode => mode.value === value);
+            if (selectedMode) {
                 setRoomData({
-                    ...roomData, gameMode: value, maxPlayers: 2
-                });
-            } else if (value === 'battle' && roomData.maxPlayers < 3) {
-                setRoomData({
-                    ...roomData, gameMode: value, maxPlayers: 3
-                });
-            } else {
-                setRoomData({
-                    ...roomData, gameMode: value
+                    ...roomData,
+                    gameMode: value,
+                    maxPlayers: selectedMode.minPlayers // Reset về min khi chuyển mode
                 });
             }
+        } else if (name === 'maxPlayers') {
+            const numValue = parseInt(value) || '';
+            setRoomData({
+                ...roomData,
+                maxPlayers: numValue === '' ? '' : numValue
+            });
+        } else if (name === 'timeLimit') {
+            const numValue = parseInt(value) || 10;
+            setRoomData({
+                ...roomData,
+                timeLimit: Math.max(10, Math.min(300, numValue))
+            });
+        } else if (name === 'questionCount') {
+            const numValue = parseInt(value) || 5;
+            setRoomData({
+                ...roomData,
+                questionCount: Math.max(5, Math.min(50, numValue))
+            });
+        } else if (name === 'topicId') {
+            const numValue = parseInt(value) || '';
+            setRoomData({
+                ...roomData,
+                topicId: numValue
+            });
         } else {
             setRoomData({
-                ...roomData, [name]: type === 'checkbox' ? checked : value
+                ...roomData,
+                [name]: type === 'checkbox' ? checked : value
             });
         }
     };
@@ -85,36 +120,131 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (loading) return;
+        if (isLoading) return;
 
         if (!roomData.name.trim()) {
             setError('Vui lòng nhập tên phòng');
             return;
         }
 
-        if (!roomData.topic) {
+        if (!roomData.topicId) {
             setError('Vui lòng chọn chủ đề câu hỏi');
             return;
         }
 
-        setLoading(true);
+        const topicIdNum = parseInt(roomData.topicId);
+        if (isNaN(topicIdNum)) {
+            setError('Chủ đề không hợp lệ');
+            return;
+        }
+
+        if (!roomData.questionCount || roomData.questionCount < 1) {
+            setError('Số câu hỏi phải lớn hơn 0');
+            return;
+        }
+
+        // Validate max players based on game mode
+        const selectedMode = roomModes.find(mode => mode.value === roomData.gameMode);
+        if (selectedMode) {
+            const maxPlayersNum = parseInt(roomData.maxPlayers);
+            if (isNaN(maxPlayersNum) || maxPlayersNum < selectedMode.minPlayers) {
+                setError(`Số người chơi cho ${selectedMode.label} phải ít nhất ${selectedMode.minPlayers} người`);
+                return;
+            }
+            // Chỉ kiểm tra max cho các mode có giới hạn max
+            if (selectedMode.value !== 'BATTLE_ROYAL' && maxPlayersNum > selectedMode.maxPlayers) {
+                setError(`Số người chơi cho ${selectedMode.label} không được vượt quá ${selectedMode.maxPlayers} người`);
+                return;
+            }
+        }
+
         setError('');
 
-        // Simulate API call
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const topicIdNum = parseInt(roomData.topicId);
+            console.log('Room data to send:', {
+                roomName: roomData.name,
+                isPrivate: roomData.isPrivate,
+                maxPlayers: roomData.maxPlayers,
+                countdownTime: roomData.timeLimit,
+                topicId: topicIdNum,
+                roomMode: roomData.gameMode,
+                questionCount: roomData.questionCount
+            });
 
-            // Generate mock room code
-            const mockRoomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            setRoomCode(mockRoomCode);
+            // Use REST API for room creation since WebSocket is not working
+            const result = await createRoom({
+                roomName: roomData.name,
+                isPrivate: roomData.isPrivate,
+                maxPlayers: parseInt(roomData.maxPlayers),
+                countdownTime: roomData.timeLimit,
+                topicId: topicIdNum,
+                roomMode: roomData.gameMode, // Đã match với backend enum
+                questionCount: roomData.questionCount
+            });
 
-            if (onSuccess) {
-                onSuccess({ code: mockRoomCode, ...roomData });
+            if (result.success) {
+                // Lấy roomCode từ nhiều field có thể có
+                const roomCode = result.data?.roomCode ||
+                    result.data?.Code ||
+                    result.data?.code ||
+                    result.data?.room_code ||
+                    (result.data?.room?.roomCode) ||
+                    (result.data?.room?.Code) ||
+                    (result.data?.room?.code);
+                if (!roomCode) {
+                    setError('Tạo phòng thành công nhưng không nhận được mã phòng. Vui lòng thử lại.');
+                    return;
+                }
+
+                // Chuẩn bị dữ liệu phòng để truyền qua navigate state
+                const roomDataForNavigation = {
+                    id: result.data.id || result.data.roomId,
+                    roomCode: roomCode,
+                    code: roomCode,
+                    roomName: result.data.roomName || result.data.name,
+                    isPrivate: result.data.isPrivate,
+                    maxPlayers: result.data.maxPlayers,
+                    currentPlayers: result.data.currentPlayers || 1, // Creator is first player
+                    hostId: result.data.hostId || result.data.ownerId,
+                    status: result.data.status || 'WAITING',
+                    topicId: result.data.topicId,
+                    topicName: result.data.topicName || result.data.topic?.name,
+                    createdAt: result.data.createdAt,
+                    isHost: true, // Creator is always host
+                    autoJoined: true, // Backend auto-joins creator
+                    ...result.data
+                };
+
+                console.log('Room created successfully, navigating with data:', roomDataForNavigation);
+
+                // Người tạo phòng thường đã được backend tự động thêm vào phòng
+                // Chuyển thẳng vào waiting room và truyền data qua state
+                if (onSuccess) {
+                    onSuccess({
+                        message: 'Phòng đã được tạo thành công!',
+                        roomCode: roomCode,
+                        autoJoined: true,
+                        ...roomData
+                    });
+                }
+
+                handleClose(); // Close modal
+
+                // Navigate with room data in state to avoid API call
+                navigate(`/waiting-room/${roomCode}`, {
+                    state: {
+                        room: roomDataForNavigation,
+                        fromCreate: true // Flag to indicate this is from room creation
+                    }
+                });
+                return;
+            } else {
+                console.error('Room creation failed:', result);
+                setError(result.error || 'Có lỗi xảy ra khi tạo phòng');
             }
         } catch (err) {
-            setError('Có lỗi xảy ra khi tạo phòng. Vui lòng thử lại.');
-        } finally {
-            setLoading(false);
+            setError(err.message || 'Có lỗi xảy ra khi tạo phòng. Vui lòng thử lại.');
         }
     };
 
@@ -128,8 +258,8 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                 maxPlayers: 2,
                 timeLimit: 60,
                 questionCount: 10,
-                topic: '',
-                gameMode: '1vs1'
+                topicId: '',
+                gameMode: 'ONE_VS_ONE'
             });
             setError('');
         }
@@ -162,10 +292,10 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                     </button>
                 </div>
 
-                {error && (
+                {(error || storeError || topicsError) && (
                     <div className="crm-error">
                         <FiAlertCircle />
-                        <span>{error}</span>
+                        <span>{error || storeError || topicsError}</span>
                     </div>
                 )}
 
@@ -200,6 +330,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                             <button
                                 className="crm-button crm-primary-btn"
                                 onClick={() => {
+                                    handleClose(); // Close modal first
                                     if (onNavigateToRoom) {
                                         onNavigateToRoom(roomCode);
                                     } else {
@@ -263,28 +394,40 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                             </h3>
 
                             <div className="crm-form-group">
-                                <label htmlFor="topic">
+                                <label htmlFor="topicId">
                                     <FiBookOpen style={{ marginRight: '8px' }} />
                                     Chủ đề câu hỏi
                                 </label>
                                 <div className="crm-select-wrapper">
                                     <select
-                                        id="topic"
-                                        name="topic"
-                                        value={roomData.topic}
+                                        id="topicId"
+                                        name="topicId"
+                                        value={roomData.topicId}
                                         onChange={handleChange}
                                         className="crm-input crm-select"
                                         required
+                                        disabled={loadingTopics}
                                     >
-                                        <option value="" disabled>Chọn chủ đề</option>
+                                        <option value="" disabled>
+                                            {loadingTopics ? 'Đang tải chủ đề...' : 'Chọn chủ đề'}
+                                        </option>
                                         {topics.map((topic) => (
                                             <option key={`topic-${topic.id}`} value={topic.id}>
                                                 {topic.name}
                                             </option>
                                         ))}
                                     </select>
-                                    <FiChevronDown className="crm-select-icon" />
+                                    {loadingTopics ? (
+                                        <FiLoader className="crm-select-icon crm-loading" />
+                                    ) : (
+                                        <FiChevronDown className="crm-select-icon" />
+                                    )}
                                 </div>
+                                {topics.length > 0 && roomData.topicId && (
+                                    <div className="crm-topic-description">
+                                        {getTopicById(roomData.topicId)?.description}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="crm-form-group">
@@ -300,11 +443,19 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                                         onChange={handleChange}
                                         className="crm-input crm-select"
                                     >
-                                        <option value="1vs1">1 vs 1</option>
-                                        <option value="battle">Battle Royale</option>
+                                        {roomModes.map((mode) => (
+                                            <option key={mode.value} value={mode.value}>
+                                                {mode.label}
+                                            </option>
+                                        ))}
                                     </select>
                                     <FiChevronDown className="crm-select-icon" />
                                 </div>
+                                {roomData.gameMode && (
+                                    <div className="crm-input-hint">
+                                        {roomModes.find(m => m.value === roomData.gameMode)?.description}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="crm-form-group">
@@ -316,13 +467,21 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                                     type="number"
                                     id="maxPlayers"
                                     name="maxPlayers"
-                                    min={roomData.gameMode === '1vs1' ? 2 : 3}
-                                    max="20"
-                                    value={roomData.maxPlayers}
+                                    min={roomModes.find(m => m.value === roomData.gameMode)?.minPlayers || 2}
+                                    max={roomData.gameMode === 'BATTLE_ROYAL' ? undefined : (roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers || 20)}
+                                    value={roomData.maxPlayers || ''}
                                     onChange={handleChange}
                                     className="crm-input"
-                                    disabled={roomData.gameMode === '1vs1'}
+                                    disabled={roomData.gameMode === 'ONE_VS_ONE'}
                                 />
+                                <div className="crm-input-hint">
+                                    {roomData.gameMode === 'ONE_VS_ONE'
+                                        ? 'Chế độ 1vs1 luôn có 2 người chơi'
+                                        : roomData.gameMode === 'BATTLE_ROYAL'
+                                            ? 'Tối thiểu 3 người chơi, không giới hạn tối đa'
+                                            : `Từ ${roomModes.find(m => m.value === roomData.gameMode)?.minPlayers} đến ${roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers} người chơi`
+                                    }
+                                </div>
                             </div>
 
                             <div className="crm-form-group">
@@ -336,7 +495,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                                     name="timeLimit"
                                     min="10"
                                     max="300"
-                                    value={roomData.timeLimit}
+                                    value={roomData.timeLimit || ''}
                                     onChange={handleChange}
                                     className="crm-input"
                                 />
@@ -353,7 +512,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                                     name="questionCount"
                                     min="5"
                                     max="50"
-                                    value={roomData.questionCount}
+                                    value={roomData.questionCount || ''}
                                     onChange={handleChange}
                                     className="crm-input"
                                 />
@@ -371,9 +530,9 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                             <button
                                 type="submit"
                                 className="crm-button crm-primary-btn"
-                                disabled={loading}
+                                disabled={isLoading}
                             >
-                                {loading ? (
+                                {isLoading ? (
                                     <>
                                         <div className="crm-loading-spinner"></div>
                                         Đang tạo phòng...

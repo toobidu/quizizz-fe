@@ -143,7 +143,7 @@ function Header() {
 
                         if (diffMinutes > 50) { // If URL is older than 50 minutes (buffer for 1 hour expiry)
                             fetchFreshAvatar();
-                        } 
+                        }
                     } else {
                         // No date param, assume it's valid for now
                         setAvatarUrl(user.avatarURL);
@@ -350,7 +350,7 @@ function Header() {
                 </nav>
             </div>
 
-            {error && (
+            {error && isAuthenticated && !error.includes('Invalid token specified') && (
                 <div className="hd-error-message">
                     {error}
                 </div>

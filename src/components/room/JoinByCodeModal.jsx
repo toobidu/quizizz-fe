@@ -1,16 +1,30 @@
 import { useState } from 'react';
 import { FiAlertCircle, FiHash, FiInfo, FiLogIn, FiX, FiKey, FiArrowRight } from 'react-icons/fi';
 import { useTheme } from '../../contexts/ThemeContext';
+import useRoomStore from '../../stores/useRoomStore';
 import '../../styles/components/room/JoinByCodeModal.css';
 
-const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
+const JoinByCodeModal = ({ isOpen, onClose, onJoin, onSuccess }) => {
     const [roomCode, setRoomCode] = useState('');
     const { theme } = useTheme();
+    const { joinRoomByCode, isLoading, error: storeError } = useRoomStore();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (roomCode.trim()) {
-            onJoin(roomCode.trim().toUpperCase());
+            try {
+                const result = await joinRoomByCode(roomCode.trim().toUpperCase());
+                if (result.success) {
+                    if (onJoin) {
+                        onJoin(roomCode.trim().toUpperCase());
+                    }
+                    if (onSuccess) {
+                        onSuccess(result);
+                    }
+                    handleClose();
+                }
+            } catch (err) {
+            }
         }
     };
 
@@ -93,7 +107,7 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                                 placeholder="ABC12345"
                                 maxLength={8}
                                 autoFocus
-                                disabled={loading}
+                                disabled={isLoading}
                                 className="jbc-input"
                             />
                             <div className="jbc-code-icon">
@@ -110,10 +124,10 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                         </div>
                     </div>
 
-                    {error && (
+                    {storeError && (
                         <div className="jbc-error">
                             <FiAlertCircle />
-                            <span>{error}</span>
+                            <span>{storeError}</span>
                         </div>
                     )}
 
@@ -122,16 +136,16 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, loading, error }) => {
                             type="button"
                             className="jbc-button jbc-secondary-btn"
                             onClick={handleClose}
-                            disabled={loading}
+                            disabled={isLoading}
                         >
                             Hủy
                         </button>
                         <button
                             type="submit"
                             className="jbc-button jbc-primary-btn"
-                            disabled={!roomCode.trim() || loading}
+                            disabled={!roomCode.trim() || isLoading}
                         >
-                            {loading ? (
+                            {isLoading ? (
                                 <>
                                     <div className="jbc-loading-spinner"></div>
                                     Đang tham gia...

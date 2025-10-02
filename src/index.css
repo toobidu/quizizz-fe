@@ -1,3 +1,6 @@
+/* Import responsive utilities */
+@import './styles/responsive.css';
+
 :root {
   /* Base colors */
   --primary: #4f46e5;
@@ -103,6 +106,3 @@
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   /* Bóng đậm hơn cho dark mode */
 }
-
-/* Import responsive utilities */
-@import './styles/responsive.css';

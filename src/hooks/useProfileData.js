@@ -24,7 +24,6 @@ export const useProfileData = () => {
                 if (isOwnProfile) {
                     response = await profileApi.getMyProfile();
                 } else {
-                    // TODO: Implement search user functionality
                     throw new Error('Chức năng xem hồ sơ người khác chưa được implement');
                 }
 
