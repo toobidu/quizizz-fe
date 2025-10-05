@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useWebSocketCleanup from '../../hooks/useWebSocketCleanup';
-import websocketService from '../../services/websocketService';
+import socketService from '../../services/socketService';
 import authStore from '../../stores/authStore';
 import { toast } from 'react-toastify';
 import '../../styles/components/room/GameRoom.css';
@@ -44,54 +44,52 @@ const GameRoom = () => {
                 throw new Error('No authentication token found');
             }
 
-            await websocketService.connect(token);
+            await socketService.connect(token);
             setIsConnected(true);
 
             // Subscribe to game events
             setupGameSubscriptions();
 
-            // Request current game state
-            websocketService.send(`/app/game/${roomCode}/state`, {});
+            // Request current game state via Socket.IO
+            socketService.emit('getGameState', { roomCode });
 
         } catch (error) {
-            console.error('Failed to initialize WebSocket:', error);
             toast.error('Không thể kết nối đến game. Vui lòng thử lại!');
             navigate('/dashboard');
         }
     };
 
     const setupGameSubscriptions = () => {
-        // Game state updates
-        websocketService.subscribe(`/topic/game/${roomCode}`, (message) => {
-            handleGameMessage(message);
+        // Game events using Socket.IO
+        socketService.on('game-started', (data) => {
+            handleGameMessage({ type: 'GAME_STARTED', data });
         });
 
-        // Personal messages
-        websocketService.subscribe(`/user/queue/game/${roomCode}/result`, (message) => {
-            handlePersonalMessage(message);
+        socketService.on('next-question', (data) => {
+            handleGameMessage({ type: 'NEXT_QUESTION', data });
         });
 
-        // Game state updates
-        websocketService.subscribe(`/topic/game/${roomCode}/state`, (message) => {
-            if (message.type === 'GAME_STATE_UPDATE') {
-                setGameState(message.data);
-            }
+        socketService.on('question-result', (data) => {
+            handlePersonalMessage({ type: 'QUESTION_RESULT', data });
         });
 
-        // Real-time updates
-        websocketService.subscribe(`/topic/game/${roomCode}/update`, (message) => {
-            if (message.type === 'GAME_UPDATE') {
-                setGameState(message.data);
-                if (message.data.timeRemaining !== undefined) {
-                    setTimeRemaining(message.data.timeRemaining);
-                }
+        socketService.on('game-ended', (data) => {
+            handleGameMessage({ type: 'GAME_ENDED', data });
+        });
+
+        socketService.on('game-state', (data) => {
+            setGameState(data);
+        });
+
+        socketService.on('game-update', (data) => {
+            setGameState(data);
+            if (data.timeRemaining !== undefined) {
+                setTimeRemaining(data.timeRemaining);
             }
         });
     };
 
     const handleGameMessage = (message) => {
-        console.log('Game message received:', message);
-
         switch (message.type) {
             case 'GAME_STARTED':
                 setGameState(message.data);
@@ -119,8 +117,7 @@ const GameRoom = () => {
                 break;
 
             default:
-                console.log('Unknown game message type:', message.type);
-        }
+                }
     };
 
     const handlePersonalMessage = (message) => {
@@ -165,7 +162,7 @@ const GameRoom = () => {
             answerText: selectedAnswer
         };
 
-        websocketService.send(`/app/game/${roomCode}/answer`, answerData);
+        socketService.emit('submitAnswer', { roomCode, ...answerData });
         setHasAnswered(true);
 
         if (timerRef.current) {
@@ -174,7 +171,7 @@ const GameRoom = () => {
     };
 
     const startGame = () => {
-        websocketService.send(`/app/game/${roomCode}/start`, {});
+        socketService.emit('startGame', { roomCode });
     };
 
     const formatTime = (seconds) => {

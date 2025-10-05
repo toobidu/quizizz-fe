@@ -2,8 +2,6 @@
 export const mapRoomFromBackend = (backendRoom) => {
     if (!backendRoom) return null;
 
-    console.log('roomUtils - Mapping backend room:', backendRoom);
-
     return {
         // Primary identifiers
         id: backendRoom.id,
@@ -63,8 +61,6 @@ export const mapRoomsFromBackend = (backendRooms) => {
 };
 
 export const mapCreateRoomRequest = (frontendData) => {
-    console.log('roomUtils - Mapping create room request:', frontendData);
-
     return {
         roomName: frontendData.roomName,
         roomMode: frontendData.roomMode || frontendData.gameMode,

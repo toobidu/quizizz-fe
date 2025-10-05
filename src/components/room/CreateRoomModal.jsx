@@ -162,16 +162,6 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
 
         try {
             const topicIdNum = parseInt(roomData.topicId);
-            console.log('Room data to send:', {
-                roomName: roomData.name,
-                isPrivate: roomData.isPrivate,
-                maxPlayers: roomData.maxPlayers,
-                countdownTime: roomData.timeLimit,
-                topicId: topicIdNum,
-                roomMode: roomData.gameMode,
-                questionCount: roomData.questionCount
-            });
-
             // Use REST API for room creation since WebSocket is not working
             const result = await createRoom({
                 roomName: roomData.name,
@@ -216,8 +206,6 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                     ...result.data
                 };
 
-                console.log('Room created successfully, navigating with data:', roomDataForNavigation);
-
                 // Người tạo phòng thường đã được backend tự động thêm vào phòng
                 // Chuyển thẳng vào waiting room và truyền data qua state
                 if (onSuccess) {
@@ -240,7 +228,6 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                 });
                 return;
             } else {
-                console.error('Room creation failed:', result);
                 setError(result.error || 'Có lỗi xảy ra khi tạo phòng');
             }
         } catch (err) {

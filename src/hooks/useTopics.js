@@ -27,14 +27,10 @@ export const useTopics = () => {
             if (result.success) {
                 setTopics(result.data);
             } else {
-                console.warn('Cannot load topics from API, using mock data');
                 setTopics(mockTopics);
-                // Don't set error for mock data, just log warning
             }
         } catch (err) {
-            console.warn('Cannot load topics from API, using mock data');
             setTopics(mockTopics);
-            // Don't set error for mock data, just log warning
         } finally {
             setLoading(false);
         }

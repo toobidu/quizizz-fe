@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import useRoomStore from '../stores/useRoomStore';
-import webSocketManager from '../utils/webSocketManager';
+import socketManager from '../utils/socketManager';
 
 /**
- * Hook để quản lý WebSocket lifecycle
+ * Hook để quản lý Socket.IO lifecycle
  * Tự động cleanup khi component unmount
  */
 export const useWebSocketCleanup = () => {
@@ -18,8 +18,8 @@ export const useWebSocketCleanup = () => {
 
     // Return utility functions
     return {
-        reconnect: () => webSocketManager.reconnect(),
-        isConnected: () => webSocketManager.isConnected(),
+        reconnect: () => socketManager.reconnect(),
+        isConnected: () => socketManager.isConnected(),
         disconnect: () => cleanup()
     };
 };

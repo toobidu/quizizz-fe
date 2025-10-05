@@ -1,8 +1,14 @@
 import { create } from 'zustand';
 import roomApi from '../services/roomApi';
-import websocketService from '../services/websocketService';
-import webSocketManager from '../utils/webSocketManager';
+import socketService from '../services/socketService';
+import socketManager from '../utils/socketManager';
 
+/**
+ * Room Store with Socket.IO Real-time Updates
+ * Standardized to match Kahoot/Quizizz architecture
+ * 
+ * NO MORE STOMP - Pure Socket.IO!
+ */
 const useRoomStore = create((set, get) => ({
     // Room state
     currentRoom: null,
@@ -25,7 +31,7 @@ const useRoomStore = create((set, get) => ({
     clearCurrentRoom: () => {
         const state = get();
         if (state.currentRoom) {
-            websocketService.leaveRoom(state.currentRoom.id);
+            socketService.leaveRoom(state.currentRoom.id);
         }
         set({
             currentRoom: null,
@@ -73,18 +79,26 @@ const useRoomStore = create((set, get) => ({
         }, 3000);
     },
 
-    // Real-time room list subscription
+    // ========== SOCKET.IO REAL-TIME SUBSCRIPTIONS ==========
+
+    /**
+     * Subscribe to room list updates (for dashboard)
+     */
     subscribeToRoomList: async () => {
         try {
             const state = get();
-            if (state.isSubscribedToRoomList) return;
+            if (state.isSubscribedToRoomList) {
+                console.log('📋 Already subscribed to room list');
+                return;
+            }
 
-            await webSocketManager.initialize();
+            console.log('📋 Subscribing to room list updates...');
+            await socketManager.initialize();
 
-            // Subscribe to room list updates
-            websocketService.subscribe('/topic/rooms', (message) => {
-                console.log('Room list update received:', message);
-
+            // Subscribe to room list updates using Socket.IO
+            socketService.subscribeToRoomList((message) => {
+                console.log('📋 Room list update:', message.type);
+                
                 if (message.type === 'CREATE_ROOM') {
                     const { room } = message.data;
                     set(state => {
@@ -117,41 +131,35 @@ const useRoomStore = create((set, get) => ({
                 }
             });
 
-            // Subscribe to personal room notifications
-            websocketService.subscribe('/user/queue/notifications', (message) => {
-                console.log('Personal notification:', message);
-                if (message.type === 'CREATE_ROOM_ERROR') {
-                    set({ error: message.data });
-                }
-            });
-
-            // Request initial room list
-            websocketService.send('/app/rooms/subscribe', {});
-
             set({ isSubscribedToRoomList: true });
-            console.log('Subscribed to room list updates');
-
+            console.log('✅ Subscribed to room list updates');
         } catch (error) {
-            console.error('Failed to subscribe to room list:', error);
+            console.error('❌ Failed to subscribe to room list:', error);
             set({ error: 'Không thể kết nối real-time updates' });
         }
     },
 
+    /**
+     * Unsubscribe from room list updates
+     */
     unsubscribeFromRoomList: () => {
-        websocketService.unsubscribe('/topic/rooms');
-        websocketService.unsubscribe('/user/queue/notifications');
+        console.log('📋 Unsubscribing from room list updates');
+        socketService.unsubscribeFromRoomList();
         set({ isSubscribedToRoomList: false });
     },
 
-    // WebSocket connection management for specific room
+    /**
+     * Connect to a specific room and subscribe to its events
+     */
     connectToRoom: async (roomId) => {
         try {
-            await webSocketManager.initialize();
+            console.log('🔌 Connecting to room:', roomId);
+            await socketManager.initialize();
 
-            // Subscribe to room-specific events
-            websocketService.subscribe(`/topic/room/${roomId}`, (message) => {
-                console.log('Room event received:', message);
-
+            // Subscribe to room-specific events using Socket.IO
+            socketService.subscribeToRoom(roomId, (message) => {
+                console.log('📡 Room event:', message.type);
+                
                 if (message.type === 'JOIN_ROOM') {
                     const { userId, username } = message.data;
                     set(state => {
@@ -174,10 +182,12 @@ const useRoomStore = create((set, get) => ({
                     set({ currentRoom: roomData });
                 } else if (message.type === 'GAME_STARTED') {
                     // Handle game start
-                    console.log('Game started:', message.data);
+                    console.log('🎮 Game started!');
                 } else if (message.type === 'PLAYER_KICKED') {
                     const { playerId, reason } = message.data;
-                    if (playerId === websocketService.getCurrentUserId()) {
+                    const currentUserId = socketManager.getCurrentUserId();
+                    
+                    if (playerId === currentUserId) {
                         get().clearCurrentRoom();
                         set({ error: reason || 'Bạn đã bị đuổi khỏi phòng' });
                     } else {
@@ -197,22 +207,39 @@ const useRoomStore = create((set, get) => ({
                 }
             });
 
-            // Send subscription message for this specific room
-            websocketService.send(`/app/room/${roomId}/subscribe`, {});
-
-            set({ isConnectedToRoom: true });
-            console.log(`Connected to room ${roomId}`);
-
+            // Join the room via Socket.IO
+            socketService.joinRoom(roomId, (response) => {
+                if (response?.success) {
+                    set({ isConnectedToRoom: true });
+                    console.log('✅ Connected to room:', roomId);
+                } else {
+                    console.error('❌ Failed to connect to room:', response?.error);
+                    set({ error: 'Không thể kết nối đến phòng' });
+                }
+            });
         } catch (error) {
-            console.error('Failed to connect to room:', error);
+            console.error('❌ Failed to connect to room:', error);
             set({ error: 'Không thể kết nối đến phòng' });
         }
     },
 
-    // Rest of the existing methods remain the same...
-    // (keeping all the existing API methods like createRoom, joinRoom, etc.)
+    /**
+     * Disconnect from current room
+     */
+    disconnectFromRoom: (roomId) => {
+        if (!roomId) return;
+        
+        console.log('🔌 Disconnecting from room:', roomId);
+        socketService.unsubscribeFromRoom(roomId);
+        socketService.leaveRoom(roomId);
+        set({ isConnectedToRoom: false });
+    },
 
-    // API integrated actions
+    // ========== API INTEGRATED ACTIONS ==========
+
+    /**
+     * Create a new room
+     */
     createRoom: async (roomData) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -222,7 +249,7 @@ const useRoomStore = create((set, get) => ({
             if (response.success) {
                 const newRoom = response.data;
 
-                // Don't add to local state immediately - wait for WebSocket event
+                // Don't add to local state immediately - wait for Socket.IO event
                 // This prevents duplicate entries
                 set({
                     currentRoom: newRoom,
@@ -245,6 +272,9 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Join room by code
+     */
     joinRoomByCode: async (roomCode) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -258,7 +288,14 @@ const useRoomStore = create((set, get) => ({
                 // Connect to the joined room
                 await get().connectToRoom(room.id);
 
-                return { success: true, room, data: { Code: room.code || room.roomCode, message: 'Tham gia phòng thành công' } };
+                return { 
+                    success: true, 
+                    room, 
+                    data: { 
+                        Code: room.code || room.roomCode, 
+                        message: 'Tham gia phòng thành công' 
+                    } 
+                };
             } else {
                 set({ error: response.error, isLoading: false, loading: false });
                 return { success: false, error: response.error };
@@ -270,6 +307,9 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Join room directly by ID
+     */
     joinRoomDirect: async (roomId) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -295,19 +335,28 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // Alias for backward compatibility
-    joinRoom: async (roomCode, isPublic = true) => {
+    /**
+     * Alias for backward compatibility
+     */
+    joinRoom: async (roomCode) => {
         return await get().joinRoomByCode(roomCode);
     },
 
+    /**
+     * Leave current room
+     */
     leaveRoom: async () => {
         const state = get();
-        if (!state.currentRoom) return { success: false, error: 'Không có phòng để rời' };
+        if (!state.currentRoom) {
+            return { success: false, error: 'Không có phòng để rời' };
+        }
 
         try {
-            const response = await roomApi.leaveRoom(state.currentRoom.id);
+            const roomId = state.currentRoom.id;
+            const response = await roomApi.leaveRoom(roomId);
 
             if (response.success) {
+                get().disconnectFromRoom(roomId);
                 get().clearCurrentRoom();
                 return { success: true };
             } else {
@@ -321,10 +370,9 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    loadRooms: async (params = {}) => {
-        return await get().fetchRooms(params);
-    },
-
+    /**
+     * Fetch all public rooms
+     */
     fetchRooms: async (params = {}) => {
         const state = get();
         if (state.isLoading) {
@@ -357,13 +405,87 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // ... rest of existing methods (fetchMyRooms, kickPlayer, etc.)
+    /**
+     * Alias for backward compatibility
+     */
+    loadRooms: async (params = {}) => {
+        return await get().fetchRooms(params);
+    },
 
-    // Auto refresh functionality (for backward compatibility)
+    /**
+     * Fetch user's own rooms
+     */
+    fetchMyRooms: async () => {
+        set({ isLoading: true, loading: true, error: null });
+
+        try {
+            const response = await roomApi.getMyRooms();
+
+            if (response.success) {
+                const myRoomsData = response.data || [];
+                set({ myRooms: myRoomsData, isLoading: false, loading: false });
+                return { success: true, rooms: myRoomsData };
+            } else {
+                set({ error: response.error, isLoading: false, loading: false });
+                return { success: false, error: response.error };
+            }
+        } catch (error) {
+            const errorMessage = error.message || 'Không thể tải phòng của bạn';
+            set({ error: errorMessage, isLoading: false, loading: false });
+            return { success: false, error: errorMessage };
+        }
+    },
+
+    /**
+     * Kick a player from room
+     */
+    kickPlayer: async (playerId) => {
+        const state = get();
+        if (!state.currentRoom) {
+            return { success: false, error: 'Không có phòng hiện tại' };
+        }
+
+        try {
+            const response = await roomApi.kickPlayer(state.currentRoom.id, playerId);
+            return response;
+        } catch (error) {
+            const errorMessage = error.message || 'Không thể đuổi người chơi';
+            return { success: false, error: errorMessage };
+        }
+    },
+
+    /**
+     * Delete a room
+     */
+    deleteRoom: async (roomId) => {
+        try {
+            const response = await roomApi.deleteRoom(roomId);
+            
+            if (response.success) {
+                // Remove from local state
+                set(state => ({
+                    rooms: state.rooms.filter(room => room.id !== roomId),
+                    myRooms: state.myRooms.filter(room => room.id !== roomId),
+                    currentRoom: state.currentRoom?.id === roomId ? null : state.currentRoom
+                }));
+            }
+            
+            return response;
+        } catch (error) {
+            const errorMessage = error.message || 'Không thể xóa phòng';
+            return { success: false, error: errorMessage };
+        }
+    },
+
+    // ========== AUTO REFRESH & CLEANUP ==========
+
     autoRefreshInterval: null,
 
+    /**
+     * Start auto-refresh (fallback for when Socket.IO fails)
+     */
     startAutoRefresh: () => {
-        // With real-time updates, polling is less necessary
+        // With Socket.IO, polling is less necessary
         // But keep for fallback
         const interval = setInterval(() => {
             if (!get().isSubscribedToRoomList) {
@@ -374,6 +496,9 @@ const useRoomStore = create((set, get) => ({
         set({ autoRefreshInterval: interval });
     },
 
+    /**
+     * Stop auto-refresh
+     */
     stopAutoRefresh: () => {
         const { autoRefreshInterval } = get();
         if (autoRefreshInterval) {
@@ -382,14 +507,29 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // Cleanup method for disconnecting WebSocket
+    /**
+     * Cleanup method for disconnecting Socket.IO
+     */
     cleanup: () => {
-        get().unsubscribeFromRoomList();
-        webSocketManager.disconnect();
-        const { autoRefreshInterval } = get();
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
+        console.log('🧹 Cleaning up room store...');
+        
+        const state = get();
+        
+        // Disconnect from current room
+        if (state.currentRoom) {
+            get().disconnectFromRoom(state.currentRoom.id);
         }
+        
+        // Unsubscribe from room list
+        get().unsubscribeFromRoomList();
+        
+        // Stop auto-refresh
+        get().stopAutoRefresh();
+        
+        // Disconnect Socket.IO
+        socketManager.disconnect();
+        
+        // Reset state
         set({
             isConnectedToRoom: false,
             isSubscribedToRoomList: false,
@@ -399,6 +539,8 @@ const useRoomStore = create((set, get) => ({
             animatingRooms: new Set(),
             newRoomIds: new Set()
         });
+        
+        console.log('✅ Room store cleanup complete');
     }
 }));
 

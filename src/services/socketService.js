@@ -3,7 +3,9 @@ import Cookies from 'js-cookie';
 
 /**
  * Socket.IO Service for Real-time Game Communication
- * Similar to Kahoot/Quizizz architecture
+ * Standardized for Kahoot/Quizizz-like architecture
+ * 
+ * This is the ONLY WebSocket service - no more STOMP/SockJS confusion!
  */
 class SocketService {
     constructor() {
@@ -12,32 +14,38 @@ class SocketService {
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.listeners = new Map();
+        this.rooms = new Set(); // Track joined rooms
     }
 
     /**
      * Connect to Socket.IO server
+     * @param {string} token - JWT token for authentication (optional if in cookie)
      * @returns {Promise<void>}
      */
-    connect() {
+    connect(token = null) {
         return new Promise((resolve, reject) => {
             if (this.connected && this.socket) {
-                console.log('✅ Already connected to Socket.IO');
+                console.log('✅ Socket.IO already connected');
                 return resolve();
             }
 
-            const token = Cookies.get('accessToken');
-            if (!token) {
+            // Get token from parameter or cookie
+            const authToken = token || Cookies.get('accessToken');
+            if (!authToken) {
+                console.error('❌ No authentication token found');
                 return reject(new Error('No authentication token found'));
             }
+
+            console.log('🔌 Connecting to Socket.IO server...');
 
             // Socket.IO configuration
             this.socket = io('http://localhost:9092', {
                 transports: ['websocket', 'polling'],
                 auth: {
-                    token: token
+                    token: authToken
                 },
                 query: {
-                    token: token
+                    token: authToken
                 },
                 reconnection: true,
                 reconnectionAttempts: this.maxReconnectAttempts,
@@ -46,17 +54,18 @@ class SocketService {
                 timeout: 20000,
             });
 
-            // Connection event handlers
+            // Connection successful
             this.socket.on('connect', () => {
-                console.log('✅ Socket.IO connected:', this.socket.id);
                 this.connected = true;
                 this.reconnectAttempts = 0;
+                console.log('✅ Socket.IO connected:', this.socket.id);
                 resolve();
             });
 
+            // Disconnection
             this.socket.on('disconnect', (reason) => {
-                console.log('❌ Socket.IO disconnected:', reason);
                 this.connected = false;
+                console.log('⚠️ Socket.IO disconnected:', reason);
 
                 if (reason === 'io server disconnect') {
                     // Server disconnected, manual reconnect needed
@@ -64,32 +73,36 @@ class SocketService {
                 }
             });
 
+            // Connection error
             this.socket.on('connect_error', (error) => {
-                console.error('🚨 Socket.IO connection error:', error.message);
                 this.reconnectAttempts++;
+                console.error(`❌ Socket.IO connection error (attempt ${this.reconnectAttempts}):`, error.message);
 
                 if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                     reject(new Error('Failed to connect after maximum attempts'));
                 }
             });
 
+            // Generic error
             this.socket.on('error', (error) => {
-                console.error('🚨 Socket.IO error:', error);
+                console.error('❌ Socket.IO error:', error);
             });
 
             // Auto-reconnect successful
             this.socket.on('reconnect', (attemptNumber) => {
-                console.log('🔄 Socket.IO reconnected after', attemptNumber, 'attempts');
                 this.connected = true;
                 this.reconnectAttempts = 0;
+                console.log('✅ Socket.IO reconnected after', attemptNumber, 'attempts');
             });
 
+            // Reconnect attempt
             this.socket.on('reconnect_attempt', (attemptNumber) => {
-                console.log('🔄 Attempting to reconnect...', attemptNumber);
+                console.log('🔄 Socket.IO reconnect attempt', attemptNumber);
             });
 
+            // Reconnect failed
             this.socket.on('reconnect_failed', () => {
-                console.error('🚨 Socket.IO reconnection failed');
+                console.error('❌ Socket.IO reconnection failed');
                 reject(new Error('Reconnection failed'));
             });
         });
@@ -100,12 +113,21 @@ class SocketService {
      */
     disconnect() {
         if (this.socket) {
+            console.log('👋 Disconnecting Socket.IO...');
+            
+            // Leave all rooms before disconnect
+            this.rooms.forEach(room => {
+                this.leaveRoom(room);
+            });
+            
             this.socket.removeAllListeners();
             this.socket.disconnect();
             this.socket = null;
             this.connected = false;
             this.listeners.clear();
-            console.log('🔌 Socket.IO disconnected');
+            this.rooms.clear();
+            
+            console.log('✅ Socket.IO disconnected');
         }
     }
 
@@ -117,7 +139,7 @@ class SocketService {
      */
     emit(event, data, callback) {
         if (!this.socket || !this.connected) {
-            console.warn('⚠️ Socket not connected, cannot emit:', event);
+            console.warn('⚠️ Cannot emit, Socket.IO not connected');
             return;
         }
 
@@ -126,8 +148,6 @@ class SocketService {
         } else {
             this.socket.emit(event, data);
         }
-
-        console.log('📤 Emitted:', event, data);
     }
 
     /**
@@ -137,12 +157,11 @@ class SocketService {
      */
     on(event, callback) {
         if (!this.socket) {
-            console.warn('⚠️ Socket not initialized, cannot listen to:', event);
+            console.warn('⚠️ Cannot listen, Socket.IO not initialized');
             return;
         }
 
         this.socket.on(event, (data) => {
-            console.log('📥 Received:', event, data);
             callback(data);
         });
 
@@ -156,7 +175,7 @@ class SocketService {
     /**
      * Remove listener for an event
      * @param {string} event - Event name
-     * @param {Function} callback - Callback function to remove
+     * @param {Function} callback - Callback function to remove (optional)
      */
     off(event, callback) {
         if (!this.socket) return;
@@ -188,14 +207,169 @@ class SocketService {
      */
     once(event, callback) {
         if (!this.socket) {
-            console.warn('⚠️ Socket not initialized');
+            console.warn('⚠️ Cannot listen, Socket.IO not initialized');
             return;
         }
 
         this.socket.once(event, (data) => {
-            console.log('📥 Received (once):', event, data);
             callback(data);
         });
+    }
+
+    /**
+     * Join a room
+     * @param {string|number} roomId - Room ID to join
+     * @param {Function} callback - Optional acknowledgment callback
+     */
+    joinRoom(roomId, callback) {
+        if (!this.socket || !this.connected) {
+            console.warn('⚠️ Cannot join room, Socket.IO not connected');
+            return;
+        }
+
+        console.log('🚪 Joining room:', roomId);
+        this.rooms.add(roomId);
+        
+        this.emit('joinRoom', { roomId }, (response) => {
+            if (response?.success) {
+                console.log('✅ Joined room:', roomId);
+            } else {
+                console.error('❌ Failed to join room:', response?.error);
+            }
+            callback?.(response);
+        });
+    }
+
+    /**
+     * Leave a room
+     * @param {string|number} roomId - Room ID to leave
+     * @param {Function} callback - Optional acknowledgment callback
+     */
+    leaveRoom(roomId, callback) {
+        if (!this.socket || !this.connected) {
+            console.warn('⚠️ Cannot leave room, Socket.IO not connected');
+            return;
+        }
+
+        console.log('🚪 Leaving room:', roomId);
+        this.rooms.delete(roomId);
+        
+        this.emit('leaveRoom', { roomId }, (response) => {
+            if (response?.success) {
+                console.log('✅ Left room:', roomId);
+            } else {
+                console.error('❌ Failed to leave room:', response?.error);
+            }
+            callback?.(response);
+        });
+    }
+
+    /**
+     * Subscribe to room list updates (for dashboard)
+     */
+    subscribeToRoomList(callback) {
+        console.log('📋 Subscribing to room list updates');
+        this.on('roomCreated', (data) => {
+            callback({ type: 'CREATE_ROOM', data });
+        });
+        
+        this.on('roomDeleted', (data) => {
+            callback({ type: 'ROOM_DELETED', data });
+        });
+        
+        this.on('roomUpdated', (data) => {
+            callback({ type: 'ROOM_UPDATED', data });
+        });
+    }
+
+    /**
+     * Unsubscribe from room list updates
+     */
+    unsubscribeFromRoomList() {
+        console.log('📋 Unsubscribing from room list updates');
+        this.off('roomCreated');
+        this.off('roomDeleted');
+        this.off('roomUpdated');
+    }
+
+    /**
+     * Subscribe to room-specific events
+     * Match backend event names: player-joined, player-left, game-started, etc.
+     * @param {string|number} roomId - Room ID
+     * @param {Function} callback - Callback for room events
+     */
+    subscribeToRoom(roomId, callback) {
+        console.log('📡 Subscribing to room events:', roomId);
+        
+        // Room-specific events matching backend
+        this.on('player-joined', (data) => {
+            // Only handle events for this room
+            if (data.room?.id === roomId || data.roomId === roomId) {
+                callback({ type: 'JOIN_ROOM', data });
+            }
+        });
+        
+        this.on('player-left', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'LEAVE_ROOM', data });
+            }
+        });
+        
+        this.on('game-started', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'GAME_STARTED', data });
+            }
+        });
+        
+        this.on('player-kicked', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'PLAYER_KICKED', data });
+            }
+        });
+        
+        this.on('question-started', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'QUESTION_STARTED', data });
+            }
+        });
+        
+        this.on('answer-submitted', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'ANSWER_SUBMITTED', data });
+            }
+        });
+        
+        this.on('next-question', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'QUESTION_ENDED', data });
+            }
+        });
+        
+        this.on('game-ended', (data) => {
+            if (data.roomId === roomId) {
+                callback({ type: 'GAME_ENDED', data });
+            }
+        });
+        
+        // Store room ID for cleanup
+        this._subscribedRoomId = roomId;
+    }
+
+    /**
+     * Unsubscribe from room-specific events
+     * @param {string|number} roomId - Room ID
+     */
+    unsubscribeFromRoom(roomId) {
+        console.log('📡 Unsubscribing from room events:', roomId);
+        this.off('player-joined');
+        this.off('player-left');
+        this.off('game-started');
+        this.off('player-kicked');
+        this.off('question-started');
+        this.off('answer-submitted');
+        this.off('next-question');
+        this.off('game-ended');
+        this._subscribedRoomId = null;
     }
 
     /**
@@ -214,158 +388,16 @@ class SocketService {
         return this.socket?.id || null;
     }
 
-    // ==================== ROOM EVENTS ====================
-
     /**
-     * Join a room
-     * @param {string} roomCode - Room code to join
-     * @param {Function} callback - Callback with response
+     * Get list of joined rooms
+     * @returns {Set}
      */
-    joinRoom(roomCode, callback) {
-        this.emit('join-room', { roomCode }, callback);
-    }
-
-    /**
-     * Leave a room
-     * @param {number} roomId - Room ID to leave
-     */
-    leaveRoom(roomId) {
-        this.emit('leave-room', { roomId });
-    }
-
-    /**
-     * Kick a player from room (host only)
-     * @param {number} roomId - Room ID
-     * @param {number} playerId - Player ID to kick
-     * @param {string} reason - Kick reason
-     */
-    kickPlayer(roomId, playerId, reason) {
-        this.emit('kick-player', { roomId, playerId, reason });
-    }
-
-    /**
-     * Start game (host only)
-     * @param {number} roomId - Room ID
-     */
-    startGame(roomId) {
-        this.emit('start-game', { roomId });
-    }
-
-    /**
-     * Get room players
-     * @param {number} roomId - Room ID
-     */
-    getPlayers(roomId) {
-        this.emit('get-players', { roomId });
-    }
-
-    // ==================== GAME EVENTS ====================
-
-    /**
-     * Submit answer for current question
-     * @param {number} roomId - Room ID
-     * @param {number} questionId - Question ID
-     * @param {number} answerId - Selected answer ID
-     * @param {number} timeTaken - Time taken in milliseconds
-     */
-    submitAnswer(roomId, questionId, answerId, timeTaken) {
-        this.emit('submit-answer', {
-            roomId,
-            questionId,
-            answerId,
-            timeTaken
-        });
-    }
-
-    /**
-     * Request next question (host only)
-     * @param {number} roomId - Room ID
-     */
-    nextQuestion(roomId) {
-        this.emit('next-question', { roomId });
-    }
-
-    // ==================== EVENT LISTENERS ====================
-
-    /**
-     * Listen to player joined event
-     * @param {Function} callback - Callback with player data
-     */
-    onPlayerJoined(callback) {
-        this.on('player-joined', callback);
-    }
-
-    /**
-     * Listen to player left event
-     * @param {Function} callback - Callback with player data
-     */
-    onPlayerLeft(callback) {
-        this.on('player-left', callback);
-    }
-
-    /**
-     * Listen to player kicked event
-     * @param {Function} callback - Callback with kick data
-     */
-    onPlayerKicked(callback) {
-        this.on('player-kicked', callback);
-    }
-
-    /**
-     * Listen to game started event
-     * @param {Function} callback - Callback with game data
-     */
-    onGameStarted(callback) {
-        this.on('game-started', callback);
-    }
-
-    /**
-     * Listen to answer submitted event
-     * @param {Function} callback - Callback with answer result
-     */
-    onAnswerSubmitted(callback) {
-        this.on('answer-submitted', callback);
-    }
-
-    /**
-     * Listen to next question event
-     * @param {Function} callback - Callback with question data
-     */
-    onNextQuestion(callback) {
-        this.on('next-question', callback);
-    }
-
-    /**
-     * Listen to game finished event
-     * @param {Function} callback - Callback with final results
-     */
-    onGameFinished(callback) {
-        this.on('game-finished', callback);
-    }
-
-    /**
-     * Listen to room players update
-     * @param {Function} callback - Callback with players list
-     */
-    onRoomPlayers(callback) {
-        this.on('room-players', callback);
-    }
-
-    /**
-     * Listen to errors
-     * @param {Function} callback - Callback with error message
-     */
-    onError(callback) {
-        this.on('error', callback);
-        this.on('join-room-error', callback);
-        this.on('leave-room-error', callback);
-        this.on('kick-player-error', callback);
-        this.on('start-game-error', callback);
-        this.on('submit-answer-error', callback);
-        this.on('next-question-error', callback);
+    getJoinedRooms() {
+        return new Set(this.rooms);
     }
 }
 
-// Export singleton instance
+// Singleton instance
 const socketService = new SocketService();
+
 export default socketService;

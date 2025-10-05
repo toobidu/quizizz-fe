@@ -26,24 +26,15 @@ const roomApi = {
      */
     createRoom: async (roomData) => {
         try {
-            console.log('roomApi.createRoom - Original data:', roomData);
             const mappedData = mapCreateRoomRequest(roomData);
-            console.log('roomApi.createRoom - Mapped data for backend:', mappedData);
-
             const response = await apiInstance.post('/rooms', mappedData);
-            console.log('roomApi.createRoom - Raw backend response:', response.data);
-
             const mappedRoom = mapRoomFromBackend(response.data.data);
-            console.log('roomApi.createRoom - Mapped room for frontend:', mappedRoom);
-
             return {
                 success: true,
                 data: mappedRoom,
                 message: response.data.message
             };
         } catch (error) {
-            console.error('roomApi.createRoom - Error:', error);
-            console.error('roomApi.createRoom - Error response:', error.response?.data);
             return {
                 success: false,
                 error: error.response?.data?.message || 'Có lỗi xảy ra khi tạo phòng'
@@ -76,14 +67,9 @@ const roomApi = {
      */
     getRoomByCode: async (roomCode) => {
         try {
-            console.log('roomApi.getRoomByCode - Requesting:', roomCode);
             const response = await apiInstance.get(`/rooms/code/${roomCode}`);
-            console.log('roomApi.getRoomByCode - Raw response:', response.data);
-
             if (response.data.success !== false) {
                 const mappedRoom = mapRoomFromBackend(response.data.data);
-                console.log('roomApi.getRoomByCode - Mapped room:', mappedRoom);
-
                 return {
                     success: true,
                     data: mappedRoom
@@ -95,7 +81,6 @@ const roomApi = {
                 };
             }
         } catch (error) {
-            console.error('roomApi.getRoomByCode - Error:', error);
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không tìm thấy phòng với mã này'
@@ -109,35 +94,12 @@ const roomApi = {
      */
     joinRoomByCode: async (roomCode) => {
         try {
-            console.log('roomApi.joinRoomByCode - Joining room:', roomCode);
             const response = await apiInstance.post('/rooms/join', {
                 roomCode: roomCode
             });
-            console.log('roomApi.joinRoomByCode - Raw response:', response.data);
-
             if (response.data.success !== false) {
                 const mappedRoom = mapRoomFromBackend(response.data.data);
-                console.log('roomApi.joinRoomByCode - Mapped room:', mappedRoom);
-
-                // Try to notify via WebSocket for real-time updates
-                try {
-                    const { default: websocketService } = await import('./websocketService');
-                    const { default: authStore } = await import('../stores/authStore');
-
-                    const user = authStore.getState().user;
-                    if (user && mappedRoom.id) {
-                        console.log('📡 Sending WebSocket join notification...');
-
-                        // Send join notification via WebSocket
-                        websocketService.send(`/app/room/${mappedRoom.id}/join`, {
-                            roomCode: roomCode,
-                            userId: user.id,
-                            username: user.username
-                        });
-                    }
-                } catch (wsError) {
-                    console.warn('WebSocket notification failed (non-critical):', wsError);
-                }
+                // Socket.IO will automatically handle room updates via backend events
 
                 return {
                     success: true,
@@ -151,7 +113,6 @@ const roomApi = {
                 };
             }
         } catch (error) {
-            console.error('roomApi.joinRoomByCode - Error:', error);
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể tham gia phòng'
@@ -191,7 +152,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error leaving room
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể rời phòng'
@@ -234,7 +195,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error kicking player
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể đuổi người chơi'
@@ -255,7 +216,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error transferring host
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể chuyển quyền host'
@@ -276,7 +237,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error starting game
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể bắt đầu game'
@@ -285,7 +246,7 @@ const roomApi = {
     },
 
     /**
-     * Get public rooms with pagination
+     * Get all rooms with pagination (simplified - only WAITING rooms)
      * @param {object} params - Query parameters
      */
     getPublicRooms: async (params = {}) => {
@@ -296,14 +257,14 @@ const roomApi = {
                 search = ''
             } = params;
 
-            // Thử endpoint đơn giản trước - không có status parameter
+            // Simplified API - no status/publicOnly/myRoomsOnly filters
             const queryParams = new URLSearchParams({
                 page: page.toString(),
                 size: size.toString(),
                 ...(search && { search })
             });
 
-            const response = await apiInstance.get(`/rooms/all?${queryParams}`);
+            const response = await apiInstance.get(`/rooms?${queryParams}`);
             const responseData = response.data.data || response.data;
 
             // Handle paginated response
@@ -329,42 +290,31 @@ const roomApi = {
                 };
             }
         } catch (error) {
-            console.error('Error in getPublicRooms:', error);
-
-            // Fallback: thử endpoint khác
-            try {
-                const response = await apiInstance.get('/rooms');
-                const mappedRooms = mapRoomsFromBackend(response.data.data || response.data || []);
-                return {
-                    success: true,
-                    data: {
-                        content: mappedRooms,
-                        rooms: mappedRooms
-                    }
-                };
-            } catch (fallbackError) {
-                console.error('Fallback error:', fallbackError);
-
-                return {
-                    success: false,
-                    error: error.response?.data?.message || 'Không thể lấy danh sách phòng'
-                };
-            }
+            return {
+                success: false,
+                error: error.response?.data?.message || 'Không thể lấy danh sách phòng'
+            };
         }
     },
 
     /**
-     * Get my rooms
+     * Get my rooms (rooms created by current user)
      */
-    getMyRooms: async () => {
+    getMyRooms: async (page = 0, size = 10) => {
         try {
-            const response = await apiInstance.get('/rooms/my-rooms');
+            // Use unified API with myRoomsOnly parameter
+            const queryParams = new URLSearchParams({
+                myRoomsOnly: 'true',
+                page: page.toString(),
+                size: size.toString()
+            });
+            const response = await apiInstance.get(`/rooms?${queryParams}`);
             return {
                 success: true,
                 data: response.data.data
             };
         } catch (error) {
-
+            // Error getting my rooms
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể lấy danh sách phòng của bạn'
@@ -377,16 +327,23 @@ const roomApi = {
      * @param {string} query - Search query
      * @param {string} status - Room status filter
      */
-    searchRooms: async (query, status = 'WAITING') => {
+    searchRooms: async (query, status = 'WAITING', page = 0, size = 20) => {
         try {
-            const params = new URLSearchParams({ query, status });
-            const response = await apiInstance.get(`/rooms/search?${params}`);
+            // Use unified API with search parameter
+            const params = new URLSearchParams({
+                search: query,
+                status,
+                page: page.toString(),
+                size: size.toString(),
+                publicOnly: 'true'
+            });
+            const response = await apiInstance.get(`/rooms?${params}`);
             return {
                 success: true,
                 data: response.data.data
             };
         } catch (error) {
-
+            // Error searching rooms
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể tìm kiếm phòng'
@@ -395,18 +352,26 @@ const roomApi = {
     },
 
     /**
-     * Quick search rooms
+     * Quick search rooms (lightweight search with fewer results)
      * @param {string} query - Search query
      */
     quickSearchRooms: async (query) => {
         try {
-            const response = await apiInstance.get(`/rooms/quick-search?q=${encodeURIComponent(query)}`);
+            // Use unified API with search parameter and smaller page size
+            const params = new URLSearchParams({
+                search: query,
+                page: '0',
+                size: '5',
+                publicOnly: 'true',
+                status: 'WAITING'
+            });
+            const response = await apiInstance.get(`/rooms?${params}`);
             return {
                 success: true,
                 data: response.data.data
             };
         } catch (error) {
-
+            // Error quick searching rooms
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể tìm kiếm phòng'
@@ -428,7 +393,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error updating room
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể cập nhật phòng'
@@ -448,7 +413,7 @@ const roomApi = {
                 message: response.data.message
             };
         } catch (error) {
-
+            // Error deleting room
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể xóa phòng'

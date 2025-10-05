@@ -53,23 +53,23 @@ const RoomsPage = () => {
     }, [currentPage]);
 
     /**
-     * Initialize room data and auto-refresh on component mount
-     * Setup simple polling for room list updates instead of WebSocket
-     * Cleanup auto-refresh on component unmount
+     * Initialize room data and setup realtime updates
+     * - Initial load via REST API
+     * - Subscribe to Socket.IO for realtime broadcasts
      */
     useEffect(() => {
+        // 1. Initial load
         loadRooms();
 
-        // Simple auto-refresh every 10 seconds instead of WebSocket
-        const refreshInterval = setInterval(() => {
-            loadRooms();
-        }, 10000); // 10 seconds
+        // 2. Subscribe to realtime updates
+        subscribeToRoomList();
 
+        // 3. Cleanup on unmount
         return () => {
-            clearInterval(refreshInterval);
+            unsubscribeFromRoomList();
             stopAutoRefresh();
         };
-    }, [loadRooms, stopAutoRefresh]); // Removed WebSocket methods
+    }, [loadRooms, subscribeToRoomList, unsubscribeFromRoomList, stopAutoRefresh]);
 
     /**
      * Handle joining a public room
@@ -108,11 +108,11 @@ const RoomsPage = () => {
         setJoinLoading(true);
         setJoinError('');
 
-        const result = await joinRoom(roomCode, false);
+        const result = await joinRoom(roomCode);
 
         if (result.success) {
             setSuccess('Đang chuyển hướng vào phòng chờ...');
-            const targetRoom = result.data?.Code || roomCode;
+            const targetRoom = result.data?.roomCode || result.data?.code || roomCode;
             setShowJoinModal(false);
             navigate(`/waiting-room/${targetRoom}`);
         } else {
@@ -120,6 +120,19 @@ const RoomsPage = () => {
         }
 
         setJoinLoading(false);
+    };
+
+    /**
+     * Handle successful join from modal
+     */
+    const handleJoinSuccess = (result) => {
+        if (result.success) {
+            setSuccess('Đã tham gia phòng thành công!');
+            const targetRoom = result.data?.roomCode || result.data?.code || result.data?.RoomCode;
+            if (targetRoom) {
+                navigate(`/waiting-room/${targetRoom}`);
+            }
+        }
     };
 
     /**
@@ -407,6 +420,7 @@ const RoomsPage = () => {
                     setJoinError('');
                 }}
                 onJoin={handleJoinPrivate}
+                onSuccess={handleJoinSuccess}
                 loading={joinLoading}
                 error={joinError}
             />

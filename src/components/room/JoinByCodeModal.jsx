@@ -65,7 +65,7 @@ const JoinByCodeModal = ({ isOpen, onClose, onJoin, onSuccess }) => {
 
     const handleOverlayClick = (e) => {
         // Chỉ đóng modal khi click vào overlay, không phải vào nội dung modal
-        if (e.target.className.includes('jbc-overlay')) {
+        if (e.target.classList && e.target.classList.contains('jbc-overlay')) {
             handleClose();
         }
     };
