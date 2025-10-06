@@ -117,7 +117,7 @@ const GameRoom = () => {
                 break;
 
             default:
-                }
+        }
     };
 
     const handlePersonalMessage = (message) => {

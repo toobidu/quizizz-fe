@@ -1,5 +1,14 @@
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import apiInstance from './apiInstance';
 import { mapRoomsFromBackend, mapRoomFromBackend, mapCreateRoomRequest } from '../utils/roomUtils';
+
+// Thêm retry mechanism
+axiosRetry(apiInstance, {
+  retries: 3,
+  retryDelay: (retryCount) => retryCount * 1000, // Delay 1s, 2s, 3s
+  retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error)
+});
 
 const roomApi = {
     /**
@@ -88,37 +97,7 @@ const roomApi = {
         }
     },
 
-    /**
-     * Join room by code
-     * @param {string} roomCode - Room code to join
-     */
-    joinRoomByCode: async (roomCode) => {
-        try {
-            const response = await apiInstance.post('/rooms/join', {
-                roomCode: roomCode
-            });
-            if (response.data.success !== false) {
-                const mappedRoom = mapRoomFromBackend(response.data.data);
-                // Socket.IO will automatically handle room updates via backend events
 
-                return {
-                    success: true,
-                    data: mappedRoom,
-                    message: response.data.message || 'Tham gia phòng thành công'
-                };
-            } else {
-                return {
-                    success: false,
-                    error: response.data.message || 'Không thể tham gia phòng'
-                };
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: error.response?.data?.message || 'Không thể tham gia phòng'
-            };
-        }
-    },
 
     /**
      * Join public room directly
@@ -251,13 +230,7 @@ const roomApi = {
      */
     getPublicRooms: async (params = {}) => {
         try {
-            const {
-                page = 0,
-                size = 6,
-                search = ''
-            } = params;
-
-            // Simplified API - no status/publicOnly/myRoomsOnly filters
+            const { page = 0, size = 6, search = '' } = params;
             const queryParams = new URLSearchParams({
                 page: page.toString(),
                 size: size.toString(),
@@ -267,35 +240,68 @@ const roomApi = {
             const response = await apiInstance.get(`/rooms?${queryParams}`);
             const responseData = response.data.data || response.data;
 
-            // Handle paginated response
-            if (responseData.content) {
-                const mappedRooms = mapRoomsFromBackend(responseData.content);
-                return {
-                    success: true,
-                    data: {
-                        ...responseData,
-                        content: mappedRooms,
-                        rooms: mappedRooms
-                    }
-                };
-            } else {
-                // Handle simple array response
-                const mappedRooms = mapRoomsFromBackend(responseData);
-                return {
-                    success: true,
-                    data: {
-                        content: mappedRooms,
-                        rooms: mappedRooms
-                    }
-                };
+            // Chuẩn hóa response
+            let mappedRooms = [];
+            if (Array.isArray(responseData)) {
+                mappedRooms = mapRoomsFromBackend(responseData);
+            } else if (responseData.content) {
+                mappedRooms = mapRoomsFromBackend(responseData.content);
+            } else if (responseData.rooms) {
+                mappedRooms = mapRoomsFromBackend(responseData.rooms);
             }
+
+            return {
+                success: true,
+                data: {
+                    content: mappedRooms,
+                    rooms: mappedRooms,
+                    totalPages: responseData.totalPages || Math.ceil(mappedRooms.length / size),
+                    totalElements: responseData.totalElements || mappedRooms.length,
+                    page,
+                    size
+                }
+            };
         } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Không thể lấy danh sách phòng';
+            const errorCode = error.response?.data?.code || 'UNKNOWN_ERROR';
             return {
                 success: false,
-                error: error.response?.data?.message || 'Không thể lấy danh sách phòng'
+                error: errorMessage,
+                errorCode
             };
         }
     },
+
+    joinRoomByCode: async (roomCode) => {
+        try {
+            const requestData = { roomCode: roomCode };
+            const response = await apiInstance.post('/rooms/join', requestData);
+
+            if (response.data.success !== false) {
+                const mappedRoom = mapRoomFromBackend(response.data.data);
+                return {
+                    success: true,
+                    data: mappedRoom,
+                    message: response.data.message || 'Tham gia phòng thành công'
+                };
+            } else {
+                return {
+                    success: false,
+                    error: response.data.message || 'Không tìm thấy phòng với mã này',
+                    errorCode: response.data.code || 'ROOM_NOT_FOUND'
+                };
+            }
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Không tìm thấy phòng với mã này';
+            const errorCode = error.response?.data?.code || 'ROOM_NOT_FOUND';
+            return {
+                success: false,
+                error: errorMessage,
+                errorCode
+            };
+        }
+    },
+
 
     /**
      * Get my rooms (rooms created by current user)

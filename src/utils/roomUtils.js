@@ -57,7 +57,8 @@ export const mapRoomFromBackend = (backendRoom) => {
 
 export const mapRoomsFromBackend = (backendRooms) => {
     if (!Array.isArray(backendRooms)) return [];
-    return backendRooms.map(mapRoomFromBackend).filter(room => room !== null);
+    const mapped = backendRooms.map(mapRoomFromBackend).filter(room => room !== null);
+    return mapped;
 };
 
 export const mapCreateRoomRequest = (frontendData) => {

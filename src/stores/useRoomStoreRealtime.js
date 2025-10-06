@@ -162,21 +162,18 @@ const useRoomStore = create((set, get) => ({
                 
                 if (message.type === 'JOIN_ROOM') {
                     const { userId, username } = message.data;
-                    set(state => {
-                        // Add player if not already in list
-                        const exists = state.roomPlayers.find(p => p.id === userId);
-                        if (!exists) {
-                            return {
-                                roomPlayers: [...state.roomPlayers, { id: userId, username }]
-                            };
-                        }
-                        return state;
-                    });
+                    console.log('Player joined room:', { userId, username });
+                    // Refresh players list from server
+                    get().fetchRoomPlayers(roomId);
                 } else if (message.type === 'LEAVE_ROOM') {
                     const { userId } = message.data;
-                    set(state => ({
-                        roomPlayers: state.roomPlayers.filter(p => p.id !== userId)
-                    }));
+                    console.log('Player left room:', { userId });
+                    // Refresh players list from server
+                    get().fetchRoomPlayers(roomId);
+                } else if (message.type === 'ROOM_PLAYERS_UPDATED') {
+                    const { players } = message.data;
+                    console.log('Room players updated:', players);
+                    set({ roomPlayers: players });
                 } else if (message.type === 'ROOM_UPDATED') {
                     const roomData = message.data;
                     set({ currentRoom: roomData });
@@ -410,6 +407,26 @@ const useRoomStore = create((set, get) => ({
      */
     loadRooms: async (params = {}) => {
         return await get().fetchRooms(params);
+    },
+
+    /**
+     * Fetch room players
+     */
+    fetchRoomPlayers: async (roomId) => {
+        try {
+            const response = await roomApi.getRoomPlayers(roomId);
+            if (response.success) {
+                const players = response.data || [];
+                set({ roomPlayers: players });
+                return { success: true, players };
+            } else {
+                console.error('Failed to fetch room players:', response.error);
+                return { success: false, error: response.error };
+            }
+        } catch (error) {
+            console.error('Error fetching room players:', error);
+            return { success: false, error: error.message };
+        }
     },
 
     /**

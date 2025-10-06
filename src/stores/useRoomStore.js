@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import roomApi from '../services/roomApi';
 import socketService from '../services/socketService';
+import socketManager from '../utils/socketManager';
 
 const useRoomStore = create((set, get) => ({
     // Room state
@@ -17,6 +18,9 @@ const useRoomStore = create((set, get) => ({
     // Animation states for UI feedback
     animatingRooms: new Set(),
     newRoomIds: new Set(),
+
+    // Internal state for optimization
+    _fetchPlayersTimer: null,
 
     // Room actions
     setCurrentRoom: (room) => set({ currentRoom: room }),
@@ -103,30 +107,46 @@ const useRoomStore = create((set, get) => ({
 
     // Setup Socket.IO listeners for room events
     setupRoomListeners: () => {
-        // Player joined
+        get().cleanupRoomListeners();
+
         socketService.onPlayerJoined((data) => {
-            get().fetchRoomPlayers(data.room?.id);
+            console.log('👥 Player joined room:', data);
+            get().fetchRoomPlayersDebounced(data.room?.id || data.roomId);
         });
 
-        // Player left
         socketService.onPlayerLeft((data) => {
-            const state = get();
-            if (state.currentRoom) {
-                get().fetchRoomPlayers(state.currentRoom.id);
-            }
+            console.log('👋 Player left room:', data);
+            get().fetchRoomPlayersDebounced(data.roomId);
         });
 
-        // Player kicked
         socketService.onPlayerKicked((data) => {
+            console.log('🦵 Player kicked from room:', data);
             const state = get();
-            if (state.currentRoom) {
-                get().fetchRoomPlayers(state.currentRoom.id);
+            const currentUserId = socketManager.getCurrentUserId();
+            if (data.playerId === currentUserId) {
+                set({ error: data.reason || 'Bạn đã bị đuổi khỏi phòng' });
+                get().clearCurrentRoom();
+                window.location.href = '/dashboard'; // Điều hướng về dashboard
+            } else {
+                get().fetchRoomPlayersDebounced(data.roomId);
             }
         });
 
-        // Room players update
-        socketService.onRoomPlayers((data) => {
-            set({ roomPlayers: data.players || [] });
+        socketService.onGameStarted((data) => {
+            console.log('🎮 Game started in room:', data);
+            const state = get();
+            if (state.currentRoom && data.roomId === state.currentRoom.id) {
+                window.dispatchEvent(new CustomEvent('gameStarted', { detail: data }));
+            }
+        });
+
+        socketService.onRoomDeleted((data) => {
+            console.log('🗑️ Room deleted:', data);
+            const state = get();
+            if (state.currentRoom && state.currentRoom.id === data.roomId) {
+                set({ error: 'Phòng đã bị xóa', currentRoom: null, roomPlayers: [] });
+                window.location.href = '/dashboard';
+            }
         });
     },
 
@@ -135,6 +155,7 @@ const useRoomStore = create((set, get) => ({
         socketService.off('player-joined');
         socketService.off('player-left');
         socketService.off('player-kicked');
+        socketService.off('game-started');
         socketService.off('room-players');
     },
 
@@ -193,6 +214,16 @@ const useRoomStore = create((set, get) => ({
 
                 // Setup listeners after joining
                 get().setupRoomListeners();
+
+                // CRITICAL: Join Socket.IO room for real-time updates
+                socketService.joinRoom(result.data.id, (response) => {
+                    if (response?.success) {
+                        console.log('✅ Joined Socket.IO room for real-time updates');
+                    } else {
+                        console.warn('⚠️ Failed to join Socket.IO room, but REST join was successful');
+                        // Don't fail the entire join operation - Socket.IO is for real-time only
+                    }
+                });
 
                 return result;
             } else {
@@ -302,6 +333,24 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
+    // Debounced version to prevent multiple rapid calls
+    fetchRoomPlayersDebounced: (roomId, delay = 300) => {
+        const state = get();
+
+        // Clear existing timer
+        if (state._fetchPlayersTimer) {
+            clearTimeout(state._fetchPlayersTimer);
+        }
+
+        // Set new timer
+        const timer = setTimeout(() => {
+            get().fetchRoomPlayers(roomId);
+            set({ _fetchPlayersTimer: null });
+        }, delay);
+
+        set({ _fetchPlayersTimer: timer });
+    },
+
     // Real-time connection methods
     connectToRoom: async (roomId) => {
         if (!roomId) {
@@ -349,50 +398,64 @@ const useRoomStore = create((set, get) => ({
 
     subscribeToRoomList: async () => {
         try {
-            // Connect to Socket.IO if not connected
-            if (!socketService.isConnected()) {
-                await socketService.connect();
+            const state = get();
+            if (state.isSubscribedToRoomList) {
+                console.log('✅ Already subscribed to room list');
+                return;
             }
 
-            // Listen to global room broadcasts
-            socketService.on('roomCreated', (data) => {
-                const { room } = data;
-                set(state => ({
-                    rooms: [room, ...state.rooms]
-                }));
-                get().addNewRoom(room.id);
-                get().addAnimatingRoom(room.id);
-            });
+            await socketManager.initialize();
+            socketService.subscribeToRoomList((message) => {
+                console.log('📋 Room list update:', message.type);
 
-            socketService.on('roomDeleted', (data) => {
-                const { roomId } = data;
-                set(state => ({
-                    rooms: state.rooms.filter(r => r.id !== roomId)
-                }));
-                get().addAnimatingRoom(roomId);
-            });
-
-            socketService.on('roomUpdated', (data) => {
-                const { room } = data;
-                set(state => ({
-                    rooms: state.rooms.map(r =>
-                        r.id === room.id ? room : r
-                    )
-                }));
-                get().addAnimatingRoom(room.id);
+                if (message.type === 'CREATE_ROOM') {
+                    const { room } = message.data;
+                    set(state => {
+                        const exists = state.rooms.find(r => r.id === room.id);
+                        if (!exists) {
+                            get().addNewRoom(room.id);
+                            get().addAnimatingRoom(room.id);
+                            return { rooms: [room, ...state.rooms] };
+                        }
+                        return state;
+                    });
+                } else if (message.type === 'ROOM_DELETED') {
+                    const { roomId } = message.data;
+                    set(state => {
+                        const updatedRooms = state.rooms.filter(room => room.id !== roomId);
+                        if (state.currentRoom?.id === roomId) {
+                            window.location.href = '/dashboard';
+                            return { rooms: updatedRooms, currentRoom: null, roomPlayers: [] };
+                        }
+                        return { rooms: updatedRooms };
+                    });
+                } else if (message.type === 'ROOM_UPDATED') {
+                    const { room } = message.data;
+                    set(state => ({
+                        rooms: state.rooms.map(r => r.id === room.id ? room : r),
+                        currentRoom: state.currentRoom?.id === room.id ? room : state.currentRoom
+                    }));
+                }
             });
 
             set({ isSubscribedToRoomList: true });
+            console.log('✅ Subscribed to room list updates');
         } catch (error) {
-            set({ error: 'Failed to subscribe to room updates' });
+            console.error('❌ Failed to subscribe to room list:', error);
+            set({ error: 'Không thể kết nối real-time updates' });
         }
     },
 
     unsubscribeFromRoomList: () => {
-        socketService.off('roomCreated');
-        socketService.off('roomDeleted');
-        socketService.off('roomUpdated');
+        console.log('🔌 Unsubscribing from room list...');
+        try {
+            socketService.unsubscribeFromRoomList();
+        } catch {}
+        socketService.setOnRoomCreated(null);
+        socketService.setOnRoomDeleted(null);
+        socketService.setOnRoomUpdated(null);
         set({ isSubscribedToRoomList: false });
+        console.log('✅ Room list unsubscription completed');
     },
 
     startGame: async () => {
@@ -402,14 +465,18 @@ const useRoomStore = create((set, get) => ({
         }
 
         try {
-            const result = await roomApi.startGame(state.currentRoom.id);
-
-            if (result.success) {
-                return { success: true };
-            } else {
-                set({ error: result.error });
-                return result;
-            }
+            // Use Socket.IO for real-time start game
+            return new Promise((resolve) => {
+                socketService.startGame(state.currentRoom.id, (response) => {
+                    if (response?.success !== false) {
+                        resolve({ success: true });
+                    } else {
+                        const errorMessage = response?.message || 'Không thể bắt đầu game';
+                        set({ error: errorMessage });
+                        resolve({ success: false, error: errorMessage });
+                    }
+                });
+            });
         } catch (error) {
             const errorMessage = error.message || 'Có lỗi xảy ra khi bắt đầu game';
             set({ error: errorMessage });

@@ -46,10 +46,6 @@ const RoomsPage = () => {
 
 
     useEffect(() => {
-    }, [rooms]);
-
-
-    useEffect(() => {
     }, [currentPage]);
 
     /**
@@ -69,7 +65,7 @@ const RoomsPage = () => {
             unsubscribeFromRoomList();
             stopAutoRefresh();
         };
-    }, [loadRooms, subscribeToRoomList, unsubscribeFromRoomList, stopAutoRefresh]);
+    }, []); // Empty dependency array to run only once
 
     /**
      * Handle joining a public room
@@ -304,10 +300,6 @@ const RoomsPage = () => {
                                     value={searchQuery}
                                     onChange={handleSearchChange}
                                 />
-                            </div>
-                            <div className="room-status-info">
-                                <span className="status-indicator">●</span>
-                                <span>Tự động cập nhật mỗi 10 giây</span>
                             </div>
                         </div>
 

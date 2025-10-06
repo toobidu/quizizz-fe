@@ -142,27 +142,71 @@ const WaitingRoom = () => {
         };
 
         fetchRoomData();
-    }, [roomCode]);    // Additional connection when room changes
+    }, [roomCode]);    // Setup socket listeners for real-time updates
     useEffect(() => {
         if (currentRoom && currentRoom.id && !fetchingRoom) {
             // Connect to WebSocket for this room
-            // Connect to Socket.IO for real-time updates (already handled in connectToRoom)
-            // The Socket.IO listeners are set up in useRoomStore.setupRoomListeners()
             connectToRoom(currentRoom.id);
+
+            // Setup real-time listeners
+            socketService.on('player-joined', (data) => {
+                if (data.roomId === currentRoom.id) {
+                    console.log('Player joined:', data);
+                    // Refresh players list
+                    fetchRoomPlayers(currentRoom.id);
+                }
+            });
+
+            socketService.on('player-left', (data) => {
+                if (data.roomId === currentRoom.id) {
+                    console.log('Player left:', data);
+                    // Refresh players list
+                    fetchRoomPlayers(currentRoom.id);
+                }
+            });
+
+            socketService.on('room-players', (data) => {
+                if (data.roomId === currentRoom.id) {
+                    console.log('Players updated:', data.players);
+                    // Update players directly from socket
+                    setRoomPlayers(data.players);
+                }
+            });
 
             // Initial fetch of players
             fetchRoomPlayers(currentRoom.id);
         }
 
-        // Cleanup function - DO NOT leave room on unmount
-        // This allows users to reload page without losing room membership
+        // Cleanup function
         return () => {
             if (currentRoom && currentRoom.id) {
-                // Pass false to disconnect WITHOUT leaving room
+                socketService.off('player-joined');
+                socketService.off('player-left');
+                socketService.off('room-players');
                 disconnectFromRoom(false);
             }
         };
     }, [currentRoom?.id, fetchingRoom]);
+
+    // Listen for game started events
+    useEffect(() => {
+        const handleGameStarted = (event) => {
+            console.log('🎮 Game started event received:', event.detail);
+            const { roomId } = event.detail;
+
+            // Navigate to game if this is our current room
+            if (currentRoom && roomId === currentRoom.id) {
+                navigate(`/game/${currentRoom.roomCode || currentRoom.code}`);
+            }
+        };
+
+        // Listen for custom game started event
+        window.addEventListener('gameStarted', handleGameStarted);
+
+        return () => {
+            window.removeEventListener('gameStarted', handleGameStarted);
+        };
+    }, [currentRoom, navigate]);
 
     const handleCopyCode = async () => {
         if (currentRoom?.roomCode || currentRoom?.code) {
