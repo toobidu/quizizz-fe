@@ -11,11 +11,6 @@ class SocketService {
         this.rooms = new Set();
     }
 
-    /**
-     * Connect to Socket.IO server
-     * @param {string} token - JWT token for authentication (optional if in cookie)
-     * @returns {Promise<void>}
-     */
     connect(token = null) {
         return new Promise((resolve, reject) => {
             if (this.connected && this.socket) {
@@ -131,12 +126,21 @@ class SocketService {
             console.log('📋 Subscription confirmed:', data);
         });
 
+        // Global handlers for debugging
         this.on('join-room-success', (data) => {
-            console.log('✅ Join room success:', data);
+            console.log('✅ Global join room success:', data);
         });
 
         this.on('join-room-error', (data) => {
-            console.error('❌ Join room error:', data);
+            console.error('❌ Global join room error:', data);
+        });
+
+        this.on('leave-room-success', (data) => {
+            console.log('✅ Global leave room success:', data);
+        });
+
+        this.on('leave-room-error', (data) => {
+            console.error('❌ Global leave room error:', data);
         });
 
         this.on('start-game-success', (data) => {
@@ -148,7 +152,6 @@ class SocketService {
         });
     }
 
-    // ✅ Thêm các hàm lưu callback để dùng lại khi reconnect
     setOnRoomCreated(callback) {
         console.log('📝 Setting onRoomCreated callback:', !!callback);
         this._onRoomCreated = callback;
@@ -166,7 +169,6 @@ class SocketService {
 
     disconnect() {
         if (this.socket) {
-            // Leave all rooms before disconnect
             this.rooms.forEach(room => {
                 this.leaveRoom(room);
             });
@@ -180,12 +182,6 @@ class SocketService {
         }
     }
 
-    /**
-     * Emit an event to the server
-     * @param {string} event - Event name
-     * @param {*} data - Data to send
-     * @param {Function} callback - Optional acknowledgment callback
-     */
     emit(event, data, callback) {
         if (!this.socket || !this.connected) {
             return;
@@ -198,11 +194,6 @@ class SocketService {
         }
     }
 
-    /**
-     * Listen to an event from the server
-     * @param {string} event - Event name
-     * @param {Function} callback - Callback function
-     */
     on(event, callback) {
         if (!this.socket) {
             return;
@@ -219,11 +210,6 @@ class SocketService {
         this.listeners.get(event).push(callback);
     }
 
-    /**
-     * Remove listener for an event
-     * @param {string} event - Event name
-     * @param {Function} callback - Callback function to remove (optional)
-     */
     off(event, callback) {
         if (!this.socket) return;
 
@@ -247,11 +233,6 @@ class SocketService {
         }
     }
 
-    /**
-     * Listen to an event only once
-     * @param {string} event - Event name
-     * @param {Function} callback - Callback function
-     */
     once(event, callback) {
         if (!this.socket) {
             return;
@@ -262,11 +243,6 @@ class SocketService {
         });
     }
 
-    /**
-     * Join a room
-     * @param {string|number} roomId - Room ID to join
-     * @param {Function} callback - Optional acknowledgment callback
-     */
     joinRoom(roomId, callback) {
         if (!this.socket || !this.connected) {
             console.error('❌ Socket not connected for joinRoom');
@@ -276,58 +252,75 @@ class SocketService {
 
         this.rooms.add(roomId);
 
-        // Thêm timeout để tránh treo
         const timeout = setTimeout(() => {
+            console.warn('⏰ Join room timeout for:', roomId);
             callback?.({ success: false, error: 'Join room timeout' });
-        }, 5000);
+        }, 10000);
 
-        // Determine if it's roomId (number) or roomCode (string)
-        const isRoomId = typeof roomId === 'number' || /^\d+$/.test(roomId);
-        const joinData = isRoomId 
-            ? { roomId: Number(roomId) }
-            : { roomCode: roomId };
+        const joinData = { roomId: Number(roomId) };
 
         console.log('🔗 Joining room with data:', joinData);
 
-        this.emit('join-room', joinData, (response) => {
+        // Listen for success/error events
+        const successHandler = (data) => {
             clearTimeout(timeout);
-            if (response?.success) {
-                console.log('✅ Successfully joined room:', roomId);
-            } else {
-                console.error('❌ Failed to join room:', roomId, response);
-                this.rooms.delete(roomId);
-            }
-            callback?.(response);
-        });
+            console.log('✅ Join room success event:', data);
+            this.off('join-room-success', successHandler);
+            this.off('join-room-error', errorHandler);
+            callback?.({ success: true, ...data });
+        };
+
+        const errorHandler = (data) => {
+            clearTimeout(timeout);
+            console.error('❌ Join room error event:', data);
+            this.off('join-room-success', successHandler);
+            this.off('join-room-error', errorHandler);
+            this.rooms.delete(roomId);
+            callback?.({ success: false, error: data.message || 'Failed to join room' });
+        };
+
+        this.once('join-room-success', successHandler);
+        this.once('join-room-error', errorHandler);
+
+        this.emit('join-room', joinData);
     }
 
-    /**
-     * Leave a room
-     * @param {string|number} roomId - Room ID to leave
-     * @param {Function} callback - Optional acknowledgment callback
-     */
     leaveRoom(roomId, callback) {
         if (!this.socket || !this.connected) {
+            callback?.({ success: false, error: 'Socket not connected' });
             return;
         }
 
         this.rooms.delete(roomId);
 
-        this.emit('leave-room', { roomId }, (response) => {
-            if (response?.success) {
-                console.log('✅ Successfully left room:', roomId);
-            } else {
-                console.error('❌ Failed to leave room:', roomId, response);
-            }
-            callback?.(response);
-        });
+        const timeout = setTimeout(() => {
+            console.warn('⏰ Leave room timeout for:', roomId);
+            callback?.({ success: false, error: 'Leave room timeout' });
+        }, 10000);
+
+        // Listen for success/error events
+        const successHandler = (data) => {
+            clearTimeout(timeout);
+            console.log('✅ Leave room success event:', data);
+            this.off('leave-room-success', successHandler);
+            this.off('leave-room-error', errorHandler);
+            callback?.({ success: true, ...data });
+        };
+
+        const errorHandler = (data) => {
+            clearTimeout(timeout);
+            console.error('❌ Leave room error event:', data);
+            this.off('leave-room-success', successHandler);
+            this.off('leave-room-error', errorHandler);
+            callback?.({ success: false, error: data.message || 'Failed to leave room' });
+        };
+
+        this.once('leave-room-success', successHandler);
+        this.once('leave-room-error', errorHandler);
+
+        this.emit('leave-room', { roomId });
     }
 
-    /**
-     * Start game in a room
-     * @param {string|number} roomId - Room ID
-     * @param {Function} callback - Optional acknowledgment callback
-     */
     startGame(roomId, callback) {
         if (!this.socket || !this.connected) {
             console.error('❌ Socket not connected');
@@ -346,30 +339,22 @@ class SocketService {
         });
     }
 
-    /**
-     * Subscribe to room list updates (for dashboard)
-     */
     subscribeToRoomList(callback) {
-        // Ensure connected
         if (!this.socket || !this.connected) {
             console.warn('⚠️ Socket not connected yet, attempting to connect before subscribing to room list');
         }
 
-        // Remember subscription state for reconnects
         this._subscribedRoomList = true;
 
-        // Ask backend to add this socket to the "room-list" room for broadcast
         try {
             this.emit('subscribe-room-list');
         } catch (e) {
             console.warn('⚠️ Failed to emit subscribe-room-list (will retry on connect):', e?.message);
         }
 
-        // Wire listeners
         this.on('roomCreated', (data) => {
             callback({ type: 'CREATE_ROOM', data });
         });
-        // Snake-case aliases for compatibility
         this.on('room-created', (data) => {
             callback({ type: 'CREATE_ROOM', data });
         });
@@ -389,240 +374,174 @@ class SocketService {
         });
     }
 
-    /**
-     * Unsubscribe from room list updates
-     */
     unsubscribeFromRoomList() {
-        // Tell backend to leave the broadcast room
         try {
             this.emit('unsubscribe-room-list');
         } catch {}
         this._subscribedRoomList = false;
 
-        // Detach listeners
         this.off('roomCreated');
         this.off('roomDeleted');
         this.off('roomUpdated');
     }
 
     /**
-     * Subscribe to room-specific events
-     * Match backend event names: player-joined, player-left, game-started, etc.
-     * @param {string|number} roomId - Room ID
-     * @param {Function} callback - Callback for room events
+     * ✅ FIXED: Subscribe to room events - EXACT match with backend
      */
     subscribeToRoom(roomId, callback) {
+        console.log('📡 Subscribing to room events for room:', roomId);
 
-        // Room-specific events matching backend
-        this.on('player-joined', (data) => {
-            // Only handle events for this room
-            if (data.room?.id === roomId || data.roomId === roomId) {
-                callback({ type: 'JOIN_ROOM', data });
+        this.unsubscribeFromRoom(roomId);
+
+        this._roomCallbacks = this._roomCallbacks || new Map();
+        this._roomCallbacks.set(roomId, callback);
+
+        // ✅ CRITICAL FIX: Match EXACT backend event names from RoomEventListener.java
+        const handlePlayerJoined = (data) => {
+            console.log('🔥 Backend player-joined event:', data);
+            if (data.roomId === Number(roomId)) {
+                callback({ type: 'PLAYER_JOINED', data });
             }
-        });
+        };
 
-        this.on('player-left', (data) => {
-            if (data.roomId === roomId) {
-                callback({ type: 'LEAVE_ROOM', data });
+        const handlePlayerLeft = (data) => {
+            console.log('🔥 Backend player-left event:', data);
+            if (data.roomId === Number(roomId)) {
+                callback({ type: 'PLAYER_LEFT', data });
             }
-        });
+        };
 
-        this.on('room-players', (data) => {
-            if (data.roomId === roomId) {
+        const handleRoomPlayers = (data) => {
+            console.log('🔥 Backend room-players event:', data);
+            if (data.roomId === Number(roomId)) {
                 callback({ type: 'ROOM_PLAYERS_UPDATED', data });
             }
-        });
+        };
 
-        this.on('game-started', (data) => {
-            if (data.roomId === roomId) {
+        const handleGameStarted = (data) => {
+            console.log('🔥 Backend game-started event:', data);
+            if (data.roomId === Number(roomId)) {
                 callback({ type: 'GAME_STARTED', data });
             }
-        });
+        };
 
-        this.on('player-kicked', (data) => {
-            if (data.roomId === roomId) {
+        const handlePlayerKicked = (data) => {
+            console.log('🔥 Backend player-kicked event:', data);
+            if (data.roomId === Number(roomId)) {
                 callback({ type: 'PLAYER_KICKED', data });
             }
-        });
+        };
 
-        this.on('question-started', (data) => {
-            if (data.roomId === roomId) {
-                callback({ type: 'QUESTION_STARTED', data });
+        // ✅ MISSING EVENT FIX: Add host-changed handler
+        const handleHostChanged = (data) => {
+            console.log('🔥 Backend host-changed event:', data);
+            if (data.roomId === Number(roomId)) {
+                callback({ type: 'HOST_CHANGED', data });
             }
+        };
+
+        this._roomHandlers = this._roomHandlers || new Map();
+        this._roomHandlers.set(roomId, {
+            'player-joined': handlePlayerJoined,
+            'player-left': handlePlayerLeft,
+            'room-players': handleRoomPlayers,
+            'game-started': handleGameStarted,
+            'player-kicked': handlePlayerKicked,
+            'host-changed': handleHostChanged
         });
 
-        this.on('answer-submitted', (data) => {
-            if (data.roomId === roomId) {
-                callback({ type: 'ANSWER_SUBMITTED', data });
-            }
-        });
-
-        this.on('next-question', (data) => {
-            if (data.roomId === roomId) {
-                callback({ type: 'QUESTION_ENDED', data });
-            }
-        });
-
-        this.on('game-ended', (data) => {
-            if (data.roomId === roomId) {
-                callback({ type: 'GAME_ENDED', data });
-            }
-        });
-
-        // Store room ID for cleanup
-        this._subscribedRoomId = roomId;
+        // Register listeners - MUST match backend event names exactly
+        this.on('player-joined', handlePlayerJoined);
+        this.on('player-left', handlePlayerLeft);
+        this.on('room-players', handleRoomPlayers);
+        this.on('game-started', handleGameStarted);
+        this.on('player-kicked', handlePlayerKicked);
+        this.on('host-changed', handleHostChanged);
     }
 
-    /**
-     * Unsubscribe from room-specific events
-     * @param {string|number} roomId - Room ID
-     */
     unsubscribeFromRoom(roomId) {
-        this.off('player-joined');
-        this.off('player-left');
-        this.off('room-players');
-        this.off('game-started');
-        this.off('player-kicked');
-        this.off('question-started');
-        this.off('answer-submitted');
-        this.off('next-question');
-        this.off('game-ended');
-        this._subscribedRoomId = null;
+        if (!this._roomHandlers) return;
+        
+        const handlers = this._roomHandlers.get(roomId);
+        if (handlers) {
+            Object.entries(handlers).forEach(([event, handler]) => {
+                this.off(event, handler);
+            });
+            
+            this._roomHandlers.delete(roomId);
+        }
+        
+        if (this._roomCallbacks) {
+            this._roomCallbacks.delete(roomId);
+        }
     }
 
-    /**
-     * Get socket connection status
-     * @returns {boolean}
-     */
     isConnected() {
         return this.connected && this.socket?.connected;
     }
 
-    /**
-     * Get socket ID
-     * @returns {string|null}
-     */
     getSocketId() {
         return this.socket?.id || null;
     }
 
-    /**
-     * Get list of joined rooms
-     * @returns {Set}
-     */
     getJoinedRooms() {
         return new Set(this.rooms);
     }
 
-    // ==================== EVENT HELPER METHODS ====================
-    // These methods provide a simpler API for common events
-
-    /**
-     * Listen for player joined events
-     * @param {Function} callback - Callback function
-     */
+    // Event helper methods
     onPlayerJoined(callback) {
         this.on('player-joined', callback);
     }
 
-    /**
-     * Listen for player left events
-     * @param {Function} callback - Callback function
-     */
     onPlayerLeft(callback) {
         this.on('player-left', callback);
     }
 
-    /**
-     * Listen for player kicked events
-     * @param {Function} callback - Callback function
-     */
     onPlayerKicked(callback) {
         this.on('player-kicked', callback);
     }
 
-    /**
-     * Listen for room players updates
-     * @param {Function} callback - Callback function
-     */
     onRoomPlayers(callback) {
         this.on('room-players', callback);
     }
 
-    /**
-     * Listen for game started events
-     * @param {Function} callback - Callback function
-     */
     onGameStarted(callback) {
         this.on('game-started', callback);
     }
 
-    /**
-     * Listen for question started events
-     * @param {Function} callback - Callback function
-     */
     onQuestionStarted(callback) {
         this.on('question-started', callback);
     }
 
-    /**
-     * Listen for next question events
-     * @param {Function} callback - Callback function
-     */
     onNextQuestion(callback) {
         this.on('next-question', callback);
     }
 
-    /**
-     * Listen for answer submitted events
-     * @param {Function} callback - Callback function
-     */
     onAnswerSubmitted(callback) {
         this.on('answer-submitted', callback);
     }
 
-    /**
-     * Listen for game finished/ended events
-     * @param {Function} callback - Callback function
-     */
     onGameFinished(callback) {
         this.on('game-ended', callback);
     }
 
-    /**
-     * Listen for error events
-     * @param {Function} callback - Callback function
-     */
     onError(callback) {
         this.on('error', callback);
     }
 
-    /**
-     * Listen for room created events
-     * @param {Function} callback - Callback function
-     */
     onRoomCreated(callback) {
         this.on('roomCreated', callback);
     }
 
-    /**
-     * Listen for room deleted events
-     * @param {Function} callback - Callback function
-     */
     onRoomDeleted(callback) {
         this.on('roomDeleted', callback);
     }
 
-    /**
-     * Listen for room updated events
-     * @param {Function} callback - Callback function
-     */
     onRoomUpdated(callback) {
         this.on('roomUpdated', callback);
     }
 }
 
-// Singleton instance
 const socketService = new SocketService();
 
 export default socketService;

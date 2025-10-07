@@ -117,6 +117,20 @@ class SocketManager {
     }
 
     /**
+     * Execute callback once socket is connected
+     * @param {Function} callback - Function to execute
+     * @returns {Promise<void>}
+     */
+    async onceConnected(callback) {
+        await this.initialize();
+        if (this.isConnected()) {
+            callback();
+        } else {
+            console.warn('⚠️ Socket not connected, callback not executed');
+        }
+    }
+
+    /**
      * Reconnect with fresh token
      * @returns {Promise<void>}
      */

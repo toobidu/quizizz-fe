@@ -10,7 +10,7 @@ import {
     FiLogOut,
     FiUser
 } from 'react-icons/fi';
-import useRoomStore from '../../stores/useRoomStore';
+import useRoomStore from '../../stores/useRoomStoreRealtime'; // ✅ FIXED: Use realtime store
 import roomApi from '../../services/roomApi';
 import authStore from '../../stores/authStore';
 import socketService from '../../services/socketService';
@@ -34,7 +34,8 @@ const WaitingRoom = () => {
         fetchRoomPlayers,
         setCurrentRoom,
         setLoading,
-        setError
+        setError,
+        setRoomPlayers
     } = useRoomStore();
 
     const [copied, setCopied] = useState(false);
@@ -43,7 +44,7 @@ const WaitingRoom = () => {
     // Get current user from auth store
     const currentUser = authStore((state) => state.user);
 
-    // Fetch room data by code when component mounts
+    // ✅ FIXED: Fetch room data by code when component mounts
     useEffect(() => {
         const fetchRoomData = async () => {
             if (!roomCode) {
@@ -56,23 +57,19 @@ const WaitingRoom = () => {
                 const roomData = location.state.room;
                 setCurrentRoom(roomData);
 
-                // Load players for this room
+                // Connect to Socket.IO for real-time updates
                 if (roomData.id) {
-                    try {
-                        await fetchRoomPlayers(roomData.id);
-                    } catch (playersError) {
-                        // Error loading players - will retry with websocket
-                    }
+                    await connectToRoom(roomData.id);
                 }
 
                 setLoading(false);
-                return; // Skip API call since we have the data
+                return;
             }
 
             // Check if room is already loaded in store
             if (currentRoom && currentRoom.roomCode === roomCode) {
                 if (currentRoom.id) {
-                    await fetchRoomPlayers(currentRoom.id);
+                    await connectToRoom(currentRoom.id);
                 }
                 return;
             }
@@ -82,58 +79,37 @@ const WaitingRoom = () => {
             setError(null);
 
             try {
-                // Get room info by code from backend
-                const response = await roomApi.getRoomByCode(roomCode);
-                if (response.success && response.data) {
-                    const room = response.data;
-                    setCurrentRoom(room);
-
-                    // Check if current user is the creator/host
-                    const currentUserId = currentUser?.id;
-                    const isHost = room.ownerId === currentUserId;
-
-                    // If not host, join the room
-                    if (!isHost) {
-                        try {
-                            const joinResponse = await roomApi.joinRoomByCode(roomCode);
-                            if (joinResponse.success) {
-                                // Join successful - update room data
-                                if (joinResponse.data) {
-                                    setCurrentRoom(joinResponse.data);
-                                }
-                            } else {
-                                // Check if error is "already joined" - treat as success
-                                const errorMsg = joinResponse.error || '';
-                                const isAlreadyJoined =
-                                    errorMsg.includes('already joined') ||
-                                    errorMsg.includes('đã tham gia') ||
-                                    errorMsg.includes('already in') ||
-                                    errorMsg.includes('ROOM_ALREADY_JOINED');
-
-                                if (isAlreadyJoined) {
-                                    // This is OK - user is already in the room, no error needed
-                                } else {
-                                    // Real error - but don't block if we already have room data
-                                    // Don't set error or return - allow user to stay in waiting room
-                                }
-                            }
-                        } catch (joinError) {
-                            // Continue anyway - user might already be in room
-                        }
+                // First try to get room info without joining
+                let room = null;
+                try {
+                    const roomInfoResponse = await roomApi.getRoomByCode(roomCode);
+                    if (roomInfoResponse.success) {
+                        room = roomInfoResponse.data;
                     }
+                } catch (infoError) {
+                    console.log('Room info fetch failed, trying join:', infoError.message);
+                }
 
-                    // Load room players
-                    if (room.id) {
-                        try {
-                            await fetchRoomPlayers(room.id);
-                        } catch (playersError) {
-                            // Error loading players - will retry with websocket
-                        }
+                // If room info fetch failed, try to join
+                if (!room) {
+                    const joinResponse = await roomApi.joinRoomByCode(roomCode);
+                    if (joinResponse.success && joinResponse.data) {
+                        room = joinResponse.data;
+                    } else {
+                        setError(joinResponse.error || 'Không tìm thấy phòng');
+                        return;
                     }
-                } else {
-                    setError(response.error || 'Không tìm thấy phòng');
+                }
+
+                // Set room data
+                setCurrentRoom(room);
+                
+                // ✅ FIXED: Connect to Socket.IO for real-time updates
+                if (room.id) {
+                    await connectToRoom(room.id);
                 }
             } catch (err) {
+                console.error('Error in fetchRoomData:', err);
                 setError('Có lỗi xảy ra khi tải phòng');
             } finally {
                 setFetchingRoom(false);
@@ -142,53 +118,9 @@ const WaitingRoom = () => {
         };
 
         fetchRoomData();
-    }, [roomCode]);    // Setup socket listeners for real-time updates
-    useEffect(() => {
-        if (currentRoom && currentRoom.id && !fetchingRoom) {
-            // Connect to WebSocket for this room
-            connectToRoom(currentRoom.id);
+    }, [roomCode]);
 
-            // Setup real-time listeners
-            socketService.on('player-joined', (data) => {
-                if (data.roomId === currentRoom.id) {
-                    console.log('Player joined:', data);
-                    // Refresh players list
-                    fetchRoomPlayers(currentRoom.id);
-                }
-            });
-
-            socketService.on('player-left', (data) => {
-                if (data.roomId === currentRoom.id) {
-                    console.log('Player left:', data);
-                    // Refresh players list
-                    fetchRoomPlayers(currentRoom.id);
-                }
-            });
-
-            socketService.on('room-players', (data) => {
-                if (data.roomId === currentRoom.id) {
-                    console.log('Players updated:', data.players);
-                    // Update players directly from socket
-                    setRoomPlayers(data.players);
-                }
-            });
-
-            // Initial fetch of players
-            fetchRoomPlayers(currentRoom.id);
-        }
-
-        // Cleanup function
-        return () => {
-            if (currentRoom && currentRoom.id) {
-                socketService.off('player-joined');
-                socketService.off('player-left');
-                socketService.off('room-players');
-                disconnectFromRoom(false);
-            }
-        };
-    }, [currentRoom?.id, fetchingRoom]);
-
-    // Listen for game started events
+    // ✅ FIXED: Listen for game started events
     useEffect(() => {
         const handleGameStarted = (event) => {
             console.log('🎮 Game started event received:', event.detail);
@@ -207,6 +139,16 @@ const WaitingRoom = () => {
             window.removeEventListener('gameStarted', handleGameStarted);
         };
     }, [currentRoom, navigate]);
+
+    // ✅ FIXED: Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (currentRoom?.id) {
+                console.log('🧹 Cleaning up room connection on unmount');
+                disconnectFromRoom(currentRoom.id);
+            }
+        };
+    }, [currentRoom?.id]);
 
     const handleCopyCode = async () => {
         if (currentRoom?.roomCode || currentRoom?.code) {
@@ -263,7 +205,6 @@ const WaitingRoom = () => {
                                 onClick={() => {
                                     setError(null);
                                     setCurrentRoom(null);
-                                    // Re-trigger useEffect by clearing and setting room code
                                     window.location.reload();
                                 }}
                             >
@@ -374,7 +315,7 @@ const WaitingRoom = () => {
                     </div>
                 </div>
 
-                {/* Players Section */}
+                {/* ✅ FIXED: Players Section with real-time updates */}
                 <div className="players-section">
                     <h3>
                         <FiUsers />
@@ -382,7 +323,7 @@ const WaitingRoom = () => {
                     </h3>
                     <div className="players-grid">
                         {roomPlayers.map((player, index) => (
-                            <div key={player.id || index} className="player-card">
+                            <div key={player.id || player.userId || index} className="player-card">
                                 <div className="player-avatar">
                                     <FiUser />
                                 </div>

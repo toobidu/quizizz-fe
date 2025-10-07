@@ -4,10 +4,8 @@ import socketService from '../services/socketService';
 import socketManager from '../utils/socketManager';
 
 /**
- * Room Store with Socket.IO Real-time Updates
+ * ✅ FIXED: Room Store with Socket.IO Real-time Updates
  * Standardized to match Kahoot/Quizizz architecture
- * 
- * NO MORE STOMP - Pure Socket.IO!
  */
 const useRoomStore = create((set, get) => ({
     // Room state
@@ -16,7 +14,7 @@ const useRoomStore = create((set, get) => ({
     roomPlayers: [],
     myRooms: [],
     isLoading: false,
-    loading: false, // Alias for backward compatibility
+    loading: false,
     error: null,
     isConnectedToRoom: false,
     isSubscribedToRoomList: false,
@@ -41,11 +39,8 @@ const useRoomStore = create((set, get) => ({
     },
 
     setLoading: (isLoading) => set({ isLoading, loading: isLoading }),
-
     setError: (error) => set({ error }),
-
     setRoomPlayers: (players) => set({ roomPlayers: players }),
-
     clearError: () => set({ error: null }),
 
     // Animation helpers
@@ -54,7 +49,6 @@ const useRoomStore = create((set, get) => ({
             animatingRooms: new Set(state.animatingRooms).add(roomId)
         }));
 
-        // Remove animation flag after animation completes
         setTimeout(() => {
             set(state => {
                 const newSet = new Set(state.animatingRooms);
@@ -69,7 +63,6 @@ const useRoomStore = create((set, get) => ({
             newRoomIds: new Set(state.newRoomIds).add(roomId)
         }));
 
-        // Remove new flag after 3 seconds
         setTimeout(() => {
             set(state => {
                 const newSet = new Set(state.newRoomIds);
@@ -81,9 +74,6 @@ const useRoomStore = create((set, get) => ({
 
     // ========== SOCKET.IO REAL-TIME SUBSCRIPTIONS ==========
 
-    /**
-     * Subscribe to room list updates (for dashboard)
-     */
     subscribeToRoomList: async () => {
         try {
             const state = get();
@@ -95,14 +85,12 @@ const useRoomStore = create((set, get) => ({
             console.log('📋 Subscribing to room list updates...');
             await socketManager.initialize();
 
-            // Subscribe to room list updates using Socket.IO
             socketService.subscribeToRoomList((message) => {
                 console.log('📋 Room list update:', message.type);
                 
                 if (message.type === 'CREATE_ROOM') {
                     const { room } = message.data;
                     set(state => {
-                        // Check if room already exists
                         const exists = state.rooms.find(r => r.id === room.id);
                         if (!exists) {
                             get().addNewRoom(room.id);
@@ -117,7 +105,6 @@ const useRoomStore = create((set, get) => ({
                     const { roomId } = message.data;
                     get().addAnimatingRoom(roomId);
 
-                    // Remove after animation
                     setTimeout(() => {
                         set(state => ({
                             rooms: state.rooms.filter(room => room.id !== roomId)
@@ -139,9 +126,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Unsubscribe from room list updates
-     */
     unsubscribeFromRoomList: () => {
         console.log('📋 Unsubscribing from room list updates');
         socketService.unsubscribeFromRoomList();
@@ -149,37 +133,57 @@ const useRoomStore = create((set, get) => ({
     },
 
     /**
-     * Connect to a specific room and subscribe to its events
+     * ✅ FIXED: Connect to room with proper event handling
      */
     connectToRoom: async (roomId) => {
         try {
             console.log('🔌 Connecting to room:', roomId);
+            set({ error: null }); // Clear any previous errors
+            
+            // Initialize socket connection first
             await socketManager.initialize();
-
-            // Subscribe to room-specific events using Socket.IO
+            
+            if (!socketManager.isConnected()) {
+                console.error('❌ Socket not connected after initialization');
+                set({ error: 'Không thể kết nối Socket.IO server' });
+                return;
+            }
+            
+            // Setup listeners first - FIXED event types to match backend
             socketService.subscribeToRoom(roomId, (message) => {
-                console.log('📡 Room event:', message.type);
+                console.log('📡 Room event:', message.type, message.data);
                 
-                if (message.type === 'JOIN_ROOM') {
+                // ✅ FIXED: Handle EXACT backend event types
+                if (message.type === 'PLAYER_JOINED') {
                     const { userId, username } = message.data;
-                    console.log('Player joined room:', { userId, username });
-                    // Refresh players list from server
+                    console.log('👤 Player joined:', { userId, username });
+                    
+                    // Fetch fresh player list instead of manual update
                     get().fetchRoomPlayers(roomId);
-                } else if (message.type === 'LEAVE_ROOM') {
+                    
+                } else if (message.type === 'PLAYER_LEFT') {
                     const { userId } = message.data;
-                    console.log('Player left room:', { userId });
-                    // Refresh players list from server
+                    console.log('👤 Player left:', { userId });
+                    
+                    // Fetch fresh player list instead of manual update
                     get().fetchRoomPlayers(roomId);
+                    
                 } else if (message.type === 'ROOM_PLAYERS_UPDATED') {
                     const { players } = message.data;
-                    console.log('Room players updated:', players);
+                    console.log('👥 Players updated:', players);
                     set({ roomPlayers: players });
+                    
                 } else if (message.type === 'ROOM_UPDATED') {
                     const roomData = message.data;
                     set({ currentRoom: roomData });
+                    
                 } else if (message.type === 'GAME_STARTED') {
-                    // Handle game start
                     console.log('🎮 Game started!');
+                    // Dispatch custom event for navigation
+                    window.dispatchEvent(new CustomEvent('gameStarted', { 
+                        detail: { roomId: message.data.roomId } 
+                    }));
+                    
                 } else if (message.type === 'PLAYER_KICKED') {
                     const { playerId, reason } = message.data;
                     const currentUserId = socketManager.getCurrentUserId();
@@ -188,35 +192,57 @@ const useRoomStore = create((set, get) => ({
                         get().clearCurrentRoom();
                         set({ error: reason || 'Bạn đã bị đuổi khỏi phòng' });
                     } else {
-                        // Remove other player from list
-                        set(state => ({
-                            roomPlayers: state.roomPlayers.filter(p => p.id !== playerId)
-                        }));
+                        // Refresh player list
+                        get().fetchRoomPlayers(roomId);
                     }
+                    
                 } else if (message.type === 'HOST_CHANGED') {
                     const { newHostId } = message.data;
                     set(state => ({
                         currentRoom: state.currentRoom ? {
                             ...state.currentRoom,
+                            ownerId: newHostId,
                             hostId: newHostId
                         } : null
                     }));
+                    
+                    // Refresh player list to update host status
+                    get().fetchRoomPlayers(roomId);
                 }
             });
 
-            // Join the room via Socket.IO
-            socketService.joinRoom(roomId, (response) => {
-                if (response?.success) {
-                    set({ isConnectedToRoom: true });
-                    console.log('✅ Connected to room:', roomId);
-                } else {
-                    console.error('❌ Failed to connect to room:', response?.error);
-                    set({ error: 'Không thể kết nối đến phòng' });
-                }
+            // Join room via Socket.IO
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    console.error('❌ Socket.IO join room timeout');
+                    set({ error: 'Timeout khi kết nối đến phòng' });
+                    reject(new Error('Join room timeout'));
+                }, 10000);
+                
+                socketService.joinRoom(roomId, (response) => {
+                    clearTimeout(timeout);
+                    
+                    console.log('🔥 Join room response:', response);
+                    
+                    if (response?.success !== false) {
+                        set({ isConnectedToRoom: true });
+                        console.log('✅ Connected to room:', roomId);
+                        
+                        // Initial fetch of players after successful connection
+                        get().fetchRoomPlayers(roomId);
+                        resolve();
+                    } else {
+                        const errorMsg = response?.message || response?.error || 'Không thể kết nối đến phòng';
+                        console.error('❌ Failed to connect to room:', errorMsg);
+                        set({ error: errorMsg });
+                        reject(new Error(errorMsg));
+                    }
+                });
             });
         } catch (error) {
             console.error('❌ Failed to connect to room:', error);
-            set({ error: 'Không thể kết nối đến phòng' });
+            set({ error: error.message || 'Không thể kết nối đến phòng' });
+            throw error;
         }
     },
 
@@ -228,15 +254,14 @@ const useRoomStore = create((set, get) => ({
         
         console.log('🔌 Disconnecting from room:', roomId);
         socketService.unsubscribeFromRoom(roomId);
-        socketService.leaveRoom(roomId);
+        if (socketService.isConnected()) {
+            socketService.leaveRoom(roomId);
+        }
         set({ isConnectedToRoom: false });
     },
 
     // ========== API INTEGRATED ACTIONS ==========
 
-    /**
-     * Create a new room
-     */
     createRoom: async (roomData) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -246,16 +271,21 @@ const useRoomStore = create((set, get) => ({
             if (response.success) {
                 const newRoom = response.data;
 
-                // Don't add to local state immediately - wait for Socket.IO event
-                // This prevents duplicate entries
                 set({
                     currentRoom: newRoom,
                     isLoading: false,
                     loading: false
                 });
 
-                // Connect to the newly created room
-                await get().connectToRoom(newRoom.id);
+                // Connect to the newly created room with better error handling
+                try {
+                    await get().connectToRoom(newRoom.id);
+                    console.log('✅ Successfully connected to created room');
+                } catch (connectError) {
+                    console.warn('⚠️ Failed to connect to Socket.IO, but room created successfully:', connectError.message);
+                    // Don't fail the entire operation if Socket.IO fails
+                    // The room is created successfully, user can still use it
+                }
 
                 return { success: true, room: newRoom };
             } else {
@@ -269,9 +299,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Join room by code
-     */
     joinRoomByCode: async (roomCode) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -304,9 +331,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Join room directly by ID
-     */
     joinRoomDirect: async (roomId) => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -317,7 +341,6 @@ const useRoomStore = create((set, get) => ({
                 const room = response.data;
                 set({ currentRoom: room, isLoading: false, loading: false });
 
-                // Connect to the joined room
                 await get().connectToRoom(room.id);
 
                 return { success: true, room };
@@ -332,16 +355,11 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Alias for backward compatibility
-     */
+    // Alias for backward compatibility
     joinRoom: async (roomCode) => {
         return await get().joinRoomByCode(roomCode);
     },
 
-    /**
-     * Leave current room
-     */
     leaveRoom: async () => {
         const state = get();
         if (!state.currentRoom) {
@@ -367,9 +385,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Fetch all public rooms
-     */
     fetchRooms: async (params = {}) => {
         const state = get();
         if (state.isLoading) {
@@ -403,21 +418,19 @@ const useRoomStore = create((set, get) => ({
     },
 
     /**
-     * Alias for backward compatibility
-     */
-    loadRooms: async (params = {}) => {
-        return await get().fetchRooms(params);
-    },
-
-    /**
-     * Fetch room players
+     * ✅ FIXED: Fetch room players with proper error handling
      */
     fetchRoomPlayers: async (roomId) => {
+        if (!roomId) {
+            return { success: false, error: 'Không có ID phòng' };
+        }
+
         try {
             const response = await roomApi.getRoomPlayers(roomId);
             if (response.success) {
                 const players = response.data || [];
                 set({ roomPlayers: players });
+                console.log('✅ Updated room players:', players.length);
                 return { success: true, players };
             } else {
                 console.error('Failed to fetch room players:', response.error);
@@ -429,9 +442,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Fetch user's own rooms
-     */
     fetchMyRooms: async () => {
         set({ isLoading: true, loading: true, error: null });
 
@@ -453,9 +463,6 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Kick a player from room
-     */
     kickPlayer: async (playerId) => {
         const state = get();
         if (!state.currentRoom) {
@@ -471,15 +478,11 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Delete a room
-     */
     deleteRoom: async (roomId) => {
         try {
             const response = await roomApi.deleteRoom(roomId);
             
             if (response.success) {
-                // Remove from local state
                 set(state => ({
                     rooms: state.rooms.filter(room => room.id !== roomId),
                     myRooms: state.myRooms.filter(room => room.id !== roomId),
@@ -494,28 +497,50 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
+    // ========== GAME ACTIONS ==========
+
+    /**
+     * ✅ FIXED: Start game using Socket.IO
+     */
+    startGame: async () => {
+        const state = get();
+        if (!state.currentRoom) {
+            return { success: false, error: 'Không có phòng để bắt đầu game' };
+        }
+
+        try {
+            return new Promise((resolve) => {
+                socketService.startGame(state.currentRoom.id, (response) => {
+                    if (response?.success !== false) {
+                        resolve({ success: true });
+                    } else {
+                        const errorMessage = response?.message || 'Không thể bắt đầu game';
+                        set({ error: errorMessage });
+                        resolve({ success: false, error: errorMessage });
+                    }
+                });
+            });
+        } catch (error) {
+            const errorMessage = error.message || 'Có lỗi xảy ra khi bắt đầu game';
+            set({ error: errorMessage });
+            return { success: false, error: errorMessage };
+        }
+    },
+
     // ========== AUTO REFRESH & CLEANUP ==========
 
     autoRefreshInterval: null,
 
-    /**
-     * Start auto-refresh (fallback for when Socket.IO fails)
-     */
     startAutoRefresh: () => {
-        // With Socket.IO, polling is less necessary
-        // But keep for fallback
         const interval = setInterval(() => {
             if (!get().isSubscribedToRoomList) {
                 get().fetchRooms();
             }
-        }, 60000); // Reduced frequency since we have real-time
+        }, 60000);
 
         set({ autoRefreshInterval: interval });
     },
 
-    /**
-     * Stop auto-refresh
-     */
     stopAutoRefresh: () => {
         const { autoRefreshInterval } = get();
         if (autoRefreshInterval) {
@@ -524,29 +549,25 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    /**
-     * Cleanup method for disconnecting Socket.IO
-     */
+    // Alias methods for backward compatibility
+    loadRooms: async (params = {}) => {
+        return get().fetchRooms(params);
+    },
+
     cleanup: () => {
         console.log('🧹 Cleaning up room store...');
         
         const state = get();
         
-        // Disconnect from current room
         if (state.currentRoom) {
             get().disconnectFromRoom(state.currentRoom.id);
         }
         
-        // Unsubscribe from room list
         get().unsubscribeFromRoomList();
-        
-        // Stop auto-refresh
         get().stopAutoRefresh();
         
-        // Disconnect Socket.IO
         socketManager.disconnect();
         
-        // Reset state
         set({
             isConnectedToRoom: false,
             isSubscribedToRoomList: false,
