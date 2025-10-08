@@ -353,7 +353,7 @@ const GameRoom = () => {
                         </button>
                     )}
 
-                    <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+                    <button onClick={() => navigate('/rooms')} className="btn-secondary">
                         Rời phòng
                     </button>
                 </div>

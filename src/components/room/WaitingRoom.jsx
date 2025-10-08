@@ -103,7 +103,7 @@ const WaitingRoom = () => {
 
                 // Set room data
                 setCurrentRoom(room);
-                
+
                 // ✅ FIXED: Connect to Socket.IO for real-time updates
                 if (room.id) {
                     await connectToRoom(room.id);
@@ -140,6 +140,29 @@ const WaitingRoom = () => {
         };
     }, [currentRoom, navigate]);
 
+    // ✅ NEW: Listen for navigation to room list events
+    useEffect(() => {
+        const handleNavigateToRoomList = (event) => {
+            console.log('🔄 Navigate to room list event received:', event.detail);
+            const { reason, message } = event.detail;
+
+            // Navigate to rooms page
+            navigate('/rooms');
+
+            // Optional: Show a toast message if needed
+            if (message) {
+                console.log('📝 Navigation message:', message);
+            }
+        };
+
+        // Listen for custom navigation event
+        window.addEventListener('navigateToRoomList', handleNavigateToRoomList);
+
+        return () => {
+            window.removeEventListener('navigateToRoomList', handleNavigateToRoomList);
+        };
+    }, [navigate]);
+
     // ✅ FIXED: Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -165,7 +188,9 @@ const WaitingRoom = () => {
     const handleLeaveRoom = async () => {
         const result = await leaveRoom();
         if (result.success) {
-            navigate('/dashboard');
+            setTimeout(() => {
+                navigate('/rooms');
+            }, 100);
         }
     };
 
