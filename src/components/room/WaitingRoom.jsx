@@ -195,11 +195,18 @@ const WaitingRoom = () => {
     };
 
     const handleStartGame = async () => {
-        const result = await startGame();
-        if (result.success) {
-            // Navigate to game room
-            navigate(`/game/${roomCode}`);
-        }
+        console.log('🎮 Host starting game for room:', currentRoom.id);
+        
+        // Use socketService directly for immediate start
+        socketService.startGame(currentRoom.id, (response) => {
+            if (response?.success) {
+                console.log('✅ Game start request successful');
+                // Navigation will be handled by game-started event listener
+            } else {
+                console.error('❌ Failed to start game:', response);
+                setError('Không thể bắt đầu game. Vui lòng thử lại.');
+            }
+        });
     };
 
     // Loading state

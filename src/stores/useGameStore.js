@@ -78,11 +78,13 @@ const useGameStore = create((set, get) => ({
      * Handle game started event
      */
     onGameStarted: (data) => {
+        console.log('🎮 Game started event received:', data);
         set({
             isGameActive: true,
             isGameStarting: false,
             isGameFinished: false,
-            currentQuestionIndex: 0
+            currentQuestionIndex: 0,
+            totalQuestions: data.gameState?.totalQuestions || 0
         });
     },
 
@@ -90,13 +92,27 @@ const useGameStore = create((set, get) => ({
      * Load next question
      */
     loadNextQuestion: (questionData) => {
+        console.log('❓ Loading next question:', questionData);
         const { currentQuestionIndex } = get();
         // Stop previous timer
         get().stopTimer();
 
+        // Transform backend data to frontend format
+        const question = {
+            questionId: questionData.questionId,
+            content: questionData.questionText,
+            answers: questionData.answers?.map((answer) => ({
+                id: answer.id,
+                content: answer.text
+            })) || [],
+            timeLimit: questionData.timeLimit,
+            sequence: questionData.currentQuestionNumber,
+            totalQuestions: questionData.totalQuestions
+        };
+
         set({
-            currentQuestion: questionData.question || questionData,
-            currentQuestionIndex: currentQuestionIndex + 1,
+            currentQuestion: question,
+            currentQuestionIndex: questionData.currentQuestionNumber || currentQuestionIndex + 1,
             totalQuestions: questionData.totalQuestions || get().totalQuestions,
             selectedAnswer: null,
             hasAnswered: false,
@@ -105,8 +121,8 @@ const useGameStore = create((set, get) => ({
         });
 
         // Start timer for this question
-        if (questionData.question?.timeLimit) {
-            get().startTimer(questionData.question.timeLimit);
+        if (questionData.timeLimit) {
+            get().startTimer(questionData.timeLimit);
         }
     },
 
@@ -135,10 +151,13 @@ const useGameStore = create((set, get) => ({
             hasAnswered: true
         });
 
+        // Use the answer ID directly
+        const selectedAnswerId = currentQuestion.answers[answerId]?.id;
+        
         socketService.submitAnswer(
             roomId,
             currentQuestion.questionId,
-            answerId,
+            selectedAnswerId,
             timeTaken
         );
 
@@ -331,20 +350,26 @@ const useGameStore = create((set, get) => ({
      * Setup socket event listeners for game
      */
     setupSocketListeners: () => {
+        console.log('🔌 Setting up game socket listeners');
+        
         // Game events
         socketService.onGameStarted((data) => {
+            console.log('🎮 Received game-started:', data);
             get().onGameStarted(data);
         });
 
         socketService.onNextQuestion((data) => {
+            console.log('❓ Received next-question:', data);
             get().loadNextQuestion(data);
         });
 
         socketService.onAnswerSubmitted((result) => {
+            console.log('📝 Received answer-submitted:', result);
             get().onAnswerResult(result);
         });
 
         socketService.onGameFinished((data) => {
+            console.log('🏆 Received game-finished:', data);
             get().onGameFinished(data);
         });
 
@@ -371,11 +396,13 @@ const useGameStore = create((set, get) => ({
      * Cleanup socket listeners
      */
     cleanupSocketListeners: () => {
+        console.log('🧹 Cleaning up game socket listeners');
         // Remove all game-related listeners
         socketService.off('game-started');
         socketService.off('next-question');
         socketService.off('answer-submitted');
         socketService.off('game-finished');
+        socketService.off('game-ended');
         socketService.off('player-joined');
         socketService.off('player-left');
         socketService.off('room-players');

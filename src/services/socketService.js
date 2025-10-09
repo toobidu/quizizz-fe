@@ -339,6 +339,31 @@ class SocketService {
         });
     }
 
+    submitAnswer(roomId, questionId, answerId, timeTaken) {
+        if (!this.socket || !this.connected) {
+            console.error('❌ Socket not connected for answer submission');
+            return;
+        }
+
+        console.log('📝 Submitting answer:', { roomId, questionId, answerId, timeTaken });
+        this.emit('submit-answer', {
+            roomId: roomId,
+            questionId: questionId,
+            answerId: answerId,
+            timeTaken: timeTaken
+        });
+    }
+
+    nextQuestion(roomId) {
+        if (!this.socket || !this.connected) {
+            console.error('❌ Socket not connected for next question');
+            return;
+        }
+
+        console.log('➡️ Requesting next question for room:', roomId);
+        this.emit('next-question', { roomId });
+    }
+
     subscribeToRoomList(callback) {
         if (!this.socket || !this.connected) {
             console.warn('⚠️ Socket not connected yet, attempting to connect before subscribing to room list');
@@ -523,6 +548,7 @@ class SocketService {
 
     onGameFinished(callback) {
         this.on('game-ended', callback);
+        this.on('game-finished', callback);
     }
 
     onError(callback) {
