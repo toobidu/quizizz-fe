@@ -405,6 +405,16 @@ const useRoomStore = create((set, get) => ({
             }
 
             await socketManager.initialize();
+
+            // ✅ CRITICAL: Lắng nghe sự kiện room-list-updated từ backend
+            socketService.on('room-list-updated', (data) => {
+                console.log('📋 Room list updated from backend:', data);
+                if (data.rooms) {
+                    set({ rooms: data.rooms });
+                }
+            });
+
+            // Giữ lại các sự kiện cũ để tương thích ngược
             socketService.subscribeToRoomList((message) => {
                 console.log('📋 Room list update:', message.type);
 

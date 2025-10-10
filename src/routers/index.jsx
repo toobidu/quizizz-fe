@@ -18,7 +18,7 @@ import FeedbackPage from "../pages/footer/FeedbackPage";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import RoomsPage from "../pages/room/RoomPage";
 import WaitingRoom from "../components/room/WaitingRoom";
-import GamePlay from "../pages/game/GamePlay"; // Import the new GamePlay component
+import GameRoom from "../components/room/GameRoom";
 import authStore from "../stores/authStore";
 
 // Protected Route Component
@@ -43,16 +43,16 @@ const ProtectedRoute = ({ children }) => {
   // Show loading while initializing or while auth is loading
   if (!isInitialized || isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '1.2rem',
-        color: '#666'
-      }}>
-        Đang tải...
-      </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontSize: '1.2rem',
+          color: '#666'
+        }}>
+          Đang tải...
+        </div>
     );
   }
 
@@ -76,7 +76,7 @@ const router = createBrowserRouter([
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
       { path: "rooms", element: <ProtectedRoute><RoomsPage /></ProtectedRoute> },
       { path: "waiting-room/:roomCode", element: <ProtectedRoute><WaitingRoom /></ProtectedRoute> },
-      { path: "game/:roomCode", element: <ProtectedRoute><GamePlay /></ProtectedRoute> }, // Updated route
+      { path: "game/:roomCode", element: <ProtectedRoute><GameRoom /></ProtectedRoute> },
       { path: "about", element: <AboutPage /> },
       { path: "blog", element: <BlogPage /> },
       { path: "contact", element: <ContactPage /> },

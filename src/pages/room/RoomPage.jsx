@@ -357,7 +357,7 @@ const RoomsPage = () => {
                                             <button
                                                 key={page}
                                                 className={`pagination-button pagination-number ${page === currentPage ? 'active' : ''
-                                                    }`}
+                                                }`}
                                                 onClick={() => {
                                                     handlePageChange(page);
                                                 }}

@@ -28,7 +28,7 @@ const login = async (payload) => {
     };
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+        error.response?.data?.message || error.message || 'Đăng nhập thất bại';
     throw new Error(errorMessage);
   }
 };
@@ -58,7 +58,7 @@ const register = async (payload) => {
     };
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message || error.message || 'Đăng ký thất bại';
+        error.response?.data?.message || error.message || 'Đăng ký thất bại';
     const field = error.response?.data?.field;
     throw new Error(errorMessage, { cause: { field } });
   }
@@ -90,9 +90,9 @@ const forgotPassword = async (email) => {
     };
   } catch (error) {
     const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      'Email không tồn tại hoặc không thể gửi email reset password';
+        error.response?.data?.message ||
+        error.message ||
+        'Email không tồn tại hoặc không thể gửi email reset password';
     throw new Error(errorMessage);
   }
 };

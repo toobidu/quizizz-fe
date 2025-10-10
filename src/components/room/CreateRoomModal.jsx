@@ -193,272 +193,272 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
   if (!onClose) return null;
 
   return (
-    <div className={`crm-overlay ${theme}`} onClick={handleOverlayClick}>
-      <div className="crm-container">
-        <div className="crm-header">
-          <div className="crm-header-content">
-            <div className="crm-header-icon">
-              <FiStar />
+      <div className={`crm-overlay ${theme}`} onClick={handleOverlayClick}>
+        <div className="crm-container">
+          <div className="crm-header">
+            <div className="crm-header-content">
+              <div className="crm-header-icon">
+                <FiStar />
+              </div>
+              <div className="crm-header-text">
+                <h2 className="crm-title">Tạo phòng thử thách</h2>
+                <p className="crm-subtitle">Thiết lập phòng chơi của bạn</p>
+              </div>
             </div>
-            <div className="crm-header-text">
-              <h2 className="crm-title">Tạo phòng thử thách</h2>
-              <p className="crm-subtitle">Thiết lập phòng chơi của bạn</p>
-            </div>
-          </div>
-          <button className="crm-close" onClick={handleClose}>
-            <FiX />
-          </button>
-        </div>
-
-        {(error || storeError || topicsError) && (
-          <div className="crm-error">
-            <FiAlertCircle />
-            <span>{error || storeError || topicsError}</span>
-            <button onClick={() => setError('')} className="crm-error-clear">
-              Thử lại
+            <button className="crm-close" onClick={handleClose}>
+              <FiX />
             </button>
           </div>
-        )}
 
-        {roomCode ? (
-          <div className="crm-success">
-            <div className="crm-success-icon">
-              <FiCheck />
-            </div>
-            <h2>Phòng đã được tạo thành công!</h2>
-            <p>Chia sẻ mã phòng với bạn bè để họ có thể tham gia</p>
-            <div className="crm-room-code">
-              <div className="crm-code-display">
-                <span className="crm-code-label">Mã phòng:</span>
-                <span className="crm-code-value">{roomCode}</span>
+          {(error || storeError || topicsError) && (
+              <div className="crm-error">
+                <FiAlertCircle />
+                <span>{error || storeError || topicsError}</span>
+                <button onClick={() => setError('')} className="crm-error-clear">
+                  Thử lại
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(roomCode);
-                  setCopied(true);
-                  toast.info('Đã sao chép mã phòng!');
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                className="crm-copy-btn"
-              >
-                {copied ? <FiCheck /> : <FiCopy />}
-                {copied ? 'Đã sao chép' : 'Sao chép'}
-              </button>
-            </div>
-            <div className="crm-success-actions">
-              <button className="crm-button crm-secondary-btn" onClick={handleClose}>
-                Đóng
-              </button>
-              <button
-                className="crm-button crm-primary-btn"
-                onClick={() => navigate(`/waiting-room/${roomCode}`)}
-              >
-                Vào phòng
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="crm-form">
-            <div className="crm-form-group">
-              <label htmlFor="name">
-                <FiStar style={{ marginRight: '8px' }} />
-                Tên phòng
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={roomData.name}
-                onChange={handleChange}
-                required
-                placeholder="Ví dụ: Phòng toán vui"
-                className="crm-input"
-              />
-            </div>
+          )}
 
-            <div className="crm-form-group crm-toggle-group">
-              <label htmlFor="isPrivate" className="crm-toggle-label">
-                {roomData.isPrivate ? (
-                  <>
-                    <FiLock style={{ marginRight: '8px' }} />
-                    Phòng riêng tư
-                  </>
-                ) : (
-                  <>
-                    <FiUnlock style={{ marginRight: '8px' }} />
-                    Phòng công khai
-                  </>
-                )}
-              </label>
-              <label className="crm-toggle-switch">
-                <input
-                  type="checkbox"
-                  id="isPrivate"
-                  name="isPrivate"
-                  checked={roomData.isPrivate}
-                  onChange={handleChange}
-                />
-                <span className="slider"></span>
-              </label>
-            </div>
-
-            <div className="crm-settings">
-              <h3 className="crm-settings-title">
-                <FiSettings style={{ marginRight: '8px' }} />
-                Cài đặt phòng
-              </h3>
-
-              <div className="crm-form-group">
-                <label htmlFor="topicId">
-                  <FiBookOpen style={{ marginRight: '8px' }} />
-                  Chủ đề câu hỏi
-                </label>
-                <div className="crm-select-wrapper">
-                  <select
-                    id="topicId"
-                    name="topicId"
-                    value={roomData.topicId}
-                    onChange={handleChange}
-                    className="crm-input crm-select"
-                    required
-                    disabled={loadingTopics}
-                  >
-                    <option value="" disabled>
-                      {loadingTopics ? 'Đang tải chủ đề...' : 'Chọn chủ đề'}
-                    </option>
-                    {topics.map((topic) => (
-                      <option key={`topic-${topic.id}`} value={topic.id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
-                  {loadingTopics ? (
-                    <FiLoader className="crm-select-icon crm-loading" />
-                  ) : (
-                    <FiChevronDown className="crm-select-icon" />
-                  )}
+          {roomCode ? (
+              <div className="crm-success">
+                <div className="crm-success-icon">
+                  <FiCheck />
                 </div>
-              </div>
-
-              <div className="crm-form-group">
-                <label htmlFor="gameMode">
-                  <FiZap style={{ marginRight: '8px' }} />
-                  Chế độ chơi
-                </label>
-                <div className="crm-select-wrapper">
-                  <select
-                    id="gameMode"
-                    name="gameMode"
-                    value={roomData.gameMode}
-                    onChange={handleChange}
-                    className="crm-input crm-select"
-                  >
-                    {roomModes.map((mode) => (
-                      <option key={mode.value} value={mode.value}>
-                        {mode.label}
-                      </option>
-                    ))}
-                  </select>
-                  <FiChevronDown className="crm-select-icon" />
-                </div>
-                {roomData.gameMode && (
-                  <div className="crm-input-hint">
-                    {roomModes.find(m => m.value === roomData.gameMode)?.description}
+                <h2>Phòng đã được tạo thành công!</h2>
+                <p>Chia sẻ mã phòng với bạn bè để họ có thể tham gia</p>
+                <div className="crm-room-code">
+                  <div className="crm-code-display">
+                    <span className="crm-code-label">Mã phòng:</span>
+                    <span className="crm-code-value">{roomCode}</span>
                   </div>
-                )}
-              </div>
-
-              <div className="crm-form-group">
-                <label htmlFor="maxPlayers">
-                  <FiUsers style={{ marginRight: '8px' }} />
-                  Số người chơi tối đa
-                </label>
-                <input
-                  type="number"
-                  id="maxPlayers"
-                  name="maxPlayers"
-                  min={roomModes.find(m => m.value === roomData.gameMode)?.minPlayers || 2}
-                  max={roomData.gameMode === 'BATTLE_ROYAL' ? undefined : (roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers || 20)}
-                  value={roomData.maxPlayers || ''}
-                  onChange={handleChange}
-                  className="crm-input"
-                  disabled={roomData.gameMode === 'ONE_VS_ONE'}
-                />
-                <div className="crm-input-hint">
-                  {roomData.gameMode === 'ONE_VS_ONE'
-                    ? 'Chế độ 1vs1 luôn có 2 người chơi'
-                    : roomData.gameMode === 'BATTLE_ROYAL'
-                      ? 'Tối thiểu 3 người chơi, không giới hạn tối đa'
-                      : `Từ ${roomModes.find(m => m.value === roomData.gameMode)?.minPlayers} đến ${roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers} người chơi`
-                  }
+                  <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(roomCode);
+                        setCopied(true);
+                        toast.info('Đã sao chép mã phòng!');
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="crm-copy-btn"
+                  >
+                    {copied ? <FiCheck /> : <FiCopy />}
+                    {copied ? 'Đã sao chép' : 'Sao chép'}
+                  </button>
+                </div>
+                <div className="crm-success-actions">
+                  <button className="crm-button crm-secondary-btn" onClick={handleClose}>
+                    Đóng
+                  </button>
+                  <button
+                      className="crm-button crm-primary-btn"
+                      onClick={() => navigate(`/waiting-room/${roomCode}`)}
+                  >
+                    Vào phòng
+                  </button>
                 </div>
               </div>
-
-              <div className="crm-form-group">
-                <label htmlFor="timeLimit">
-                  <FiClock style={{ marginRight: '8px' }} />
-                  Thời gian trả lời (giây)
-                </label>
-                <input
-                  type="number"
-                  id="timeLimit"
-                  name="timeLimit"
-                  min="10"
-                  max="300"
-                  value={roomData.timeLimit || ''}
-                  onChange={handleChange}
-                  className="crm-input"
-                />
-              </div>
-
-              <div className="crm-form-group">
-                <label htmlFor="questionCount">
-                  <FiHelpCircle style={{ marginRight: '8px' }} />
-                  Số câu hỏi
-                </label>
-                <input
-                  type="number"
-                  id="questionCount"
-                  name="questionCount"
-                  min="5"
-                  max="50"
-                  value={roomData.questionCount || ''}
-                  onChange={handleChange}
-                  className="crm-input"
-                />
-              </div>
-            </div>
-
-            <div className="crm-form-actions">
-              <button
-                type="button"
-                className="crm-button crm-secondary-btn"
-                onClick={handleClose}
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                className="crm-button crm-primary-btn"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <div className="crm-loading-spinner"></div>
-                    Đang tạo phòng...
-                  </>
-                ) : (
-                  <>
+          ) : (
+              <form onSubmit={handleSubmit} className="crm-form">
+                <div className="crm-form-group">
+                  <label htmlFor="name">
                     <FiStar style={{ marginRight: '8px' }} />
-                    Tạo phòng
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
+                    Tên phòng
+                  </label>
+                  <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={roomData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="Ví dụ: Phòng toán vui"
+                      className="crm-input"
+                  />
+                </div>
+
+                <div className="crm-form-group crm-toggle-group">
+                  <label htmlFor="isPrivate" className="crm-toggle-label">
+                    {roomData.isPrivate ? (
+                        <>
+                          <FiLock style={{ marginRight: '8px' }} />
+                          Phòng riêng tư
+                        </>
+                    ) : (
+                        <>
+                          <FiUnlock style={{ marginRight: '8px' }} />
+                          Phòng công khai
+                        </>
+                    )}
+                  </label>
+                  <label className="crm-toggle-switch">
+                    <input
+                        type="checkbox"
+                        id="isPrivate"
+                        name="isPrivate"
+                        checked={roomData.isPrivate}
+                        onChange={handleChange}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+
+                <div className="crm-settings">
+                  <h3 className="crm-settings-title">
+                    <FiSettings style={{ marginRight: '8px' }} />
+                    Cài đặt phòng
+                  </h3>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="topicId">
+                      <FiBookOpen style={{ marginRight: '8px' }} />
+                      Chủ đề câu hỏi
+                    </label>
+                    <div className="crm-select-wrapper">
+                      <select
+                          id="topicId"
+                          name="topicId"
+                          value={roomData.topicId}
+                          onChange={handleChange}
+                          className="crm-input crm-select"
+                          required
+                          disabled={loadingTopics}
+                      >
+                        <option value="" disabled>
+                          {loadingTopics ? 'Đang tải chủ đề...' : 'Chọn chủ đề'}
+                        </option>
+                        {topics.map((topic) => (
+                            <option key={`topic-${topic.id}`} value={topic.id}>
+                              {topic.name}
+                            </option>
+                        ))}
+                      </select>
+                      {loadingTopics ? (
+                          <FiLoader className="crm-select-icon crm-loading" />
+                      ) : (
+                          <FiChevronDown className="crm-select-icon" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="gameMode">
+                      <FiZap style={{ marginRight: '8px' }} />
+                      Chế độ chơi
+                    </label>
+                    <div className="crm-select-wrapper">
+                      <select
+                          id="gameMode"
+                          name="gameMode"
+                          value={roomData.gameMode}
+                          onChange={handleChange}
+                          className="crm-input crm-select"
+                      >
+                        {roomModes.map((mode) => (
+                            <option key={mode.value} value={mode.value}>
+                              {mode.label}
+                            </option>
+                        ))}
+                      </select>
+                      <FiChevronDown className="crm-select-icon" />
+                    </div>
+                    {roomData.gameMode && (
+                        <div className="crm-input-hint">
+                          {roomModes.find(m => m.value === roomData.gameMode)?.description}
+                        </div>
+                    )}
+                  </div>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="maxPlayers">
+                      <FiUsers style={{ marginRight: '8px' }} />
+                      Số người chơi tối đa
+                    </label>
+                    <input
+                        type="number"
+                        id="maxPlayers"
+                        name="maxPlayers"
+                        min={roomModes.find(m => m.value === roomData.gameMode)?.minPlayers || 2}
+                        max={roomData.gameMode === 'BATTLE_ROYAL' ? undefined : (roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers || 20)}
+                        value={roomData.maxPlayers || ''}
+                        onChange={handleChange}
+                        className="crm-input"
+                        disabled={roomData.gameMode === 'ONE_VS_ONE'}
+                    />
+                    <div className="crm-input-hint">
+                      {roomData.gameMode === 'ONE_VS_ONE'
+                          ? 'Chế độ 1vs1 luôn có 2 người chơi'
+                          : roomData.gameMode === 'BATTLE_ROYAL'
+                              ? 'Tối thiểu 3 người chơi, không giới hạn tối đa'
+                              : `Từ ${roomModes.find(m => m.value === roomData.gameMode)?.minPlayers} đến ${roomModes.find(m => m.value === roomData.gameMode)?.maxPlayers} người chơi`
+                      }
+                    </div>
+                  </div>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="timeLimit">
+                      <FiClock style={{ marginRight: '8px' }} />
+                      Thời gian trả lời (giây)
+                    </label>
+                    <input
+                        type="number"
+                        id="timeLimit"
+                        name="timeLimit"
+                        min="10"
+                        max="300"
+                        value={roomData.timeLimit || ''}
+                        onChange={handleChange}
+                        className="crm-input"
+                    />
+                  </div>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="questionCount">
+                      <FiHelpCircle style={{ marginRight: '8px' }} />
+                      Số câu hỏi
+                    </label>
+                    <input
+                        type="number"
+                        id="questionCount"
+                        name="questionCount"
+                        min="5"
+                        max="50"
+                        value={roomData.questionCount || ''}
+                        onChange={handleChange}
+                        className="crm-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="crm-form-actions">
+                  <button
+                      type="button"
+                      className="crm-button crm-secondary-btn"
+                      onClick={handleClose}
+                  >
+                    Hủy
+                  </button>
+                  <button
+                      type="submit"
+                      className="crm-button crm-primary-btn"
+                      disabled={isLoading}
+                  >
+                    {isLoading ? (
+                        <>
+                          <div className="crm-loading-spinner"></div>
+                          Đang tạo phòng...
+                        </>
+                    ) : (
+                        <>
+                          <FiStar style={{ marginRight: '8px' }} />
+                          Tạo phòng
+                        </>
+                    )}
+                  </button>
+                </div>
+              </form>
+          )}
+        </div>
       </div>
-    </div>
   );
 }
 

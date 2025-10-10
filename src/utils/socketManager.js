@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 /**
  * WebSocket Connection Manager for Socket.IO
  * Simplified manager that handles initialization and cleanup
- * 
+ *
  * NO MORE STOMP/SockJS - Only Socket.IO!
  */
 class SocketManager {
@@ -53,7 +53,7 @@ class SocketManager {
             console.error('❌ Failed to initialize Socket.IO:', error.message);
             this.connectionPromise = null;
             this.isInitialized = false;
-            
+
             // Don't throw error - allow app to work in REST API mode
             // The app can still function without real-time features
         }

@@ -5,9 +5,9 @@ import { mapRoomsFromBackend, mapRoomFromBackend, mapCreateRoomRequest } from '.
 
 // Thêm retry mechanism
 axiosRetry(apiInstance, {
-  retries: 3,
-  retryDelay: (retryCount) => retryCount * 1000, // Delay 1s, 2s, 3s
-  retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error)
+    retries: 3,
+    retryDelay: (retryCount) => retryCount * 1000, // Delay 1s, 2s, 3s
+    retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error)
 });
 
 const roomApi = {

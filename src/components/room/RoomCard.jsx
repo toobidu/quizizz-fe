@@ -40,71 +40,71 @@ const RoomCard = ({ room, onJoinPublic }) => {
   };
 
   return (
-    <div className={`room-card ${isAnimating ? 'animating' : ''} ${isNew ? 'new-room' : ''}`}>
-      {isNew && <div className="new-room-badge">MỚI</div>}
-      <div className="room-card-header">
-        <div className="room-card-main-info">
-          <h3 className="room-card-title">{room.roomName}</h3>
-          <div className="room-card-meta">
-            <div className="room-card-status">
-              <div
-                className="room-card-status-dot"
-                style={{ backgroundColor: getStatusColor(room.status) }}
-              ></div>
-              <span>{getStatusText(room.status)}</span>
-            </div>
-            <div className="room-card-privacy">
-              {room.isPrivate ? <FiLock /> : <FiUnlock />}
-              <span>{room.isPrivate ? 'Riêng tư' : 'Công khai'}</span>
+      <div className={`room-card ${isAnimating ? 'animating' : ''} ${isNew ? 'new-room' : ''}`}>
+        {isNew && <div className="new-room-badge">MỚI</div>}
+        <div className="room-card-header">
+          <div className="room-card-main-info">
+            <h3 className="room-card-title">{room.roomName}</h3>
+            <div className="room-card-meta">
+              <div className="room-card-status">
+                <div
+                    className="room-card-status-dot"
+                    style={{ backgroundColor: getStatusColor(room.status) }}
+                ></div>
+                <span>{getStatusText(room.status)}</span>
+              </div>
+              <div className="room-card-privacy">
+                {room.isPrivate ? <FiLock /> : <FiUnlock />}
+                <span>{room.isPrivate ? 'Riêng tư' : 'Công khai'}</span>
+              </div>
             </div>
           </div>
+
+          {!room.isPrivate && room.roomCode && (
+              <div className="room-card-code">
+                <FiHash />
+                <span>{room.roomCode}</span>
+              </div>
+          )}
         </div>
 
-        {!room.isPrivate && room.roomCode && (
-          <div className="room-card-code">
-            <FiHash />
-            <span>{room.roomCode}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="room-card-content">
-        <div className="room-card-details">
-          <div className="room-card-detail-item">
-            <span className="room-card-detail-label">Chủ đề:</span>
-            <span className="room-card-detail-value">{room.topicName || 'Chưa xác định'}</span>
-          </div>
-          <div className="room-card-detail-item">
-            <span className="room-card-detail-label">Chế độ:</span>
-            <span className="room-card-detail-value">{getGameModeText(room.roomMode)}</span>
-          </div>
-          <div className="room-card-detail-item">
-            <IoPeople />
-            <span className="room-card-detail-label">Người chơi:</span>
-            <span className="room-card-detail-value">
+        <div className="room-card-content">
+          <div className="room-card-details">
+            <div className="room-card-detail-item">
+              <span className="room-card-detail-label">Chủ đề:</span>
+              <span className="room-card-detail-value">{room.topicName || 'Chưa xác định'}</span>
+            </div>
+            <div className="room-card-detail-item">
+              <span className="room-card-detail-label">Chế độ:</span>
+              <span className="room-card-detail-value">{getGameModeText(room.roomMode)}</span>
+            </div>
+            <div className="room-card-detail-item">
+              <IoPeople />
+              <span className="room-card-detail-label">Người chơi:</span>
+              <span className="room-card-detail-value">
               {room.currentPlayers || 0}/{room.maxPlayers}
             </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="room-card-footer">
-        <button
-          className="room-card-join-btn"
-          onClick={handleJoin}
-          disabled={room.status?.toLowerCase() !== 'waiting' || isJoining}
-        >
-          {isJoining ? (
-            <span className="loading-spinner">Đang tham gia...</span>
-          ) : (
-            <>
-              <IoPlay />
-              <span>Tham gia</span>
-            </>
-          )}
-        </button>
+        <div className="room-card-footer">
+          <button
+              className="room-card-join-btn"
+              onClick={handleJoin}
+              disabled={room.status?.toLowerCase() !== 'waiting' || isJoining}
+          >
+            {isJoining ? (
+                <span className="loading-spinner">Đang tham gia...</span>
+            ) : (
+                <>
+                  <IoPlay />
+                  <span>Tham gia</span>
+                </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
   );
 };
 

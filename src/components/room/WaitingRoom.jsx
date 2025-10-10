@@ -140,29 +140,6 @@ const WaitingRoom = () => {
         };
     }, [currentRoom, navigate]);
 
-    // ✅ NEW: Listen for navigation to room list events
-    useEffect(() => {
-        const handleNavigateToRoomList = (event) => {
-            console.log('🔄 Navigate to room list event received:', event.detail);
-            const { reason, message } = event.detail;
-
-            // Navigate to rooms page
-            navigate('/rooms');
-
-            // Optional: Show a toast message if needed
-            if (message) {
-                console.log('📝 Navigation message:', message);
-            }
-        };
-
-        // Listen for custom navigation event
-        window.addEventListener('navigateToRoomList', handleNavigateToRoomList);
-
-        return () => {
-            window.removeEventListener('navigateToRoomList', handleNavigateToRoomList);
-        };
-    }, [navigate]);
-
     // ✅ FIXED: Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -186,27 +163,32 @@ const WaitingRoom = () => {
     };
 
     const handleLeaveRoom = async () => {
-        const result = await leaveRoom();
-        if (result.success) {
-            setTimeout(() => {
-                navigate('/rooms');
-            }, 100);
+        try {
+            console.log('🚪 User clicked leave room button');
+
+            // ✅ CRITICAL: Always navigate regardless of result
+            // Call leaveRoom but don't wait for complex logic
+            leaveRoom().catch(err => {
+                console.error('Leave room error (ignored):', err);
+            });
+
+            // ✅ Navigate immediately to prevent user from being stuck
+            console.log('🔄 Navigating to /rooms immediately');
+            navigate('/rooms', { replace: true });
+
+        } catch (error) {
+            console.error('❌ Error in handleLeaveRoom:', error);
+            // Still navigate even on error
+            navigate('/rooms', { replace: true });
         }
     };
 
     const handleStartGame = async () => {
-        console.log('🎮 Host starting game for room:', currentRoom.id);
-        
-        // Use socketService directly for immediate start
-        socketService.startGame(currentRoom.id, (response) => {
-            if (response?.success) {
-                console.log('✅ Game start request successful');
-                // Navigation will be handled by game-started event listener
-            } else {
-                console.error('❌ Failed to start game:', response);
-                setError('Không thể bắt đầu game. Vui lòng thử lại.');
-            }
-        });
+        const result = await startGame();
+        if (result.success) {
+            // Navigate to game room
+            navigate(`/game/${roomCode}`);
+        }
     };
 
     // Loading state

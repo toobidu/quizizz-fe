@@ -103,7 +103,7 @@ const GamePlay = ({ isHost, onLeave }) => {
                         <button
                             key={answer.id}
                             className={`answer-option ${selectedAnswer === answer.id ? 'selected' : ''
-                                } ${hasAnswered ? 'disabled' : ''}`}
+                            } ${hasAnswered ? 'disabled' : ''}`}
                             onClick={() => handleAnswerClick(answer.id)}
                             disabled={hasAnswered}
                             style={{

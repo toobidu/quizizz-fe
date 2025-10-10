@@ -59,7 +59,7 @@ const profileApi = {
       };
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi tải thông tin hồ sơ';
+          error.response?.data?.message || error.message || 'Lỗi khi tải thông tin hồ sơ';
       return {
         status: error.response?.status || 500,
         message: errorMessage,
@@ -96,7 +96,7 @@ const profileApi = {
       };
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi tìm kiếm người dùng';
+          error.response?.data?.message || error.message || 'Lỗi khi tìm kiếm người dùng';
       return {
         status: error.response?.status || 500,
         message: errorMessage,
@@ -133,7 +133,7 @@ const profileApi = {
       };
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi tải thông tin hồ sơ người dùng';
+          error.response?.data?.message || error.message || 'Lỗi khi tải thông tin hồ sơ người dùng';
       return {
         status: error.response?.status || 500,
         message: errorMessage,
@@ -195,7 +195,7 @@ const profileApi = {
       }
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi cập nhật thông tin hồ sơ';
+          error.response?.data?.message || error.message || 'Lỗi khi cập nhật thông tin hồ sơ';
       return {
         status: error.response?.status || 500,
         message: errorMessage,
@@ -229,7 +229,7 @@ const profileApi = {
       };
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi đổi mật khẩu';
+          error.response?.data?.message || error.message || 'Lỗi khi đổi mật khẩu';
       return {
         status: error.response?.status || 500,
         message: errorMessage,
@@ -258,7 +258,7 @@ const profileApi = {
       };
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || 'Lỗi khi tải avatar';
+          error.response?.data?.message || error.message || 'Lỗi khi tải avatar';
       return {
         status: error.response?.status || 500,
         message: errorMessage,

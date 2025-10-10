@@ -10,20 +10,20 @@ const authStore = create((set) => ({
   error: null,
 
   setUser: (user) =>
-    set((state) => {
-      return {
-        user,
-        isAuthenticated: !!user,
-        error: null,
-      };
-    }),
+      set((state) => {
+        return {
+          user,
+          isAuthenticated: !!user,
+          error: null,
+        };
+      }),
 
   clearUser: () =>
-    set({
-      user: null,
-      isAuthenticated: false,
-      error: null,
-    }),
+      set({
+        user: null,
+        isAuthenticated: false,
+        error: null,
+      }),
 
   setLoading: (isLoading) => set({ isLoading }),
 
