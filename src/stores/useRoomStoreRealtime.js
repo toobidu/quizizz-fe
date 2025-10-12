@@ -4,11 +4,11 @@ import socketService from '../services/socketService';
 import socketManager from '../utils/socketManager';
 
 /**
- * ✅ FIXED: Room Store with Socket.IO Real-time Updates
- * Standardized to match Kahoot/Quizizz architecture
+ * ✅ ĐÃ SỬA: Kho lưu trữ phòng với cập nhật thời gian thực Socket.IO
+ * Được chuẩn hóa để phù hợp với kiến trúc Kahoot/Quizizz
  */
 const useRoomStore = create((set, get) => ({
-    // Room state
+    // Trạng thái phòng
     currentRoom: null,
     rooms: [],
     roomPlayers: [],
@@ -19,11 +19,11 @@ const useRoomStore = create((set, get) => ({
     isConnectedToRoom: false,
     isSubscribedToRoomList: false,
 
-    // Animation states for UI feedback
+    // Trạng thái hoạt hình để phản hồi giao diện người dùng
     animatingRooms: new Set(),
     newRoomIds: new Set(),
 
-    // Room actions
+    // Hành động phòng
     setCurrentRoom: (room) => set({ currentRoom: room }),
 
     clearCurrentRoom: () => {
@@ -35,11 +35,10 @@ const useRoomStore = create((set, get) => ({
             currentRoom: null,
             roomPlayers: [],
             isConnectedToRoom: false,
-            error: null  // ✅ Clear any existing errors when clearing room
+            error: null  // ✅ Xóa mọi lỗi hiện có khi xóa phòng
         });
 
-        // Force refresh rooms list when clearing current room
-        console.log('🔄 Force refreshing rooms list after clearing');
+        // Buộc làm mới danh sách phòng khi xóa phòng hiện tại
         setTimeout(() => {
             get().fetchRooms();
         }, 100);
@@ -50,7 +49,7 @@ const useRoomStore = create((set, get) => ({
     setRoomPlayers: (players) => set({ roomPlayers: players }),
     clearError: () => set({ error: null }),
 
-    // Animation helpers
+    // Trợ giúp hoạt hình
     addAnimatingRoom: (roomId) => {
         set(state => ({
             animatingRooms: new Set(state.animatingRooms).add(roomId)
@@ -79,27 +78,23 @@ const useRoomStore = create((set, get) => ({
         }, 3000);
     },
 
-    // ========== SOCKET.IO REAL-TIME SUBSCRIPTIONS ==========
+    // ========== ĐĂNG KÝ THỜI GIAN THỰC SOCKET.IO ==========
 
     subscribeToRoomList: async () => {
         try {
             const state = get();
             if (state.isSubscribedToRoomList) {
-                console.log('📋 Already subscribed to room list');
                 return;
             }
 
-            console.log('📋 Subscribing to room list updates...');
             await socketManager.initialize();
 
-            // ✅ Ensure socket is connected before subscribing
+            // ✅ Đảm bảo socket được kết nối trước khi đăng ký
             if (!socketManager.isConnected()) {
-                console.error('❌ Socket not connected, cannot subscribe to room list');
                 return;
             }
 
             socketService.subscribeToRoomList((message) => {
-                console.log('📋 Room list update:', message.type, message);
 
                 if (message.type === 'CREATE_ROOM') {
                     const { room } = message.data;
@@ -125,12 +120,10 @@ const useRoomStore = create((set, get) => ({
                     }, 500);
                 } else if (message.type === 'ROOM_UPDATED') {
                     const { room } = message.data;
-                    console.log('🔄 Updating room in list:', room.id, 'currentPlayers:', room.currentPlayers);
 
                     set(state => {
                         const updatedRooms = state.rooms.map(r => {
                             if (r.id === room.id) {
-                                console.log('✅ Room updated from', r.currentPlayers, 'to', room.currentPlayers, 'players');
                                 return { ...r, ...room };
                             }
                             return r;
@@ -142,70 +135,58 @@ const useRoomStore = create((set, get) => ({
             });
 
             set({ isSubscribedToRoomList: true });
-            console.log('✅ Subscribed to room list updates');
         } catch (error) {
-            console.error('❌ Failed to subscribe to room list:', error);
             set({ error: 'Không thể kết nối real-time updates' });
         }
     },
 
     unsubscribeFromRoomList: () => {
-        console.log('📋 Unsubscribing from room list updates');
         socketService.unsubscribeFromRoomList();
         set({ isSubscribedToRoomList: false });
     },
 
     /**
-     * ✅ FIXED: Connect to room with proper event handling
+     * ✅ ĐÃ SỬA: Kết nối đến phòng với xử lý sự kiện đúng cách
      */
     connectToRoom: async (roomId) => {
         try {
-            console.log('🔌 Connecting to room:', roomId);
-            set({ error: null }); // Clear any previous errors
+            set({ error: null }); // Xóa mọi lỗi trước đó
 
-            // Initialize socket connection first
+            // Khởi tạo kết nối socket trước
             await socketManager.initialize();
 
             if (!socketManager.isConnected()) {
-                console.error('❌ Socket not connected after initialization');
                 set({ error: 'Không thể kết nối Socket.IO server' });
                 return;
             }
 
-            // ✅ FIX: Get roomCode from currentRoom instead of using roomId directly
+            // ✅ SỬA: Lấy roomCode từ currentRoom thay vì sử dụng roomId trực tiếp
             const state = get();
             const roomCode = state.currentRoom?.roomCode || state.currentRoom?.code || state.currentRoom?.Code;
 
             if (!roomCode) {
-                console.error('❌ No roomCode found in currentRoom:', state.currentRoom);
                 set({ error: 'Không tìm thấy mã phòng' });
                 return;
             }
 
-            console.log('🔑 Using roomCode for Socket.IO join:', roomCode);
-
-            // Setup listeners first - FIXED event types to match backend
+            // Thiết lập listeners trước - SỬA loại sự kiện để phù hợp với backend
             socketService.subscribeToRoom(roomId, (message) => {
-                console.log('📡 Room event:', message.type, message.data);
 
-                // ✅ FIXED: Handle EXACT backend event types
+                // ✅ SỬA: Xử lý CHÍNH XÁC loại sự kiện backend
                 if (message.type === 'PLAYER_JOINED') {
                     const { userId, username } = message.data;
-                    console.log('👤 Player joined:', { userId, username });
 
-                    // Fetch fresh player list instead of manual update
+                    // Lấy danh sách người chơi mới thay vì cập nhật thủ công
                     get().fetchRoomPlayers(roomId);
 
                 } else if (message.type === 'PLAYER_LEFT') {
                     const { userId } = message.data;
-                    console.log('👤 Player left:', { userId });
 
-                    // Fetch fresh player list instead of manual update
+                    // Lấy danh sách người chơi mới thay vì cập nhật thủ công
                     get().fetchRoomPlayers(roomId);
 
                 } else if (message.type === 'ROOM_PLAYERS_UPDATED') {
                     const { players } = message.data;
-                    console.log('👥 Players updated:', players);
                     set({ roomPlayers: players });
 
                 } else if (message.type === 'ROOM_UPDATED') {
@@ -213,8 +194,7 @@ const useRoomStore = create((set, get) => ({
                     set({ currentRoom: roomData });
 
                 } else if (message.type === 'GAME_STARTED') {
-                    console.log('🎮 Game started!');
-                    // Dispatch custom event for navigation
+                    // Gửi sự kiện tùy chỉnh để điều hướng
                     window.dispatchEvent(new CustomEvent('gameStarted', {
                         detail: { roomId: message.data.roomId }
                     }));
@@ -227,7 +207,7 @@ const useRoomStore = create((set, get) => ({
                         get().clearCurrentRoom();
                         set({ error: reason || 'Bạn đã bị đuổi khỏi phòng' });
                     } else {
-                        // Refresh player list
+                        // Làm mới danh sách người chơi
                         get().fetchRoomPlayers(roomId);
                     }
 
@@ -241,15 +221,14 @@ const useRoomStore = create((set, get) => ({
                         } : null
                     }));
 
-                    // Refresh player list to update host status
+                    // Làm mới danh sách người chơi để cập nhật trạng thái host
                     get().fetchRoomPlayers(roomId);
                 }
             });
 
-            // ✅ FIX: Join room via Socket.IO using roomCode instead of roomId
+            // ✅ SỬA: Tham gia phòng qua Socket.IO sử dụng roomCode thay vì roomId
             return new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
-                    console.error('❌ Socket.IO join room timeout');
                     set({ error: 'Timeout khi kết nối đến phòng' });
                     reject(new Error('Join room timeout'));
                 }, 10000);
@@ -257,31 +236,24 @@ const useRoomStore = create((set, get) => ({
                 socketService.joinRoom(roomCode, (response) => {
                     clearTimeout(timeout);
 
-                    console.log('🔥 Join room response:', response);
-
                     if (response?.success !== false) {
                         set({ isConnectedToRoom: true });
-                        console.log('✅ Connected to room:', roomCode);
 
-                        // Initial fetch of players after successful connection
+                        // Lấy người chơi ban đầu sau khi kết nối thành công
                         get().fetchRoomPlayers(roomId);
                         resolve();
                     } else {
                         const errorMsg = response?.message || response?.error || 'Không thể kết nối đến phòng';
-                        console.error('❌ Failed to connect to room:', errorMsg);
 
-                        // ✅ HANDLE "Room is full" and "User already joined" errors gracefully
-                        // These are not critical errors when creating/joining a room
                         if (errorMsg.includes('Room is full') ||
                             errorMsg.includes('User already joined') ||
                             errorMsg.includes('already joined')) {
-                            console.warn('⚠️ Room state conflict, but treating as successful connection');
                             set({
                                 isConnectedToRoom: true,
-                                error: null  // Clear any error state
+                                error: null  // Xóa mọi trạng thái lỗi
                             });
 
-                            // Still try to fetch players to ensure UI is updated
+                            // Vẫn thử lấy người chơi để đảm bảo UI được cập nhật
                             get().fetchRoomPlayers(roomId);
                             resolve();
                         } else {
@@ -292,42 +264,32 @@ const useRoomStore = create((set, get) => ({
                 });
             });
         } catch (error) {
-            console.error('❌ Failed to connect to room:', error);
             set({ error: error.message || 'Không thể kết nối đến phòng' });
             throw error;
         }
     },
 
     /**
-     * Disconnect from current room
+     * Ngắt kết nối khỏi phòng hiện tại
      */
     disconnectFromRoom: (roomId) => {
         if (!roomId) {
-            console.log('❌ No roomId provided for disconnect');
             return;
         }
 
-        console.log('🔌 Disconnecting from room:', roomId);
-
-        // Unsubscribe from room events
-        console.log('🔇 Unsubscribing from room events');
+        // Hủy đăng ký sự kiện phòng
         socketService.unsubscribeFromRoom(roomId);
 
-        // Leave Socket.IO room if connected
+        // Rời phòng Socket.IO nếu đã kết nối
         if (socketService.isConnected()) {
-            console.log('🚪 Leaving Socket.IO room:', roomId);
             socketService.leaveRoom(roomId, (response) => {
-                console.log('🚪 Socket.IO leave room response:', response);
             });
-        } else {
-            console.log('⚠️ Socket not connected, skipping Socket.IO leave');
         }
 
         set({ isConnectedToRoom: false });
-        console.log('✅ Disconnected from room:', roomId);
     },
 
-    // ========== API INTEGRATED ACTIONS ==========
+    // ========== HÀNH ĐỘNG TÍCH HỢP API ==========
 
     createRoom: async (roomData) => {
         set({ isLoading: true, loading: true, error: null });
@@ -344,27 +306,24 @@ const useRoomStore = create((set, get) => ({
                     loading: false
                 });
 
-                // Connect to the newly created room with improved error handling
+                // Kết nối đến phòng vừa tạo với xử lý lỗi được cải thiện
                 try {
                     await get().connectToRoom(newRoom.id);
-                    console.log('✅ Successfully connected to created room');
                 } catch (connectError) {
-                    // ✅ IMPROVED: Handle common connection errors gracefully
+                    // ✅ CẢI THIỆN: Xử lý các lỗi kết nối phổ biến một cách nhẹ nhàng
                     if (connectError.message.includes('Room is full') ||
                         connectError.message.includes('User already joined') ||
                         connectError.message.includes('already joined')) {
-                        console.warn('⚠️ Room state conflict resolved, user is in room:', connectError.message);
-                        // User is already in the room (from creation), which is the desired state
+                        // Người dùng đã ở trong phòng (từ việc tạo), đây là trạng thái mong muốn
                         set({
                             isConnectedToRoom: true,
-                            error: null  // Clear any error state
+                            error: null  // Xóa mọi trạng thái lỗi
                         });
-                        // Fetch players to ensure UI is properly updated
+                        // Lấy người chơi để đảm bảo UI được cập nhật đúng cách
                         get().fetchRoomPlayers(newRoom.id);
                     } else {
-                        console.warn('⚠️ Failed to connect to Socket.IO, but room created successfully:', connectError.message);
-                        // Don't fail the entire operation for other socket errors
-                        // The room is created successfully, user can still use it
+                        // Không thất bại toàn bộ hoạt động cho các lỗi socket khác
+                        // Phòng được tạo thành công, người dùng vẫn có thể sử dụng
                     }
                 }
 
@@ -390,7 +349,7 @@ const useRoomStore = create((set, get) => ({
                 const room = response.data;
                 set({ currentRoom: room, isLoading: false, loading: false });
 
-                // ✅ IMPROVED: Handle connection errors gracefully for code-based join
+                // ✅ CẢI THIỆN: Xử lý lỗi kết nối nhẹ nhàng cho việc tham gia dựa trên mã
                 try {
                     await get().connectToRoom(room.id);
                     return {
@@ -405,7 +364,6 @@ const useRoomStore = create((set, get) => ({
                     if (connectError.message.includes('Room is full') ||
                         connectError.message.includes('User already joined') ||
                         connectError.message.includes('already joined')) {
-                        console.warn('⚠️ Room state conflict in code join, treating as success');
                         set({
                             isConnectedToRoom: true,
                             error: null
@@ -420,7 +378,7 @@ const useRoomStore = create((set, get) => ({
                             }
                         };
                     } else {
-                        throw connectError; // Re-throw other connection errors
+                        throw connectError; // Ném lại các lỗi kết nối khác
                     }
                 }
             } else {
@@ -444,7 +402,7 @@ const useRoomStore = create((set, get) => ({
                 const room = response.data;
                 set({ currentRoom: room, isLoading: false, loading: false });
 
-                // ✅ IMPROVED: Handle connection errors gracefully for direct join
+                // ✅ CẢI THIỆN: Xử lý lỗi kết nối nhẹ nhàng cho việc tham gia trực tiếp
                 try {
                     await get().connectToRoom(room.id);
                     return { success: true, room };
@@ -452,7 +410,6 @@ const useRoomStore = create((set, get) => ({
                     if (connectError.message.includes('Room is full') ||
                         connectError.message.includes('User already joined') ||
                         connectError.message.includes('already joined')) {
-                        console.warn('⚠️ Room state conflict in direct join, treating as success');
                         set({
                             isConnectedToRoom: true,
                             error: null
@@ -460,7 +417,7 @@ const useRoomStore = create((set, get) => ({
                         get().fetchRoomPlayers(room.id);
                         return { success: true, room };
                     } else {
-                        throw connectError; // Re-throw other connection errors
+                        throw connectError; // Ném lại các lỗi kết nối khác
                     }
                 }
             } else {
@@ -474,7 +431,7 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // Alias for backward compatibility
+    // Bí danh để tương thích ngược
     joinRoom: async (roomCode) => {
         return await get().joinRoomByCode(roomCode);
     },
@@ -486,33 +443,25 @@ const useRoomStore = create((set, get) => ({
         }
 
         const roomId = state.currentRoom.id;
-        console.log('🚪 Starting leave room process for room:', roomId);
 
         try {
-            // Disconnect from Socket.IO first
-            console.log('🔌 Disconnecting from Socket.IO room:', roomId);
+            // Ngắt kết nối từ Socket.IO trước
             get().disconnectFromRoom(roomId);
 
-            // Clear room state immediately for instant UI update
-            console.log('🧹 Clearing room state immediately');
+            // Xóa trạng thái phòng ngay lập tức để cập nhật UI tức thì
             get().clearCurrentRoom();
 
-            // Then call REST API to leave room
-            console.log('📡 Calling REST API to leave room:', roomId);
+            // Sau đó gọi REST API để rời phòng
             const response = await roomApi.leaveRoom(roomId);
-            console.log('📡 REST API response:', response);
 
             if (response.success) {
-                console.log('✅ Successfully left room via REST API');
 
-                // Force refresh rooms list to ensure UI is updated
-                console.log('🔄 Force refreshing rooms list after leaving');
+                // Buộc làm mới danh sách phòng để đảm bảo UI được cập nhật
                 setTimeout(() => {
                     get().fetchRooms();
                 }, 100);
 
-                // ✅ Trigger navigation to RoomPage after successful leave
-                console.log('🔄 Triggering navigation to RoomPage');
+                // ✅ Kích hoạt điều hướng đến RoomPage sau khi rời thành công
                 window.dispatchEvent(new CustomEvent('navigateToRoomList', {
                     detail: {
                         reason: 'left_room',
@@ -522,13 +471,11 @@ const useRoomStore = create((set, get) => ({
 
                 return { success: true };
             } else {
-                console.error('❌ REST API failed:', response.error);
                 set({ error: response.error });
                 return { success: false, error: response.error };
             }
         } catch (error) {
             const errorMessage = error.message || 'Không thể rời phòng';
-            console.error('❌ Leave room error:', errorMessage);
             set({ error: errorMessage });
             return { success: false, error: errorMessage };
         }
@@ -537,7 +484,7 @@ const useRoomStore = create((set, get) => ({
     fetchRooms: async (params = {}) => {
         const state = get();
         if (state.isLoading) {
-            return { success: false, error: 'Request already in progress' };
+            return { success: false, error: 'Yêu cầu đang được xử lý' };
         }
 
         set({ isLoading: true, loading: true, error: null });
@@ -549,7 +496,7 @@ const useRoomStore = create((set, get) => ({
                 const roomsData = response.data.content || response.data.rooms || response.data || [];
                 set({ rooms: roomsData, isLoading: false, loading: false });
 
-                // Subscribe to real-time updates after initial load
+                // Đăng ký cập nhật thời gian thực sau khi tải ban đầu
                 if (!state.isSubscribedToRoomList) {
                     get().subscribeToRoomList();
                 }
@@ -567,7 +514,7 @@ const useRoomStore = create((set, get) => ({
     },
 
     /**
-     * ✅ FIXED: Fetch room players with proper error handling
+     * ✅ ĐÃ SỬA: Lấy người chơi phòng với xử lý lỗi đúng cách
      */
     fetchRoomPlayers: async (roomId) => {
         if (!roomId) {
@@ -579,14 +526,11 @@ const useRoomStore = create((set, get) => ({
             if (response.success) {
                 const players = response.data || [];
                 set({ roomPlayers: players });
-                console.log('✅ Updated room players:', players.length);
                 return { success: true, players };
             } else {
-                console.error('Failed to fetch room players:', response.error);
                 return { success: false, error: response.error };
             }
         } catch (error) {
-            console.error('Error fetching room players:', error);
             return { success: false, error: error.message };
         }
     },
@@ -646,10 +590,10 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // ========== GAME ACTIONS ==========
+    // ========== HÀNH ĐỘNG GAME ==========
 
     /**
-     * ✅ FIXED: Start game using Socket.IO
+     * ✅ ĐÃ SỬA: Bắt đầu game sử dụng Socket.IO
      */
     startGame: async () => {
         const state = get();
@@ -676,7 +620,7 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // ========== AUTO REFRESH & CLEANUP ==========
+    // ========== TỰ ĐỘNG LÀM MỚI & DỌN DẸP ==========
 
     autoRefreshInterval: null,
 
@@ -698,13 +642,12 @@ const useRoomStore = create((set, get) => ({
         }
     },
 
-    // Alias methods for backward compatibility
+    // Phương thức bí danh để tương thích ngược
     loadRooms: async (params = {}) => {
         return get().fetchRooms(params);
     },
 
     cleanup: () => {
-        console.log('🧹 Cleaning up room store...');
 
         const state = get();
 
@@ -727,7 +670,6 @@ const useRoomStore = create((set, get) => ({
             newRoomIds: new Set()
         });
 
-        console.log('✅ Room store cleanup complete');
     }
 }));
 

@@ -2,10 +2,8 @@ import socketService from '../services/socketService';
 import Cookies from 'js-cookie';
 
 /**
- * WebSocket Connection Manager for Socket.IO
- * Simplified manager that handles initialization and cleanup
+ * Trình quản lý kết nối WebSocket cho Socket.IO
  *
- * NO MORE STOMP/SockJS - Only Socket.IO!
  */
 class SocketManager {
     constructor() {
@@ -14,19 +12,17 @@ class SocketManager {
     }
 
     /**
-     * Initialize Socket.IO connection with proper token management
+     * Khởi tạo kết nối Socket.IO với quản lý token đúng cách
      * @returns {Promise<void>}
      */
     async initialize() {
-        // Already connected
+        // Đã kết nối
         if (this.isInitialized && socketService.isConnected()) {
-            console.log('✅ Socket.IO already initialized and connected');
             return;
         }
 
-        // Connection in progress
+        // Đang kết nối
         if (this.connectionPromise) {
-            console.log('⏳ Socket.IO connection already in progress');
             return this.connectionPromise;
         }
 
@@ -35,7 +31,7 @@ class SocketManager {
     }
 
     /**
-     * Private method to handle connection
+     * Phương thức riêng tư để xử lý kết nối
      * @private
      */
     async _connect() {
@@ -45,35 +41,32 @@ class SocketManager {
                 throw new Error('Authentication token not found');
             }
 
-            console.log('🔌 Initializing Socket.IO connection...');
             await socketService.connect(token);
             this.isInitialized = true;
-            console.log('✅ Socket.IO initialized successfully');
         } catch (error) {
-            console.error('❌ Failed to initialize Socket.IO:', error.message);
             this.connectionPromise = null;
             this.isInitialized = false;
 
-            // Don't throw error - allow app to work in REST API mode
-            // The app can still function without real-time features
+            // Không ném lỗi - cho phép ứng dụng hoạt động ở chế độ REST API
+            // Ứng dụng vẫn có thể hoạt động mà không có tính năng real-time
         }
     }
 
     /**
-     * Get authentication token from storage
+     * Lấy token xác thực từ bộ nhớ
      * @private
      * @returns {string|null}
      */
     _getToken() {
-        // Try cookies first
+        // Thử cookies trước
         let token = Cookies.get('accessToken');
 
-        // Fallback to sessionStorage
+        // Fallback sang sessionStorage
         if (!token) {
             token = sessionStorage.getItem('accessToken');
         }
 
-        // Fallback to localStorage
+        // Fallback sang localStorage
         if (!token) {
             token = localStorage.getItem('accessToken');
         }
@@ -82,18 +75,16 @@ class SocketManager {
     }
 
     /**
-     * Disconnect and cleanup
+     * Ngắt kết nối và dọn dẹp
      */
     disconnect() {
-        console.log('🧹 Cleaning up Socket.IO connection...');
         socketService.disconnect();
         this.isInitialized = false;
         this.connectionPromise = null;
-        console.log('✅ Socket.IO cleanup complete');
     }
 
     /**
-     * Check if connected
+     * Kiểm tra xem có kết nối không
      * @returns {boolean}
      */
     isConnected() {
@@ -101,24 +92,23 @@ class SocketManager {
     }
 
     /**
-     * Get current user ID from auth store
+     * Lấy ID người dùng hiện tại từ auth store
      * @returns {number|null}
      */
     getCurrentUserId() {
         try {
-            // Dynamic import to avoid circular dependency
+            // Import động để tránh phụ thuộc vòng tròn
             const authStore = require('../stores/authStore').default;
             const user = authStore.getState().user;
             return user?.id;
         } catch (error) {
-            console.warn('⚠️ Could not get current user ID:', error.message);
             return null;
         }
     }
 
     /**
-     * Execute callback once socket is connected
-     * @param {Function} callback - Function to execute
+     * Thực thi callback một lần khi socket đã kết nối
+     * @param {Function} callback - Hàm cần thực thi
      * @returns {Promise<void>}
      */
     async onceConnected(callback) {
@@ -126,22 +116,20 @@ class SocketManager {
         if (this.isConnected()) {
             callback();
         } else {
-            console.warn('⚠️ Socket not connected, callback not executed');
         }
     }
 
     /**
-     * Reconnect with fresh token
+     * Kết nối lại với token mới
      * @returns {Promise<void>}
      */
     async reconnect() {
-        console.log('🔄 Reconnecting Socket.IO...');
         this.disconnect();
         return this.initialize();
     }
 
     /**
-     * Get the underlying socket service
+     * Lấy service socket cơ bản
      * @returns {SocketService}
      */
     getService() {

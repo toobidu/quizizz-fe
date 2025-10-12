@@ -1,13 +1,12 @@
-/* GamePlay.css */
-
 .game-play-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     width: 100%;
-    background-color: var(--background-color);
+    background-color: var(--bg-color);
     color: var(--text-color);
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 /* --- Loading, Error, Game Over Screens --- */
@@ -22,8 +21,8 @@
 }
 
 .loading-spinner {
-    border: 6px solid var(--secondary-color-light);
-    border-top: 6px solid var(--primary-color);
+    border: 6px solid var(--border);
+    border-top: 6px solid var(--primary);
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -32,8 +31,8 @@
 }
 
 .loading-spinner-small {
-    border: 3px solid var(--secondary-color-light);
-    border-top: 3px solid var(--primary-color);
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--primary);
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -46,14 +45,14 @@
 }
 
 .error-screen h2 {
-    color: var(--danger-color);
+    color: var(--danger);
     font-size: 2.5rem;
     margin-bottom: 1rem;
 }
 
 .game-over-screen h2 {
     font-size: 3rem;
-    color: var(--primary-color);
+    color: var(--primary);
     margin-bottom: 1rem;
 }
 
@@ -61,10 +60,11 @@
     width: 100%;
     max-width: 500px;
     margin: 2rem 0;
-    background: var(--background-alt);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow);
 }
 
 .final-rankings h3 {
@@ -73,7 +73,7 @@
     justify-content: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .final-rankings ul {
@@ -87,7 +87,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
 }
 
 .final-rankings li:last-child {
@@ -112,7 +112,7 @@
 }
 
 .view-results-button {
-    background-color: var(--primary-color);
+    background-color: var(--primary);
     color: white;
     font-size: 1.2rem;
     padding: 0.8rem 2rem;
@@ -126,7 +126,7 @@
 }
 
 .view-results-button:hover {
-    background-color: var(--primary-color-dark);
+    background-color: var(--primary-hover);
 }
 
 /* --- Question Result Screen --- */
@@ -135,7 +135,7 @@
 }
 
 .question-result-screen.correct {
-    background-color: rgba(40, 167, 69, 0.1);
+    background-color: rgba(var(--success-rgb), 0.1);
 }
 
 .question-result-screen.incorrect {
@@ -148,11 +148,11 @@
 }
 
 .question-result-screen.correct .result-icon {
-    color: var(--success-color);
+    color: var(--success);
 }
 
 .question-result-screen.incorrect .result-icon {
-    color: var(--danger-color);
+    color: var(--danger);
 }
 
 .question-result-screen h2 {
@@ -183,13 +183,14 @@
     display: flex;
     justify-content: space-between;
     padding: 0.5rem;
-    background: var(--background-alt);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     margin-bottom: 0.5rem;
 }
 
 .next-question-button {
-    background-color: var(--primary-color);
+    background-color: var(--primary);
     color: white;
     font-size: 1.2rem;
     padding: 0.8rem 2rem;
@@ -208,8 +209,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    background-color: var(--background-alt);
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
@@ -223,12 +224,12 @@
 
 .timer span {
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .player-score span {
     font-weight: bold;
-    color: var(--warning-color);
+    color: var(--warning);
 }
 
 /* --- Question Section --- */
@@ -267,8 +268,8 @@
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
     padding: 1.5rem;
-    background-color: var(--background-alt);
-    border-top: 1px solid var(--border-color);
+    background-color: var(--surface);
+    border-top: 1px solid var(--border);
     flex-shrink: 0;
 }
 
@@ -321,7 +322,7 @@
 }
 
 .submit-answer-button {
-    background-color: var(--primary-color);
+    background-color: var(--primary);
     color: white;
     font-size: 1.2rem;
     padding: 0.8rem 2.5rem;
@@ -332,7 +333,8 @@
 }
 
 .submit-answer-button:disabled {
-    background-color: var(--secondary-color);
+    background-color: var(--border);
+    color: var(--text-muted);
     cursor: not-allowed;
 }
 
@@ -342,4 +344,17 @@
     gap: 0.75rem;
     font-size: 1.1rem;
     color: var(--text-secondary);
+}
+
+/* Dark mode specific adjustments */
+[data-theme="dark"] .game-play-container {
+    background-color: var(--bg-color);
+}
+
+[data-theme="dark"] .answer-option:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .answer-option.selected {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
 }

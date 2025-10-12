@@ -14,7 +14,6 @@ class SocketService {
     connect(token = null) {
         return new Promise((resolve, reject) => {
             if (this.connected && this.socket) {
-                console.log('🔗 Already connected to Socket.IO');
                 return resolve();
             }
 
@@ -24,11 +23,9 @@ class SocketService {
 
             const authToken = token || Cookies.get('accessToken');
             if (!authToken) {
-                console.error('❌ No authentication token found');
                 return reject(new Error('No authentication token found'));
             }
 
-            // ✅ FIX: Configure socket.io-client v2.4.0 for Java netty-socketio backend
             this.socket = io('http://localhost:9093', {
                 transports: ['polling', 'websocket'],
                 query: { token: authToken },
@@ -39,8 +36,8 @@ class SocketService {
                 timeout: 20000,
                 upgrade: true,
                 rememberUpgrade: true,
-                withCredentials: false, // ✅ FIX: Disable credentials to avoid CORS wildcard issue
-                forceNew: false // ✅ FIX: Reuse connection if possible
+                withCredentials: false, 
+                forceNew: false 
             });
 
             this.socket.on('connect', () => {
@@ -48,22 +45,18 @@ class SocketService {
                 this.reconnectAttempts = 0;
                 this._setupGlobalListeners();
 
-                // Re-subscribe to room-list broadcasts if previously subscribed
+                // Đăng ký lại broadcast danh sách phòng nếu đã đăng ký trước đó
                 if (this._subscribedRoomList && this._roomListCallback) {
                     try {
-                        console.log('🔄 Resubscribing to room-list...');
                         this.emit('subscribe-room-list');
                         this.subscribeToRoomList(this._roomListCallback);
-                        console.log('✅ Resubscribed to room-list broadcasts');
                     } catch (e) {
-                        console.error('❌ Failed to resubscribe:', e);
                     }
                 }
 
                 // Khôi phục trạng thái phòng khi reconnect
                 this.rooms.forEach(roomId => {
                     this.joinRoom(roomId, (response) => {
-                        console.log(`🔄 Rejoined room ${roomId}:`, response);
                     });
                 });
 
@@ -71,12 +64,9 @@ class SocketService {
             });
 
             this.socket.on('connect_error', (error) => {
-                console.error('❌ Socket.IO connection error:', error);
                 if (error && error.message) {
-                    console.error('❌ Error message:', error.message);
                 }
                 if (error && error.data) {
-                    console.error('❌ Error data:', error.data);
                 }
                 this.reconnectAttempts++;
                 if (this.reconnectAttempts >= this.maxReconnectAttempts) {
@@ -85,16 +75,13 @@ class SocketService {
             });
 
             this.socket.on('error', (error) => {
-                console.error('❌ Socket.IO error:', error);
             });
 
             this.socket.on('reconnect', (attemptNumber) => {
                 this.connected = true;
                 this.reconnectAttempts = 0;
-                console.log('🔗 Reconnected after', attemptNumber, 'attempts');
                 
                 if (this._subscribedRoomList && this._roomListCallback) {
-                    console.log('🔄 Resubscribing to room-list after reconnect...');
                     this.subscribeToRoomList(this._roomListCallback);
                 }
             });
@@ -106,7 +93,6 @@ class SocketService {
     }
 
     _setupGlobalListeners() {
-        // Xóa tất cả listener hiện tại để tránh trùng lặp
         this.listeners.forEach((callbacks, event) => {
             callbacks.forEach(callback => this.socket.off(event, callback));
         });
@@ -114,51 +100,39 @@ class SocketService {
 
 
         this.on('roomCreated', (data) => {
-            console.log('🎯 Received roomCreated event:', data);
             if (this._onRoomCreated) this._onRoomCreated(data);
         });
 
         this.on('roomDeleted', (data) => {
-            console.log('🎯 Received roomDeleted event:', data);
             if (this._onRoomDeleted) this._onRoomDeleted(data);
         });
 
         this.on('roomUpdated', (data) => {
-            console.log('🎯 Received roomUpdated event:', data);
             if (this._onRoomUpdated) this._onRoomUpdated(data);
         });
 
         this.on('connection-confirmed', (data) => {
-            console.log('✅ Connection confirmed by backend:', data);
         });
 
         this.on('subscription-confirmed', (data) => {
-            console.log('📋 Subscription confirmed:', data);
         });
 
-        // Global handlers for debugging
         this.on('join-room-success', (data) => {
-            console.log('✅ Global join room success:', data);
         });
 
         this.on('join-room-error', (data) => {
-            console.error('❌ Global join room error:', data);
         });
 
         this.on('leave-room-success', (data) => {
-            console.log('✅ Global leave room success:', data);
         });
 
         this.on('leave-room-error', (data) => {
-            console.error('❌ Global leave room error:', data);
         });
 
         this.on('start-game-success', (data) => {
-            console.log('✅ Start game success:', data);
         });
 
         this.on('start-game-error', (data) => {
-            console.error('❌ Start game error:', data);
         });
     }
 
@@ -210,7 +184,7 @@ class SocketService {
             callback(data);
         });
 
-        // Store listener reference for cleanup
+        // Lưu tham chiếu listener để dọn dẹp
         if (!this.listeners.has(event)) {
             this.listeners.set(event, []);
         }
@@ -226,7 +200,7 @@ class SocketService {
             this.socket.off(event);
         }
 
-        // Clean up stored references
+        // Dọn dẹp các tham chiếu đã lưu
         if (this.listeners.has(event)) {
             if (callback) {
                 const callbacks = this.listeners.get(event);
@@ -252,7 +226,6 @@ class SocketService {
 
     joinRoom(roomCodeOrId, callback) {
         if (!this.socket || !this.connected) {
-            console.error('❌ Socket not connected for joinRoom');
             callback?.({ success: false, error: 'Socket not connected' });
             return;
         }
@@ -260,19 +233,15 @@ class SocketService {
         this.rooms.add(roomCodeOrId);
 
         const timeout = setTimeout(() => {
-            console.warn('⏰ Join room timeout for:', roomCodeOrId);
             callback?.({ success: false, error: 'Join room timeout' });
         }, 10000);
 
-        // ✅ FIXED: Backend expects roomCode, not roomId
+        // ✅ ĐÃ SỬA: Backend mong đợi roomCode, không phải roomId
         const joinData = { roomCode: String(roomCodeOrId) };
 
-        console.log('🔗 Joining room with data:', joinData);
-
-        // Listen for success/error events
+        // Lắng nghe sự kiện thành công/lỗi
         const successHandler = (data) => {
             clearTimeout(timeout);
-            console.log('✅ Join room success event:', data);
             this.off('join-room-success', successHandler);
             this.off('join-room-error', errorHandler);
             callback?.({ success: true, ...data });
@@ -280,10 +249,9 @@ class SocketService {
 
         const errorHandler = (data) => {
             clearTimeout(timeout);
-            console.error('❌ Join room error event:', data);
             this.off('join-room-success', successHandler);
             this.off('join-room-error', errorHandler);
-            this.rooms.delete(roomCodeOrId); // FIX: Dùng roomCodeOrId thay vì roomId
+            this.rooms.delete(roomCodeOrId); // SỬA: Dùng roomCodeOrId thay vì roomId
             callback?.({ success: false, error: data.message || 'Failed to join room' });
         };
 
@@ -302,14 +270,12 @@ class SocketService {
         this.rooms.delete(roomId);
 
         const timeout = setTimeout(() => {
-            console.warn('⏰ Leave room timeout for:', roomId);
             callback?.({ success: false, error: 'Leave room timeout' });
         }, 10000);
 
         // Listen for success/error events
         const successHandler = (data) => {
             clearTimeout(timeout);
-            console.log('✅ Leave room success event:', data);
             this.off('leave-room-success', successHandler);
             this.off('leave-room-error', errorHandler);
             callback?.({ success: true, ...data });
@@ -317,7 +283,6 @@ class SocketService {
 
         const errorHandler = (data) => {
             clearTimeout(timeout);
-            console.error('❌ Leave room error event:', data);
             this.off('leave-room-success', successHandler);
             this.off('leave-room-error', errorHandler);
             callback?.({ success: false, error: data.message || 'Failed to leave room' });
@@ -331,29 +296,20 @@ class SocketService {
 
     startGame(roomId, callback) {
         if (!this.socket || !this.connected) {
-            console.error('❌ Socket not connected');
             callback?.({ success: false, error: 'Socket not connected' });
             return;
         }
 
-        console.log('🎮 Starting game in room:', roomId);
         this.emit('start-game', { roomId }, (response) => {
-            if (response?.success) {
-                console.log('✅ Successfully started game in room:', roomId);
-            } else {
-                console.error('❌ Failed to start game:', roomId, response);
-            }
             callback?.(response);
         });
     }
 
     submitAnswer(roomId, questionId, answerId, timeTaken) {
         if (!this.socket || !this.connected) {
-            console.error('❌ Socket not connected for answer submission');
             return;
         }
 
-        console.log('📝 Submitting answer:', { roomId, questionId, answerId, timeTaken });
         this.emit('submit-answer', {
             roomId: roomId,
             questionId: questionId,
@@ -364,17 +320,14 @@ class SocketService {
 
     nextQuestion(roomId) {
         if (!this.socket || !this.connected) {
-            console.error('❌ Socket not connected for next question');
             return;
         }
 
-        console.log('➡️ Requesting next question for room:', roomId);
         this.emit('next-question', { roomId });
     }
 
     subscribeToRoomList(callback) {
         if (!this.socket || !this.connected) {
-            console.warn('⚠️ Socket not connected, storing callback for later');
             this._subscribedRoomList = true;
             this._roomListCallback = callback;
             return;
@@ -386,17 +339,14 @@ class SocketService {
         this.emit('subscribe-room-list');
 
         this.on('room-created', (data) => {
-            console.log('🏠 room-created event:', data);
             callback({ type: 'CREATE_ROOM', data });
         });
 
         this.on('room-deleted', (data) => {
-            console.log('🗑️ room-deleted event:', data);
             callback({ type: 'ROOM_DELETED', data });
         });
 
         this.on('room-updated', (data) => {
-            console.log('🔄 room-updated event:', data);
             callback({ type: 'ROOM_UPDATED', data });
         });
 
@@ -415,55 +365,48 @@ class SocketService {
     }
 
     /**
-     * ✅ FIXED: Subscribe to room events - EXACT match with backend
+     * Đăng ký sự kiện phòng - khớp chính xác với backend
      */
     subscribeToRoom(roomId, callback) {
-        console.log('📡 Subscribing to room events for room:', roomId);
 
         this.unsubscribeFromRoom(roomId);
 
         this._roomCallbacks = this._roomCallbacks || new Map();
         this._roomCallbacks.set(roomId, callback);
 
-        // ✅ CRITICAL FIX: Match EXACT backend event names from RoomEventListener.java
+        //Khớp CHÍNH XÁC tên sự kiện backend từ RoomEventListener.java
         const handlePlayerJoined = (data) => {
-            console.log('🔥 Backend player-joined event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'PLAYER_JOINED', data });
             }
         };
 
         const handlePlayerLeft = (data) => {
-            console.log('🔥 Backend player-left event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'PLAYER_LEFT', data });
             }
         };
 
         const handleRoomPlayers = (data) => {
-            console.log('🔥 Backend room-players event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'ROOM_PLAYERS_UPDATED', data });
             }
         };
 
         const handleGameStarted = (data) => {
-            console.log('🔥 Backend game-started event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'GAME_STARTED', data });
             }
         };
 
         const handlePlayerKicked = (data) => {
-            console.log('🔥 Backend player-kicked event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'PLAYER_KICKED', data });
             }
         };
 
-        // ✅ MISSING EVENT FIX: Add host-changed handler
+        // SỬA SỰ KIỆN THIẾU: Thêm handler host-changed
         const handleHostChanged = (data) => {
-            console.log('🔥 Backend host-changed event:', data);
             if (data.roomId === Number(roomId)) {
                 callback({ type: 'HOST_CHANGED', data });
             }
@@ -479,7 +422,7 @@ class SocketService {
             'host-changed': handleHostChanged
         });
 
-        // Register listeners - MUST match backend event names exactly
+        // Đăng ký listeners - PHẢI khớp chính xác tên sự kiện backend
         this.on('player-joined', handlePlayerJoined);
         this.on('player-left', handlePlayerLeft);
         this.on('room-players', handleRoomPlayers);

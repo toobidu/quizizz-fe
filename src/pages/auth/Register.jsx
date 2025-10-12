@@ -86,13 +86,13 @@ function Register() {
     return Object.keys(newErrors).length === 0;
   }, [formData, validateField]);
 
-  useEffect(() => {
-    const firstErrorKey = Object.keys(errors)[0];
-    if (firstErrorKey) {
-      firstErrorInputRef.current = document.getElementById(firstErrorKey);
-      firstErrorInputRef.current?.focus();
-    }
-  }, [errors]);
+  // useEffect(() => {
+  //   const firstErrorKey = Object.keys(errors)[0];
+  //   if (firstErrorKey) {
+  //     firstErrorInputRef.current = document.getElementById(firstErrorKey);
+  //     firstErrorInputRef.current?.focus();
+  //   }
+  // }, [errors]);
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -112,16 +112,17 @@ function Register() {
       try {
         await authApi.register({
           username: formData.username,
-          full_name: formData.fullName,
+          fullName: formData.fullName,
           email: formData.email,
-          phone_number: formData.phoneNumber,
+          phoneNumber: formData.phoneNumber,
           address: formData.address,
+          dob: formData.dob,
           password: formData.password,
           confirm_password: formData.confirmPassword,
         });
 
-        setSubmitStatus({ success: true, message: 'Đăng ký thành công! Chuyển hướng sau 3 giây...' });
-        setTimeout(() => navigate('/login'), 3000);
+        setSubmitStatus({ success: true, message: 'Đăng ký thành công!' });
+        setTimeout(() => navigate('/login'), 1500);
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
         if (error.response?.status === 400) {

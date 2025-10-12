@@ -407,26 +407,15 @@
     }
 }
 
-@media (max-width: 480px) {
-    .waiting-room-header {
-        padding: 0.5rem 0;
-    }
+/* Dark mode specific adjustments */
+[data-theme="dark"] .waiting-room {
+    background: var(--bg-color);
+}
 
-    .back-button,
-    .leave-button {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
+[data-theme="dark"] .player-card:hover {
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.2);
+}
 
-    .room-code-display,
-    .room-settings,
-    .players-section {
-        padding: 1rem;
-    }
-
-    .setting-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
+[data-theme="dark"] .start-game-button:hover {
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
 }

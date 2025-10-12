@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { FaCrown } from 'react-icons/fa6';
+import { FaMedal } from 'react-icons/fa';
 import socketService from '../../services/socketService';
 import authStore from '../../stores/authStore';
-import useRoomStore from '../../stores/useRoomStoreRealtime'; // ✅ FIX: Use realtime store
-import { toast } from 'react-toastify';
+import useRoomStore from '../../stores/useRoomStoreRealtime';
+import AnswerResultPopup from './AnswerResultPopup';
+import NotificationPopup from './NotificationPopup';
+import GameStartPopup from './GameStartPopup';
+import CompletionPopup from './CompletionPopup';
 import '../../styles/components/room/GameRoom.css';
 
 const GameRoom = () => {
@@ -17,36 +22,35 @@ const GameRoom = () => {
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [hasAnswered, setHasAnswered] = useState(false);
-    const [isConnected, setIsConnected] = useState(true); // ✅ FIX: Start as true since already connected
+    const [isConnected, setIsConnected] = useState(true); 
     const [gameResults, setGameResults] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [answerResult, setAnswerResult] = useState(null);
+
+    // ✅ NEW: States cho các popup thay thế toast
+    const [notification, setNotification] = useState(null);
+    const [showGameStart, setShowGameStart] = useState(false);
+    const [showCompletion, setShowCompletion] = useState(false);
 
     const timerRef = useRef(null);
     const questionStartTimeRef = useRef(null);
 
-    // ✅ FIX: Initialize with game-started event data from WaitingRoom
+    // Khởi tạo với dữ liệu sự kiện game-started từ WaitingRoom
     useEffect(() => {
         if (!currentUser || !roomCode) {
-            console.error('❌ No user or roomCode, redirecting to home');
             navigate('/');
             return;
         }
 
-        console.log('🎮 GameRoom mounted for room:', roomCode);
-        console.log('🎮 Current room from store:', currentRoom);
-
-        // ✅ Socket should already be connected from WaitingRoom
+        // Socket nên đã kết nối từ WaitingRoom
         if (socketService.isConnected()) {
             setIsConnected(true);
             setupGameSubscriptions();
 
-            // ✅ FIX: Request current game state to get ongoing question if game already started
+            // Sửa: Yêu cầu trạng thái game hiện tại để lấy câu hỏi đang diễn ra nếu game đã bắt đầu
             if (currentRoom?.id) {
-                console.log('🔄 Requesting current game state for room:', currentRoom.id);
                 socketService.emit('get-game-state', { roomId: currentRoom.id }, (response) => {
-                    console.log('📦 Received game state:', response);
                     if (response && response.currentQuestion) {
-                        console.log('📝 Setting current question from game state');
                         setCurrentQuestion(response.currentQuestion);
                         setSelectedAnswer(null);
                         setHasAnswered(false);
@@ -60,16 +64,14 @@ const GameRoom = () => {
                 });
             }
         } else {
-            console.warn('⚠️ Socket not connected, trying to connect...');
             initializeWebSocket();
         }
 
         return () => {
-            console.log('🧹 GameRoom cleanup');
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
-            // ✅ DON'T disconnect from room - let user stay in room
+            // KHÔNG ngắt kết nối khỏi phòng - để người dùng ở lại phòng
         };
     }, [roomCode, currentUser]);
 
@@ -85,17 +87,15 @@ const GameRoom = () => {
             setupGameSubscriptions();
 
         } catch (error) {
-            console.error('❌ Failed to connect socket:', error);
-            toast.error('Không thể kết nối đến game. Vui lòng thử lại!');
-            // ✅ FIX: Don't navigate immediately, give user a chance to retry
+            setNotification({ type: 'error', message: 'Không thể kết nối đến game. Vui lòng thử lại!' });
+            // Không chuyển hướng ngay lập tức, cho người dùng có cơ hội thử lại
             setIsLoading(false);
         }
     };
 
     const setupGameSubscriptions = () => {
-        console.log('📡 Setting up game subscriptions...');
 
-        // ✅ FIX: Remove any existing listeners before adding new ones to prevent duplicates
+        // Sửa: Xóa các listener tồn tại trước khi thêm mới để tránh trùng lặp
         socketService.off('game-started');
         socketService.off('next-question');
         socketService.off('answer-submitted');
@@ -103,29 +103,25 @@ const GameRoom = () => {
         socketService.off('game-ended');
         socketService.off('game-finished');
 
-        // ✅ Listen for game-started event (contains first question)
+        // Lắng nghe sự kiện game-started (chứa câu hỏi đầu tiên)
         socketService.on('game-started', (data) => {
-            console.log('🎮 game-started event in GameRoom:', data);
             handleGameMessage({ type: 'GAME_STARTED', data });
         });
 
-        // ✅ Listen for next-question event
+        // Lắng nghe sự kiện next-question
         socketService.on('next-question', (data) => {
-            console.log('➡️ next-question event:', data);
             handleGameMessage({ type: 'NEXT_QUESTION', data });
         });
 
-        // ✅ Listen for answer-submitted event (personal result) - ONCE per answer
+        // Lắng nghe sự kiện answer-submitted (kết quả cá nhân) - MỘT LẦN mỗi câu trả lời
         const answerSubmittedHandler = (data) => {
-            console.log('✅ answer-submitted event:', data);
             handlePersonalMessage({ type: 'ANSWER_RESULT', data });
         };
         socketService.on('answer-submitted', answerSubmittedHandler);
 
-        // ✅ Listen for player-answered event (other players)
+        // Lắng nghe sự kiện player-answered (người chơi khác)
         socketService.on('player-answered', (data) => {
-            console.log('👥 player-answered event:', data);
-            // Only update other players' status, not score
+            // Chỉ cập nhật trạng thái của người chơi khác, không cập nhật điểm
             setGameState(prev => {
                 if (!prev || !prev.players) return prev;
                 return {
@@ -139,42 +135,33 @@ const GameRoom = () => {
             });
         });
 
-        // ✅ Listen for game-ended/game-finished
+        // Lắng nghe sự kiện game-ended/game-finished
         socketService.on('game-ended', (data) => {
-            console.log('🏁 game-ended event:', data);
             handleGameMessage({ type: 'GAME_ENDED', data });
         });
 
         socketService.on('game-finished', (data) => {
-            console.log('🏁 game-finished event:', data);
             handleGameMessage({ type: 'GAME_ENDED', data });
         });
 
         setIsLoading(false);
-        console.log('✅ Game subscriptions setup complete');
     };
 
     const handleGameMessage = (message) => {
-        console.log('📨 Handling game message:', message.type, message.data);
 
         switch (message.type) {
             case 'GAME_STARTED':
-                // ✅ Extract first question from game-started event
+                // Trích xuất câu hỏi đầu tiên từ sự kiện game-started
                 if (message.data.question) {
-                    console.log('📝 Game started question:', JSON.stringify(message.data.question, null, 2));
-                    console.log('📝 Question text:', message.data.question.questionText);
-                    console.log('📝 Answers:', message.data.question.answers);
-
-                    // ✅ FIX: Khởi tạo gameState với players từ currentRoom
+                    // Sửa: Khởi tạo gameState với players từ currentRoom
                     if (currentRoom?.players) {
                         setGameState({
                             players: currentRoom.players.map(p => ({
                                 ...p,
-                                score: 0, // Khởi tạo điểm = 0
+                                score: 0, 
                                 hasAnswered: false
                             }))
                         });
-                        console.log('✅ Initialized gameState with players:', currentRoom.players);
                     }
 
                     setCurrentQuestion(message.data.question);
@@ -183,19 +170,14 @@ const GameRoom = () => {
                     setTimeRemaining(message.data.question.timeLimit || 30);
                     questionStartTimeRef.current = Date.now();
                     startQuestionTimer(message.data.question.timeLimit || 30);
-                    toast.success('Game đã bắt đầu!');
+                    setShowGameStart(true); // Hiển thị popup bắt đầu game
                 }
                 break;
 
             case 'NEXT_QUESTION':
-                console.log('📝 Next question:', JSON.stringify(message.data, null, 2));
 
-                // ✅ FIX: Backend gửi {question: {...}, timestamp: ...}
                 // Cần lấy từ message.data.question, KHÔNG phải message.data trực tiếp
                 const nextQuestionData = message.data.question || message.data;
-
-                console.log('📝 Question text:', nextQuestionData.questionText);
-                console.log('📝 Answers:', nextQuestionData.answers);
 
                 setCurrentQuestion(nextQuestionData);
                 setSelectedAnswer(null);
@@ -203,7 +185,7 @@ const GameRoom = () => {
                 setTimeRemaining(nextQuestionData.timeLimit || 30);
                 questionStartTimeRef.current = Date.now();
                 startQuestionTimer(nextQuestionData.timeLimit || 30);
-                toast.info(`Câu hỏi ${nextQuestionData.questionNumber}/${nextQuestionData.totalQuestions}`);
+                setNotification({ type: 'info', message: `Câu hỏi ${nextQuestionData.questionNumber}/${nextQuestionData.totalQuestions}` });
                 break;
 
             case 'GAME_ENDED':
@@ -212,11 +194,11 @@ const GameRoom = () => {
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                 }
-                toast.info('Game đã kết thúc!');
+                setShowCompletion(true); // Hiển thị popup hoàn thành
                 break;
 
             default:
-                console.log('⚠️ Unknown message type:', message.type);
+                break;
         }
     };
 
@@ -224,10 +206,10 @@ const GameRoom = () => {
         if (message.type === 'ANSWER_RESULT') {
             const result = message.data.result || message.data;
 
-            // ✅ Update local score immediately
+            // Cập nhật điểm cục bộ ngay lập tức
             const earnedScore = result.score || result.pointsEarned || 0;
 
-            // ✅ Update gameState with new score
+            // Cập nhật gameState với điểm mới
             setGameState(prev => {
                 if (!prev || !prev.players) return prev;
                 return {
@@ -240,43 +222,43 @@ const GameRoom = () => {
                 };
             });
 
-            if (result.isCorrect) {
-                toast.success(`Đúng rồi! +${earnedScore} điểm`, { toastId: 'answer-result' });
-            } else {
-                toast.error(`Sai rồi!`, { toastId: 'answer-result' });
-            }
+            setAnswerResult({
+                isCorrect: result.isCorrect,
+                score: earnedScore,
+                streak: result.streak || 0,
+                streakMultiplier: result.streakMultiplier || 1.0
+            });
 
-            // ✅ NEW: Kiểm tra xem có câu hỏi tiếp theo không
+            // Kiểm tra xem có câu hỏi tiếp theo không
             if (message.data.hasNextQuestion && message.data.nextQuestion) {
-                // Có câu tiếp theo - tự động chuyển
-                console.log('➡️ Auto-advancing to next question:', message.data.nextQuestion);
+                // Có câu tiếp theo - tự động chuyển sau khi popup hiển thị
 
                 const nextQ = message.data.nextQuestion;
-                setCurrentQuestion(nextQ);
-                setSelectedAnswer(null);
-                setHasAnswered(false);
-                setTimeRemaining(nextQ.timeLimit || 30);
-                questionStartTimeRef.current = Date.now();
-                startQuestionTimer(nextQ.timeLimit || 30);
 
-                toast.info(`Câu ${nextQ.questionNumber}/${nextQ.totalQuestions}`, {
-                    autoClose: 1000,
-                    toastId: 'next-question'
-                });
+                // Delay 2.5 giây để người chơi xem kết quả trước khi chuyển câu
+                setTimeout(() => {
+                    setAnswerResult(null); // Đóng popup
+                    setCurrentQuestion(nextQ);
+                    setSelectedAnswer(null);
+                    setHasAnswered(false);
+                    setTimeRemaining(nextQ.timeLimit || 30);
+                    questionStartTimeRef.current = Date.now();
+                    startQuestionTimer(nextQ.timeLimit || 30);
+                }, 2500);
+
             } else if (message.data.completed) {
                 // Player này đã hoàn thành tất cả câu hỏi
-                console.log('🏁 Player completed all questions, waiting for others...');
-                setCurrentQuestion(null);
-                setHasAnswered(false);
+                setTimeout(() => {
+                    setAnswerResult(null);
+                    setCurrentQuestion(null);
+                    setHasAnswered(false);
 
-                if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                }
+                    if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                    }
 
-                toast.success('🎉 Bạn đã hoàn thành! Đang chờ người chơi khác...', {
-                    autoClose: false,
-                    toastId: 'completed'
-                });
+                    setShowCompletion(true); // Hiển thị popup hoàn thành
+                }, 2500);
             }
         }
     };
@@ -291,7 +273,7 @@ const GameRoom = () => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
                     if (!hasAnswered) {
-                        // Auto-submit empty answer when time runs out
+                        // Tự động gửi câu trả lời trống khi hết thời gian
                         submitAnswer();
                     }
                     return 0;
@@ -304,15 +286,9 @@ const GameRoom = () => {
     const submitAnswer = () => {
         if (hasAnswered || !currentQuestion) return;
 
-        console.log('📤 Submitting answer:', selectedAnswer);
-        console.log('📤 Current question:', currentQuestion);
-
-        // ✅ FIX: Backend returns 'answers', not 'options'
         const roomId = currentRoom?.id;
         const questionId = currentQuestion.questionId || currentQuestion.id;
         const questionOptions = currentQuestion.answers || currentQuestion.options || [];
-
-        // ✅ FIX: Find the answer object that matches selectedAnswer text
         const selectedAnswerObj = questionOptions.find(opt =>
             (opt.text || opt.answerText || opt) === selectedAnswer
         );
@@ -323,12 +299,7 @@ const GameRoom = () => {
 
         const timeTaken = questionStartTimeRef.current ? Date.now() - questionStartTimeRef.current : 0;
 
-        console.log('📤 Selected answer object:', selectedAnswerObj);
-        console.log('📤 Selected option index:', selectedOptionIndex);
-        console.log('📤 Answer ID:', answerId);
-        console.log('📤 Time taken:', timeTaken);
-
-        // ✅ Send to backend with all required fields
+        // Gửi đến backend với tất cả các trường bắt buộc
         socketService.emit('submit-answer', {
             roomId: roomId,
             questionId: questionId,
@@ -378,16 +349,12 @@ const GameRoom = () => {
 
     // Show results screen
     if (gameResults) {
-        // ✅ FIX: Backend trả về 'ranking', không phải 'rankings'
         const rankings = gameResults.result?.ranking || gameResults.ranking || [];
-
-        console.log('🏆 Game results:', gameResults);
-        console.log('🏆 Rankings:', rankings);
 
         return (
             <div className="game-room results">
                 <div className="results-container">
-                    <h2 className="results-title">🎉 Kết Quả Game</h2>
+                    <h2 className="results-title">Kết Quả Game</h2>
 
                     <div className="final-leaderboard">
                         {rankings.length > 0 ? (
@@ -395,16 +362,9 @@ const GameRoom = () => {
                                 <div key={player.userId} className={`result-item rank-${index + 1}`}>
                                     <div className="rank-badge" style={{ backgroundColor: getPlayerRankColor(index + 1) }}>
                                         <span className="rank-number">#{index + 1}</span>
-                                        {index === 0 && <span className="rank-icon">👑</span>}
+                                        {index === 0 && <FaCrown className="rank-icon" />}
                                     </div>
                                     <div className="player-info">
-                                        <div className="player-avatar-wrapper">
-                                            <img
-                                                src={player.avatarUrl || '/default-avatar.png'}
-                                                alt={player.userName}
-                                                className="player-avatar"
-                                            />
-                                        </div>
                                         <div className="player-details">
                                             <h3 className="player-name">
                                                 {player.userName || `User ${player.userId}`}
@@ -423,9 +383,9 @@ const GameRoom = () => {
                                     </div>
                                     {index < 3 && (
                                         <div className="medal-icon">
-                                            {index === 0 && '🥇'}
-                                            {index === 1 && '🥈'}
-                                            {index === 2 && '🥉'}
+                                            {index === 0 && <FaMedal style={{ color: 'gold', fontSize: '24px' }} />}
+                                            {index === 1 && <FaMedal style={{ color: 'silver', fontSize: '24px' }} />}
+                                            {index === 2 && <FaMedal style={{ color: '#cd7f32', fontSize: '24px' }} />}
                                         </div>
                                     )}
                                 </div>
@@ -439,10 +399,10 @@ const GameRoom = () => {
 
                     <div className="results-actions">
                         <button onClick={() => navigate('/dashboard')} className="btn-primary">
-                            🏠 Về Dashboard
+                            Về Dashboard
                         </button>
                         <button onClick={() => navigate('/rooms')} className="btn-secondary">
-                            🎮 Tìm phòng khác
+                            Tìm phòng khác
                         </button>
                     </div>
                 </div>
@@ -452,12 +412,8 @@ const GameRoom = () => {
 
     // Show question screen
     if (currentQuestion) {
-        // ✅ FIX: Backend returns 'answers' with field 'text', not 'answerText'
+        // FIX: Backend returns 'answers' with field 'text', not 'answerText'
         const questionOptions = currentQuestion.answers || currentQuestion.options || [];
-
-        console.log('🎯 Rendering question:', currentQuestion.questionText);
-        console.log('🎯 Question number:', currentQuestion.questionNumber || currentQuestion.questionId);
-        console.log('🎯 Available options:', questionOptions);
 
         return (
             <div className="game-room playing">
@@ -485,11 +441,9 @@ const GameRoom = () => {
                     <div className="options-container">
                         {questionOptions.length > 0 ? (
                             questionOptions.map((option, index) => {
-                                // ✅ FIX: Backend returns {id, text} not {id, answerText}
+                                // FIX: Backend returns {id, text} not {id, answerText}
                                 const optionText = option.text || option.answerText || option;
                                 const optionId = option.id || index;
-
-                                console.log(`🎯 Option ${index}:`, optionText, '(from object:', option, ')');
 
                                 return (
                                     <button
@@ -543,6 +497,28 @@ const GameRoom = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Popup kết quả câu trả lời */}
+                {answerResult && (
+                    <AnswerResultPopup
+                        result={answerResult}
+                        onClose={() => setAnswerResult(null)}
+                    />
+                )}
+
+                {/* Popup thông báo bắt đầu game */}
+                {showGameStart && (
+                    <GameStartPopup
+                        onClose={() => setShowGameStart(false)}
+                    />
+                )}
+
+                {/* Popup hoàn thành game */}
+                {showCompletion && (
+                    <CompletionPopup
+                        onClose={() => setShowCompletion(false)}
+                    />
+                )}
             </div>
         );
     }
@@ -583,7 +559,7 @@ const GameRoom = () => {
                 <div className="waiting-actions">
                     {gameState?.isHost && (
                         <button onClick={startGame} className="btn-primary start-btn">
-                            🚀 Bắt đầu Game
+                            Bắt đầu Game
                         </button>
                     )}
 
@@ -591,6 +567,16 @@ const GameRoom = () => {
                         Rời phòng
                     </button>
                 </div>
+
+                {/* Popup thông báo chung */}
+                {notification && (
+                    <NotificationPopup
+                        type={notification.type}
+                        message={notification.message}
+                        onClose={() => setNotification(null)}
+                        autoClose={notification.autoClose !== false}
+                    />
+                )}
             </div>
         </div>
     );

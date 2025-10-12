@@ -7,14 +7,18 @@ import '../../styles/components/room/GameResults.css';
  * GameResults Component - Final leaderboard and statistics
  * Similar to Kahoot/Quizizz results screen
  */
-const GameResults = ({ onExit }) => {
+const GameResults = ({ onExit, gameResults }) => {
     const navigate = useNavigate();
 
     const {
-        leaderboard,
+        leaderboard: storeLeaderboard,
         totalQuestions,
         players
     } = useGameStore();
+
+    // ✅ FIXED: Sử dụng dữ liệu từ backend nếu có, fallback về store
+    const leaderboard = gameResults?.ranking || storeLeaderboard;
+    const totalQs = gameResults?.totalQuestions || totalQuestions;
 
     /**
      * Handle play again
@@ -29,9 +33,9 @@ const GameResults = ({ onExit }) => {
      */
     const getMedal = (rank) => {
         switch (rank) {
-            case 0: return '🥇';
-            case 1: return '🥈';
-            case 2: return '🥉';
+            case 1: return '🥇';
+            case 2: return '🥈';
+            case 3: return '🥉';
             default: return '🏅';
         }
     };
@@ -41,11 +45,22 @@ const GameResults = ({ onExit }) => {
      */
     const getPodiumClass = (rank) => {
         switch (rank) {
-            case 0: return 'podium-first';
-            case 1: return 'podium-second';
-            case 2: return 'podium-third';
+            case 1: return 'podium-first';
+            case 2: return 'podium-second';
+            case 3: return 'podium-third';
             default: return '';
         }
+    };
+
+    /**
+     * Calculate player accuracy percentage
+     */
+    const calculateAccuracy = (player) => {
+        if (!player.correctAnswers && !player.totalAnswers) return 0;
+        const correct = player.correctAnswers || 0;
+        const total = player.totalAnswers || totalQs || 0;
+        if (total === 0) return 0;
+        return Math.round((correct / total) * 100);
     };
 
     return (
@@ -65,7 +80,7 @@ const GameResults = ({ onExit }) => {
             <div className="results-header">
                 <h1>🎉 Trò chơi kết thúc!</h1>
                 <p className="game-stats">
-                    Tổng số câu: {totalQuestions} | Người chơi: {players.length}
+                    Tổng số câu: {totalQs} | Người chơi: {leaderboard.length}
                 </p>
             </div>
 
@@ -75,23 +90,27 @@ const GameResults = ({ onExit }) => {
                 <div className="podium">
                     {leaderboard.slice(0, 3).map((player, index) => {
                         const podiumOrder = index === 0 ? 0 : index === 1 ? 2 : 1; // Center winner
+                        const rank = player.rank || (index + 1);
                         return (
                             <div
                                 key={player.userId}
-                                className={`podium-place ${getPodiumClass(index)}`}
+                                className={`podium-place ${getPodiumClass(rank)}`}
                                 style={{ order: podiumOrder }}
                             >
                                 <div className="player-avatar">
                                     <img
                                         src={player.avatar || '/default-avatar.png'}
-                                        alt={player.username}
+                                        alt={player.userName || 'Player'}
+                                        onError={(e) => {
+                                            e.target.src = '/default-avatar.png';
+                                        }}
                                     />
                                 </div>
-                                <div className="medal">{getMedal(index)}</div>
-                                <h3>{player.username}</h3>
-                                <p className="score">{player.totalScore} điểm</p>
-                                <div className={`podium-base rank-${index + 1}`}>
-                                    <span className="rank-number">#{index + 1}</span>
+                                <div className="medal">{getMedal(rank)}</div>
+                                <h3>{player.userName || `User${player.userId}`}</h3>
+                                <p className="score">{player.totalScore || 0} điểm</p>
+                                <div className={`podium-base rank-${rank}`}>
+                                    <span className="rank-number">#{rank}</span>
                                 </div>
                             </div>
                         );
@@ -110,28 +129,34 @@ const GameResults = ({ onExit }) => {
                         <span>Độ chính xác</span>
                     </div>
                     <div className="leaderboard-body">
-                        {leaderboard.map((player, index) => (
-                            <div
-                                key={player.userId}
-                                className={`leaderboard-row ${index < 3 ? 'top-three' : ''}`}
-                            >
-                                <span className="rank">
-                                    {index < 3 ? getMedal(index) : `#${index + 1}`}
-                                </span>
-                                <span className="player-name">
-                                    <img
-                                        src={player.avatar || '/default-avatar.png'}
-                                        alt={player.username}
-                                        className="mini-avatar"
-                                    />
-                                    {player.username}
-                                </span>
-                                <span className="score">{player.totalScore || 0}</span>
-                                <span className="accuracy">
-                                    {calculateAccuracy(player)}%
-                                </span>
-                            </div>
-                        ))}
+                        {leaderboard.map((player, index) => {
+                            const rank = player.rank || (index + 1);
+                            return (
+                                <div
+                                    key={player.userId}
+                                    className={`leaderboard-row ${rank <= 3 ? 'top-three' : ''}`}
+                                >
+                                    <span className="rank">
+                                        {rank <= 3 ? getMedal(rank) : `#${rank}`}
+                                    </span>
+                                    <span className="player-name">
+                                        <img
+                                            src={player.avatar || '/default-avatar.png'}
+                                            alt={player.userName || 'Player'}
+                                            className="mini-avatar"
+                                            onError={(e) => {
+                                                e.target.src = '/default-avatar.png';
+                                            }}
+                                        />
+                                        {player.userName || `User${player.userId}`}
+                                    </span>
+                                    <span className="score">{player.totalScore || 0}</span>
+                                    <span className="accuracy">
+                                        {calculateAccuracy(player)}%
+                                    </span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -147,14 +172,6 @@ const GameResults = ({ onExit }) => {
             </div>
         </div>
     );
-};
-
-/**
- * Calculate player accuracy percentage
- */
-const calculateAccuracy = (player) => {
-    if (!player.correctAnswers || !player.totalAnswers) return 0;
-    return Math.round((player.correctAnswers / player.totalAnswers) * 100);
 };
 
 export default GameResults;

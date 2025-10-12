@@ -1,0 +1,234 @@
+/* CompletionPopup Styles */
+
+.completion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10002;
+    animation: overlay-fade-in 0.3s ease-out;
+}
+
+@keyframes overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.completion-popup {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 32px;
+    padding: 60px 50px;
+    text-align: center;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+    color: white;
+    position: relative;
+    max-width: 600px;
+    animation: popup-bounce-in 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes popup-bounce-in {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Confetti Animation */
+.confetti-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    border-radius: 32px;
+}
+
+.confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confetti-fall 3s linear infinite;
+}
+
+@keyframes confetti-fall {
+    to {
+        transform: translateY(600px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.completion-content {
+    position: relative;
+    z-index: 1;
+}
+
+.completion-icon {
+    font-size: 100px;
+    line-height: 1;
+    margin-bottom: 25px;
+    animation: icon-bounce 1s ease-in-out infinite;
+}
+
+@keyframes icon-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.completion-title {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: text-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes text-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.completion-message {
+    font-size: 22px;
+    margin: 0 0 20px 0;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.completion-emoji {
+    font-size: 32px;
+    margin: 20px 0;
+    animation: emoji-wave 2s ease-in-out infinite;
+}
+
+@keyframes emoji-wave {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-10deg);
+    }
+    75% {
+        transform: rotate(10deg);
+    }
+}
+
+.completion-waiting {
+    font-size: 18px;
+    margin: 25px 0 15px 0;
+    opacity: 0.9;
+}
+
+.completion-loader {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.loader-dot {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    animation: loader-bounce 1.4s infinite ease-in-out;
+}
+
+.loader-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loader-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes loader-bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.completion-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.completion-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .completion-popup {
+        margin: 20px;
+        padding: 40px 30px;
+        max-width: 90%;
+    }
+
+    .completion-icon {
+        font-size: 70px;
+    }
+
+    .completion-title {
+        font-size: 36px;
+    }
+
+    .completion-message {
+        font-size: 18px;
+    }
+
+    .completion-emoji {
+        font-size: 24px;
+    }
+
+    .completion-waiting {
+        font-size: 16px;
+    }
+}
+

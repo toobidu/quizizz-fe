@@ -3,7 +3,6 @@ import socketService from '../services/socketService';
 
 /**
  * Game Store - Real-time game state management
- * Handles Kahoot/Quizizz-like game flow
  */
 const useGameStore = create((set, get) => ({
     // Game state

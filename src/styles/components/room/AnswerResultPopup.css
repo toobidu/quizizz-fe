@@ -1,0 +1,237 @@
+/* AnswerResultPopup Styles */
+
+.answer-result-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: overlay-fade-in 0.3s ease-out;
+}
+
+@keyframes overlay-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.answer-result-popup {
+    background: #4CAF50;
+    border-radius: 24px;
+    padding: 40px;
+    min-width: 320px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    color: white;
+}
+
+/* Animations */
+@keyframes popup-bounce-in {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes popup-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-10px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(10px);
+    }
+}
+
+.popup-bounce-in {
+    animation: popup-bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.popup-shake {
+    animation: popup-shake 0.6s ease-in-out;
+}
+
+/* Icon */
+.popup-icon {
+    font-size: 80px;
+    line-height: 1;
+    margin-bottom: 20px;
+    animation: icon-pulse 0.6s ease-out;
+}
+
+@keyframes icon-pulse {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Title */
+.popup-title {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Score */
+.popup-score {
+    margin: 20px 0;
+    animation: score-slide-up 0.5s ease-out 0.3s backwards;
+}
+
+@keyframes score-slide-up {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.score-value {
+    font-size: 48px;
+    font-weight: bold;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.score-label {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+/* Streak Badge */
+.popup-streak {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin: 20px 0;
+    animation: streak-glow 0.6s ease-out 0.4s backwards;
+}
+
+@keyframes streak-glow {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.streak-text {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.streak-label {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.streak-count {
+    font-size: 14px;
+    margin-top: 8px;
+    opacity: 0.8;
+}
+
+/* Message */
+.popup-message {
+    font-size: 16px;
+    margin: 20px 0;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+/* Close Button */
+.popup-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .answer-result-popup {
+        margin: 20px;
+        padding: 30px 20px;
+        min-width: auto;
+    }
+
+    .popup-icon {
+        font-size: 60px;
+    }
+
+    .popup-title {
+        font-size: 28px;
+    }
+
+    .score-value {
+        font-size: 36px;
+    }
+
+    .streak-text {
+        font-size: 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .answer-result-overlay {
+        background: rgba(0, 0, 0, 0.85);
+    }
+}
+

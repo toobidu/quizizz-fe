@@ -10,7 +10,7 @@ import {
     FiLogOut,
     FiUser
 } from 'react-icons/fi';
-import useRoomStore from '../../stores/useRoomStoreRealtime'; // ✅ FIXED: Use realtime store
+import useRoomStore from '../../stores/useRoomStoreRealtime';
 import roomApi from '../../services/roomApi';
 import authStore from '../../stores/authStore';
 import socketService from '../../services/socketService';
@@ -40,14 +40,9 @@ const WaitingRoom = () => {
 
     const [copied, setCopied] = useState(false);
     const [fetchingRoom, setFetchingRoom] = useState(false);
-
-    // ✅ FIX: Use useRef instead of useState to avoid React closure problem
     const isNavigatingToGameRef = useRef(false);
-
-    // Get current user from auth store
     const currentUser = authStore((state) => state.user);
 
-    // ✅ FIXED: Fetch room data by code when component mounts
     useEffect(() => {
         const fetchRoomData = async () => {
             if (!roomCode) {
@@ -55,12 +50,10 @@ const WaitingRoom = () => {
                 return;
             }
 
-            // Check if room data was passed via navigate state (from CreateRoomModal)
             if (location.state?.room && location.state?.fromCreate) {
                 const roomData = location.state.room;
                 setCurrentRoom(roomData);
 
-                // Connect to Socket.IO for real-time updates
                 if (roomData.id) {
                     await connectToRoom(roomData.id);
                 }
@@ -69,7 +62,6 @@ const WaitingRoom = () => {
                 return;
             }
 
-            // Check if room is already loaded in store
             if (currentRoom && currentRoom.roomCode === roomCode) {
                 if (currentRoom.id) {
                     await connectToRoom(currentRoom.id);
@@ -82,7 +74,6 @@ const WaitingRoom = () => {
             setError(null);
 
             try {
-                // First try to get room info without joining
                 let room = null;
                 try {
                     const roomInfoResponse = await roomApi.getRoomByCode(roomCode);
@@ -90,10 +81,8 @@ const WaitingRoom = () => {
                         room = roomInfoResponse.data;
                     }
                 } catch (infoError) {
-                    console.log('Room info fetch failed, trying join:', infoError.message);
                 }
 
-                // If room info fetch failed, try to join
                 if (!room) {
                     const joinResponse = await roomApi.joinRoomByCode(roomCode);
                     if (joinResponse.success && joinResponse.data) {
@@ -104,15 +93,12 @@ const WaitingRoom = () => {
                     }
                 }
 
-                // Set room data
                 setCurrentRoom(room);
 
-                // ✅ FIXED: Connect to Socket.IO for real-time updates
                 if (room.id) {
                     await connectToRoom(room.id);
                 }
             } catch (err) {
-                console.error('Error in fetchRoomData:', err);
                 setError('Có lỗi xảy ra khi tải phòng');
             } finally {
                 setFetchingRoom(false);
@@ -123,22 +109,16 @@ const WaitingRoom = () => {
         fetchRoomData();
     }, [roomCode]);
 
-    // ✅ FIXED: Listen for game started events
     useEffect(() => {
         const handleGameStarted = (event) => {
-            console.log('🎮 Game started event received:', event.detail);
             const { roomId } = event.detail;
 
-            // Navigate to game if this is our current room
             if (currentRoom && roomId === currentRoom.id) {
-                // ✅ Set ref BEFORE navigating to prevent cleanup from leaving room
                 isNavigatingToGameRef.current = true;
-                console.log('🎮 Navigating to game, will NOT leave room on unmount');
                 navigate(`/game/${currentRoom.roomCode || currentRoom.code}`);
             }
         };
 
-        // Listen for custom game started event
         window.addEventListener('gameStarted', handleGameStarted);
 
         return () => {
@@ -146,17 +126,12 @@ const WaitingRoom = () => {
         };
     }, [currentRoom, navigate]);
 
-    // ✅ FIXED: Cleanup on unmount - DON'T leave room if navigating to game
     useEffect(() => {
         return () => {
             if (currentRoom?.id) {
-                // ✅ CRITICAL: Use ref.current to get the LATEST value
                 if (isNavigatingToGameRef.current) {
-                    console.log('🎮 Unmounting due to game start - keeping room connection');
-                    // Just unsubscribe from events, but DON'T leave the Socket.IO room
                     socketService.unsubscribeFromRoom(currentRoom.id);
                 } else {
-                    console.log('🧹 Normal cleanup - disconnecting from room');
                     disconnectFromRoom(currentRoom.id);
                 }
             }
@@ -170,28 +145,16 @@ const WaitingRoom = () => {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
             } catch (err) {
-                // Copy failed - browser might not support clipboard API
             }
         }
     };
 
     const handleLeaveRoom = async () => {
         try {
-            console.log('🚪 User clicked leave room button');
+            leaveRoom().catch(() => { });
 
-            // ✅ CRITICAL: Always navigate regardless of result
-            // Call leaveRoom but don't wait for complex logic
-            leaveRoom().catch(err => {
-                console.error('Leave room error (ignored):', err);
-            });
-
-            // ✅ Navigate immediately to prevent user from being stuck
-            console.log('🔄 Navigating to /rooms immediately');
             navigate('/rooms', { replace: true });
-
         } catch (error) {
-            console.error('❌ Error in handleLeaveRoom:', error);
-            // Still navigate even on error
             navigate('/rooms', { replace: true });
         }
     };

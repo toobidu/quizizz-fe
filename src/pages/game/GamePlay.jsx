@@ -46,35 +46,30 @@ const GamePlay = () => {
 
     useEffect(() => {
         if (roomCode && currentUser?.id) {
-            console.log(`🚀 Initializing game for room: ${roomCode}`);
+            // Khởi tạo trạng thái game
+            initGame(roomCode, false); // Giả sử không phải host hiện tại
             
-            // Initialize game state
-            initGame(roomCode, false); // Assume not host for now
-            
-            // Setup socket listeners
+            // Thiết lập các listener socket
             setupSocketListeners();
             
-            // Join room if not already joined
+            // Tham gia phòng nếu chưa tham gia
             if (!socketService.getJoinedRooms().has(roomCode)) {
                 socketService.joinRoom(roomCode, (response) => {
                     if (response.success) {
-                        console.log('✅ Joined room for game:', response);
                     } else {
-                        console.error('❌ Failed to join room for game:', response);
                     }
                 });
             }
         }
 
         return () => {
-            console.log(`🔌 Cleaning up game for room: ${roomCode}`);
             cleanupSocketListeners();
             reset();
         };
     }, [roomCode, currentUser?.id]);
 
     useEffect(() => {
-        // Reset local state when a new question arrives
+        // Đặt lại trạng thái cục bộ khi câu hỏi mới đến
         setLocalSelectedAnswer(null);
     }, [currentQuestion]);
 
@@ -86,22 +81,19 @@ const GamePlay = () => {
 
     const handleSubmitAnswer = () => {
         if (localSelectedAnswer !== null && !hasAnswered) {
-            console.log(`📤 Submitting answer: ${localSelectedAnswer}`);
             submitAnswer(localSelectedAnswer);
         }
     };
 
     const handleNextQuestion = () => {
-        console.log('➡️ Requesting next question...');
         nextQuestion();
     };
 
     const handleViewResults = () => {
-        console.log('🏆 Navigating to results page...');
         navigate(`/results/${roomCode}`);
     };
 
-    // Render loading state
+    // Hiển thị trạng thái đang tải
     if (isGameStarting || (!isGameActive && !isGameFinished)) {
         return (
             <div className={`game-play-container ${theme}`}>
@@ -113,7 +105,7 @@ const GamePlay = () => {
         );
     }
 
-    // Render waiting for question state
+    // Hiển thị trạng thái chờ câu hỏi
     if (isGameActive && !currentQuestion) {
         return (
             <div className={`game-play-container ${theme}`}>
@@ -125,7 +117,7 @@ const GamePlay = () => {
         );
     }
 
-    // Render error state
+    // Hiển thị trạng thái lỗi
     if (error) {
         return (
             <div className={`game-play-container ${theme}`}>
@@ -138,7 +130,7 @@ const GamePlay = () => {
         );
     }
 
-    // Render game over screen
+    // Hiển thị màn hình kết thúc game
     if (isGameFinished) {
         return (
             <div className={`game-play-container ${theme}`}>
@@ -165,7 +157,7 @@ const GamePlay = () => {
         );
     }
 
-    // Render question result screen
+    // Hiển thị màn hình kết quả câu hỏi
     if (answerResult && hasAnswered) {
         const isCorrect = answerResult.isCorrect;
         return (
@@ -195,7 +187,7 @@ const GamePlay = () => {
         );
     }
 
-    // Render the main game play screen (question and answers)
+    // Hiển thị màn hình chơi game chính (câu hỏi và câu trả lời)
     return (
         <div className={`game-play-container ${theme}`}>
             <div className="game-header">

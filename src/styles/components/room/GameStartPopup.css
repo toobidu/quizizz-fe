@@ -1,0 +1,125 @@
+/* GameStartPopup Styles */
+
+.game-start-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    animation: overlay-fade-in 0.3s ease-out;
+}
+
+.game-start-popup {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 24px;
+    padding: 50px 60px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: white;
+    animation: popup-scale-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    max-width: 500px;
+}
+
+@keyframes popup-scale-in {
+    0% {
+        transform: scale(0.3) rotate(-10deg);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.game-start-icon {
+    font-size: 80px;
+    line-height: 1;
+    margin-bottom: 20px;
+    animation: icon-spin 0.8s ease-out;
+}
+
+@keyframes icon-spin {
+    0% {
+        transform: rotate(0deg) scale(0);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+.game-start-title {
+    font-size: 42px;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    animation: text-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes text-glow {
+    0%, 100% {
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        text-shadow: 0 4px 16px rgba(255, 255, 255, 0.6);
+    }
+}
+
+.game-start-message {
+    font-size: 20px;
+    margin: 0 0 30px 0;
+    opacity: 0.95;
+}
+
+.game-start-loader {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.loader-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #fff, #ffd700);
+    border-radius: 3px;
+    animation: loader-progress 2.5s ease-out forwards;
+}
+
+@keyframes loader-progress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .game-start-popup {
+        margin: 20px;
+        padding: 40px 30px;
+        max-width: 90%;
+    }
+
+    .game-start-icon {
+        font-size: 60px;
+    }
+
+    .game-start-title {
+        font-size: 32px;
+    }
+
+    .game-start-message {
+        font-size: 16px;
+    }
+}
+

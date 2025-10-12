@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { IoPeople, IoTime, IoPlay } from 'react-icons/io5';
-import { FiUser, FiHash, FiLock, FiUnlock } from 'react-icons/fi';
+import { IoPeople, IoPlay } from 'react-icons/io5';
+import { FiHash, FiLock, FiUnlock } from 'react-icons/fi';
 import useRoomStore from '../../stores/useRoomStore';
 import '../../styles/components/room/RoomCard.css';
 
@@ -92,10 +92,15 @@ const RoomCard = ({ room, onJoinPublic }) => {
           <button
               className="room-card-join-btn"
               onClick={handleJoin}
-              disabled={room.status?.toLowerCase() !== 'waiting' || isJoining}
+              disabled={room.status?.toLowerCase() !== 'waiting' || isJoining || room.isPrivate}
           >
             {isJoining ? (
                 <span className="loading-spinner">Đang tham gia...</span>
+            ) : room.isPrivate ? (
+                <>
+                  <FiLock />
+                  <span>Phòng riêng tư</span>
+                </>
             ) : (
                 <>
                   <IoPlay />
