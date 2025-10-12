@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     FiUsers,
@@ -40,6 +40,9 @@ const WaitingRoom = () => {
 
     const [copied, setCopied] = useState(false);
     const [fetchingRoom, setFetchingRoom] = useState(false);
+
+    // ✅ FIX: Use useRef instead of useState to avoid React closure problem
+    const isNavigatingToGameRef = useRef(false);
 
     // Get current user from auth store
     const currentUser = authStore((state) => state.user);
@@ -128,6 +131,9 @@ const WaitingRoom = () => {
 
             // Navigate to game if this is our current room
             if (currentRoom && roomId === currentRoom.id) {
+                // ✅ Set ref BEFORE navigating to prevent cleanup from leaving room
+                isNavigatingToGameRef.current = true;
+                console.log('🎮 Navigating to game, will NOT leave room on unmount');
                 navigate(`/game/${currentRoom.roomCode || currentRoom.code}`);
             }
         };
@@ -140,15 +146,22 @@ const WaitingRoom = () => {
         };
     }, [currentRoom, navigate]);
 
-    // ✅ FIXED: Cleanup on unmount
+    // ✅ FIXED: Cleanup on unmount - DON'T leave room if navigating to game
     useEffect(() => {
         return () => {
             if (currentRoom?.id) {
-                console.log('🧹 Cleaning up room connection on unmount');
-                disconnectFromRoom(currentRoom.id);
+                // ✅ CRITICAL: Use ref.current to get the LATEST value
+                if (isNavigatingToGameRef.current) {
+                    console.log('🎮 Unmounting due to game start - keeping room connection');
+                    // Just unsubscribe from events, but DON'T leave the Socket.IO room
+                    socketService.unsubscribeFromRoom(currentRoom.id);
+                } else {
+                    console.log('🧹 Normal cleanup - disconnecting from room');
+                    disconnectFromRoom(currentRoom.id);
+                }
             }
         };
-    }, [currentRoom?.id]);
+    }, [currentRoom?.id, disconnectFromRoom]);
 
     const handleCopyCode = async () => {
         if (currentRoom?.roomCode || currentRoom?.code) {
@@ -383,3 +396,4 @@ const WaitingRoom = () => {
 };
 
 export default WaitingRoom;
+
