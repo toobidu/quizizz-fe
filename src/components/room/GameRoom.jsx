@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useWebSocketCleanup from '../../hooks/useWebSocketCleanup';
 import socketService from '../../services/socketService';
 import authStore from '../../stores/authStore';
+import useRoomStore from '../../stores/useRoomStore';
 import { toast } from 'react-toastify';
 import '../../styles/components/room/GameRoom.css';
 
@@ -10,6 +11,7 @@ const GameRoom = () => {
     const { roomCode } = useParams();
     const navigate = useNavigate();
     const { currentUser } = authStore();
+    const { currentRoom } = useRoomStore();
     const [gameState, setGameState] = useState(null);
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -18,6 +20,7 @@ const GameRoom = () => {
     const [isConnected, setIsConnected] = useState(false);
     const [gameResults, setGameResults] = useState(null);
     const timerRef = useRef(null);
+    const questionStartTimeRef = useRef(null);
 
     // Cleanup WebSocket on unmount
     useWebSocketCleanup();
@@ -69,11 +72,31 @@ const GameRoom = () => {
             handleGameMessage({ type: 'NEXT_QUESTION', data });
         });
 
-        socketService.on('question-result', (data) => {
-            handlePersonalMessage({ type: 'QUESTION_RESULT', data });
+        // ✅ FIXED: Backend emits 'answer-result', not 'question-result'
+        socketService.on('answer-result', (data) => {
+            handlePersonalMessage({ type: 'ANSWER_RESULT', data });
+        });
+
+        // ✅ NEW: Listen to player-answered for realtime status updates
+        socketService.on('player-answered', (data) => {
+            console.log('👥 Player answered:', data);
+            setGameState(prev => {
+                if (!prev || !prev.players) return prev;
+                return {
+                    ...prev,
+                    players: prev.players.map(p =>
+                        p.userId === data.userId
+                            ? { ...p, hasAnswered: true, score: data.score }
+                            : p
+                    )
+                };
+            });
         });
 
         socketService.on('game-ended', (data) => {
+            handleGameMessage({ type: 'GAME_ENDED', data });
+        });
+        socketService.on('game-finished', (data) => {
             handleGameMessage({ type: 'GAME_ENDED', data });
         });
 
@@ -101,6 +124,7 @@ const GameRoom = () => {
                 setSelectedAnswer(null);
                 setHasAnswered(false);
                 setTimeRemaining(message.data.timeLimit);
+                questionStartTimeRef.current = Date.now(); // ✅ Track question start time
                 startQuestionTimer(message.data.timeLimit);
                 break;
 
@@ -154,15 +178,22 @@ const GameRoom = () => {
     const submitAnswer = () => {
         if (hasAnswered || !currentQuestion) return;
 
-        const answerData = {
-            questionId: currentQuestion.questionId,
-            selectedAnswer: selectedAnswer,
-            selectedOptionIndex: selectedAnswer ? currentQuestion.options.indexOf(selectedAnswer) : -1,
-            submissionTime: Date.now(),
-            answerText: selectedAnswer
-        };
+        // ✅ FIXED: Use proper structure matching backend expectations
+        const roomId = currentRoom?.id;
+        const questionId = currentQuestion.questionId || currentQuestion.id;
+        const selectedOptionIndex = selectedAnswer ? currentQuestion.options.indexOf(selectedAnswer) : -1;
+        const timeTaken = questionStartTimeRef.current ? Date.now() - questionStartTimeRef.current : 0;
 
-        socketService.emit('submitAnswer', { roomCode, ...answerData });
+        // Use socketService.submitAnswer which formats data correctly
+        socketService.emit('submit-answer', {
+            roomId: roomId,
+            questionId: questionId,
+            selectedAnswer: selectedAnswer,
+            selectedOptionIndex: selectedOptionIndex,
+            answerText: selectedAnswer,
+            timeTaken: timeTaken
+        });
+
         setHasAnswered(true);
 
         if (timerRef.current) {

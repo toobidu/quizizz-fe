@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 import Cookies from 'js-cookie';
 
 class SocketService {
@@ -19,7 +19,6 @@ class SocketService {
             }
 
             if (this.socket) {
-                console.log('🔄 Disconnecting existing connection...');
                 this.disconnect();
             }
 
@@ -29,31 +28,36 @@ class SocketService {
                 return reject(new Error('No authentication token found'));
             }
 
-            console.log('🚀 Connecting to Socket.IO server...');
-            this.socket = io('http://localhost:9092', {
-                transports: ['websocket', 'polling'],
-                auth: { token: authToken },
+            // ✅ FIX: Configure socket.io-client v2.4.0 for Java netty-socketio backend
+            this.socket = io('http://localhost:9093', {
+                transports: ['polling', 'websocket'],
                 query: { token: authToken },
                 reconnection: true,
                 reconnectionAttempts: this.maxReconnectAttempts,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
                 timeout: 20000,
-                forceNew: true,
+                upgrade: true,
+                rememberUpgrade: true,
+                withCredentials: false, // ✅ FIX: Disable credentials to avoid CORS wildcard issue
+                forceNew: false // ✅ FIX: Reuse connection if possible
             });
 
             this.socket.on('connect', () => {
-                console.log('🔗 Socket.IO connected with ID:', this.socket.id);
                 this.connected = true;
                 this.reconnectAttempts = 0;
                 this._setupGlobalListeners();
 
                 // Re-subscribe to room-list broadcasts if previously subscribed
-                if (this._subscribedRoomList) {
+                if (this._subscribedRoomList && this._roomListCallback) {
                     try {
+                        console.log('🔄 Resubscribing to room-list...');
                         this.emit('subscribe-room-list');
-                        console.log('📋 Resubscribed to room-list broadcasts');
-                    } catch {}
+                        this.subscribeToRoomList(this._roomListCallback);
+                        console.log('✅ Resubscribed to room-list broadcasts');
+                    } catch (e) {
+                        console.error('❌ Failed to resubscribe:', e);
+                    }
                 }
 
                 // Khôi phục trạng thái phòng khi reconnect
@@ -68,6 +72,12 @@ class SocketService {
 
             this.socket.on('connect_error', (error) => {
                 console.error('❌ Socket.IO connection error:', error);
+                if (error && error.message) {
+                    console.error('❌ Error message:', error.message);
+                }
+                if (error && error.data) {
+                    console.error('❌ Error data:', error.data);
+                }
                 this.reconnectAttempts++;
                 if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                     reject(new Error('Failed to connect after maximum attempts'));
@@ -82,6 +92,11 @@ class SocketService {
                 this.connected = true;
                 this.reconnectAttempts = 0;
                 console.log('🔗 Reconnected after', attemptNumber, 'attempts');
+                
+                if (this._subscribedRoomList && this._roomListCallback) {
+                    console.log('🔄 Resubscribing to room-list after reconnect...');
+                    this.subscribeToRoomList(this._roomListCallback);
+                }
             });
 
             this.socket.on('reconnect_failed', () => {
@@ -91,17 +106,12 @@ class SocketService {
     }
 
     _setupGlobalListeners() {
-        console.log('🔧 Setting up global listeners...');
-
         // Xóa tất cả listener hiện tại để tránh trùng lặp
         this.listeners.forEach((callbacks, event) => {
             callbacks.forEach(callback => this.socket.off(event, callback));
         });
         this.listeners.clear();
 
-        this.socket.onAny((eventName, ...args) => {
-            console.log('📡 Received any event:', eventName, args);
-        });
 
         this.on('roomCreated', (data) => {
             console.log('🎯 Received roomCreated event:', data);
@@ -153,17 +163,14 @@ class SocketService {
     }
 
     setOnRoomCreated(callback) {
-        console.log('📝 Setting onRoomCreated callback:', !!callback);
         this._onRoomCreated = callback;
     }
 
     setOnRoomDeleted(callback) {
-        console.log('📝 Setting onRoomDeleted callback:', !!callback);
         this._onRoomDeleted = callback;
     }
 
     setOnRoomUpdated(callback) {
-        console.log('📝 Setting onRoomUpdated callback:', !!callback);
         this._onRoomUpdated = callback;
     }
 
@@ -243,21 +250,22 @@ class SocketService {
         });
     }
 
-    joinRoom(roomId, callback) {
+    joinRoom(roomCodeOrId, callback) {
         if (!this.socket || !this.connected) {
             console.error('❌ Socket not connected for joinRoom');
             callback?.({ success: false, error: 'Socket not connected' });
             return;
         }
 
-        this.rooms.add(roomId);
+        this.rooms.add(roomCodeOrId);
 
         const timeout = setTimeout(() => {
-            console.warn('⏰ Join room timeout for:', roomId);
+            console.warn('⏰ Join room timeout for:', roomCodeOrId);
             callback?.({ success: false, error: 'Join room timeout' });
         }, 10000);
 
-        const joinData = { roomId: Number(roomId) };
+        // ✅ FIXED: Backend expects roomCode, not roomId
+        const joinData = { roomCode: String(roomCodeOrId) };
 
         console.log('🔗 Joining room with data:', joinData);
 
@@ -275,7 +283,7 @@ class SocketService {
             console.error('❌ Join room error event:', data);
             this.off('join-room-success', successHandler);
             this.off('join-room-error', errorHandler);
-            this.rooms.delete(roomId);
+            this.rooms.delete(roomCodeOrId); // FIX: Dùng roomCodeOrId thay vì roomId
             callback?.({ success: false, error: data.message || 'Failed to join room' });
         };
 
@@ -366,37 +374,32 @@ class SocketService {
 
     subscribeToRoomList(callback) {
         if (!this.socket || !this.connected) {
-            console.warn('⚠️ Socket not connected yet, attempting to connect before subscribing to room list');
+            console.warn('⚠️ Socket not connected, storing callback for later');
+            this._subscribedRoomList = true;
+            this._roomListCallback = callback;
+            return;
         }
 
         this._subscribedRoomList = true;
+        this._roomListCallback = callback;
 
-        try {
-            this.emit('subscribe-room-list');
-        } catch (e) {
-            console.warn('⚠️ Failed to emit subscribe-room-list (will retry on connect):', e?.message);
-        }
+        this.emit('subscribe-room-list');
 
-        this.on('roomCreated', (data) => {
-            callback({ type: 'CREATE_ROOM', data });
-        });
         this.on('room-created', (data) => {
+            console.log('🏠 room-created event:', data);
             callback({ type: 'CREATE_ROOM', data });
         });
 
-        this.on('roomDeleted', (data) => {
-            callback({ type: 'ROOM_DELETED', data });
-        });
         this.on('room-deleted', (data) => {
+            console.log('🗑️ room-deleted event:', data);
             callback({ type: 'ROOM_DELETED', data });
         });
 
-        this.on('roomUpdated', (data) => {
-            callback({ type: 'ROOM_UPDATED', data });
-        });
         this.on('room-updated', (data) => {
+            console.log('🔄 room-updated event:', data);
             callback({ type: 'ROOM_UPDATED', data });
         });
+
     }
 
     unsubscribeFromRoomList() {
@@ -404,10 +407,11 @@ class SocketService {
             this.emit('unsubscribe-room-list');
         } catch {}
         this._subscribedRoomList = false;
+        this._roomListCallback = null;
 
-        this.off('roomCreated');
-        this.off('roomDeleted');
-        this.off('roomUpdated');
+        this.off('room-created');
+        this.off('room-deleted');
+        this.off('room-updated');
     }
 
     /**

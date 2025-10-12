@@ -262,14 +262,6 @@ const RoomsPage = () => {
                         <div className="room-header">
                             <div className="room-header-left">
                                 <h1>Danh sách phòng</h1>
-                                <button
-                                    className="room-btn-refresh"
-                                    onClick={() => loadRooms()}
-                                    disabled={loading}
-                                    title="Refresh danh sách phòng"
-                                >
-                                    <IoRefresh className={`room-refresh-icon ${loading ? 'spinning' : ''}`} />
-                                </button>
                             </div>
 
                             <div className="room-actions">

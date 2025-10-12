@@ -35,15 +35,20 @@ const roomApi = {
      */
     createRoom: async (roomData) => {
         try {
+            console.log('🎯 Creating room with data:', roomData);
             const mappedData = mapCreateRoomRequest(roomData);
+            console.log('📤 Sending to backend:', mappedData);
             const response = await apiInstance.post('/rooms', mappedData);
+            console.log('📥 Backend createRoom response:', response.data);
             const mappedRoom = mapRoomFromBackend(response.data.data);
+            console.log('🔧 Mapped room:', mappedRoom);
             return {
                 success: true,
                 data: mappedRoom,
                 message: response.data.message
             };
         } catch (error) {
+            console.error('❌ createRoom error:', error);
             return {
                 success: false,
                 error: error.response?.data?.message || 'Có lỗi xảy ra khi tạo phòng'
@@ -243,11 +248,15 @@ const roomApi = {
             // Chuẩn hóa response
             let mappedRooms = [];
             if (Array.isArray(responseData)) {
+                console.log('✅ responseData is Array, length:', responseData.length);
                 mappedRooms = mapRoomsFromBackend(responseData);
             } else if (responseData.content) {
+                console.log('✅ responseData has content, length:', responseData.content.length);
                 mappedRooms = mapRoomsFromBackend(responseData.content);
             } else if (responseData.rooms) {
                 mappedRooms = mapRoomsFromBackend(responseData.rooms);
+            } else {
+                console.warn('⚠️ responseData format unexpected:', typeof responseData, responseData);
             }
 
             return {
@@ -262,6 +271,7 @@ const roomApi = {
                 }
             };
         } catch (error) {
+            console.error('❌ getPublicRooms error:', error);
             const errorMessage = error.response?.data?.message || 'Không thể lấy danh sách phòng';
             const errorCode = error.response?.data?.code || 'UNKNOWN_ERROR';
             return {

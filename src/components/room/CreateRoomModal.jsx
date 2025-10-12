@@ -148,16 +148,14 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       });
 
       if (result.success) {
-        const roomCode = result.data?.roomCode || result.data?.code;
+        const roomCode = result.data?.roomCode || result.data?.code || result.data?.RoomCode;
         if (!roomCode) {
           setError('Tạo phòng thành công nhưng không nhận được mã phòng.');
           return;
         }
 
         toast.success('Phòng đã được tạo thành công!');
-        setRoomCode(roomCode);
-        onSuccess?.({ message: 'Phòng đã được tạo thành công!', roomCode, autoJoined: true });
-
+        onClose?.();
         navigate(`/waiting-room/${roomCode}`, {
           state: { room: result.data, fromCreate: true }
         });
@@ -220,45 +218,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
               </div>
           )}
 
-          {roomCode ? (
-              <div className="crm-success">
-                <div className="crm-success-icon">
-                  <FiCheck />
-                </div>
-                <h2>Phòng đã được tạo thành công!</h2>
-                <p>Chia sẻ mã phòng với bạn bè để họ có thể tham gia</p>
-                <div className="crm-room-code">
-                  <div className="crm-code-display">
-                    <span className="crm-code-label">Mã phòng:</span>
-                    <span className="crm-code-value">{roomCode}</span>
-                  </div>
-                  <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(roomCode);
-                        setCopied(true);
-                        toast.info('Đã sao chép mã phòng!');
-                        setTimeout(() => setCopied(false), 2000);
-                      }}
-                      className="crm-copy-btn"
-                  >
-                    {copied ? <FiCheck /> : <FiCopy />}
-                    {copied ? 'Đã sao chép' : 'Sao chép'}
-                  </button>
-                </div>
-                <div className="crm-success-actions">
-                  <button className="crm-button crm-secondary-btn" onClick={handleClose}>
-                    Đóng
-                  </button>
-                  <button
-                      className="crm-button crm-primary-btn"
-                      onClick={() => navigate(`/waiting-room/${roomCode}`)}
-                  >
-                    Vào phòng
-                  </button>
-                </div>
-              </div>
-          ) : (
-              <form onSubmit={handleSubmit} className="crm-form">
+          <form onSubmit={handleSubmit} className="crm-form">
                 <div className="crm-form-group">
                   <label htmlFor="name">
                     <FiStar style={{ marginRight: '8px' }} />
@@ -456,7 +416,6 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                   </button>
                 </div>
               </form>
-          )}
         </div>
       </div>
   );

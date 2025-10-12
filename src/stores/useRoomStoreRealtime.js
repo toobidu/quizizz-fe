@@ -172,6 +172,18 @@ const useRoomStore = create((set, get) => ({
                 return;
             }
 
+            // ✅ FIX: Get roomCode from currentRoom instead of using roomId directly
+            const state = get();
+            const roomCode = state.currentRoom?.roomCode || state.currentRoom?.code || state.currentRoom?.Code;
+
+            if (!roomCode) {
+                console.error('❌ No roomCode found in currentRoom:', state.currentRoom);
+                set({ error: 'Không tìm thấy mã phòng' });
+                return;
+            }
+
+            console.log('🔑 Using roomCode for Socket.IO join:', roomCode);
+
             // Setup listeners first - FIXED event types to match backend
             socketService.subscribeToRoom(roomId, (message) => {
                 console.log('📡 Room event:', message.type, message.data);
@@ -234,7 +246,7 @@ const useRoomStore = create((set, get) => ({
                 }
             });
 
-            // Join room via Socket.IO
+            // ✅ FIX: Join room via Socket.IO using roomCode instead of roomId
             return new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
                     console.error('❌ Socket.IO join room timeout');
@@ -242,14 +254,14 @@ const useRoomStore = create((set, get) => ({
                     reject(new Error('Join room timeout'));
                 }, 10000);
 
-                socketService.joinRoom(roomId, (response) => {
+                socketService.joinRoom(roomCode, (response) => {
                     clearTimeout(timeout);
 
                     console.log('🔥 Join room response:', response);
 
                     if (response?.success !== false) {
                         set({ isConnectedToRoom: true });
-                        console.log('✅ Connected to room:', roomId);
+                        console.log('✅ Connected to room:', roomCode);
 
                         // Initial fetch of players after successful connection
                         get().fetchRoomPlayers(roomId);
