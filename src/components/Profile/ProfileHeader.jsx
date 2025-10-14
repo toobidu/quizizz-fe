@@ -29,7 +29,6 @@ const ProfileHeader = ({
                         alt={`${profileData.username}'s avatar`}
                         className="pf-avatar-image"
                         onError={(e) => {
-                            // setAvatarUrl(null); // Có thể thêm logic này sau
                         }}
                     />
                 ) : profileData.avatarURL ? (

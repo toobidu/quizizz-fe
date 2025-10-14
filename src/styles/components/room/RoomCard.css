@@ -237,7 +237,7 @@
     padding: 0.5rem 1rem;
     border: 2px solid var(--primary);
     border-radius: 25px;
-    font-family: 'Courier New', monospace;
+    font-family: 'Poppins', sans-serif;
     letter-spacing: 1px;
     box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.15);
 }
