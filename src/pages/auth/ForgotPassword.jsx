@@ -55,8 +55,7 @@ function ForgotPassword() {
 
       try {
         const response = await authApi.forgotPassword(email);
-        setSuccessMessage('Email đặt lại mật khẩu đã được gửi đến hộp thư của bạn!');
-        // Không cần navigate đến verify-email nữa, chỉ hiển thị message
+        setSuccessMessage('Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và sử dụng mật khẩu mới để đăng nhập!');
       } catch (error) {
         const errorMessage =
           error.response?.data?.message || error.message || 'Có lỗi xảy ra, vui lòng thử lại';

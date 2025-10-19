@@ -1,13 +1,13 @@
 import React from 'react';
 import '../../styles/components/room/CompletionPopup.css';
+import { MdCelebration, MdAutoAwesome, MdClose } from 'react-icons/md';
+import { GiPartyPopper } from 'react-icons/gi';
 
 /**
  * CompletionPopup - Popup khi player hoàn thành tất cả câu hỏi
  */
 const CompletionPopup = ({ onClose }) => {
     React.useEffect(() => {
-        // Không tự động đóng - để player xem cho đến khi game kết thúc
-        // onClose sẽ được gọi khi chuyển sang màn hình kết quả
     }, []);
 
     return (
@@ -29,12 +29,14 @@ const CompletionPopup = ({ onClose }) => {
                 </div>
 
                 <div className="completion-content">
-                    <div className="completion-icon">🎉</div>
+                    <div className="completion-icon"><MdCelebration size={48} color="#FFD700" /></div>
                     <h2 className="completion-title">Hoàn Thành!</h2>
                     <p className="completion-message">
                         Bạn đã trả lời xong tất cả câu hỏi!
                     </p>
-                    <div className="completion-emoji">✨ 🎊 ✨</div>
+                    <div className="completion-emoji">
+                        <MdAutoAwesome size={32} color="#FFD700" /> <GiPartyPopper size={32} color="#FF6B6B" /> <MdAutoAwesome size={32} color="#FFD700" />
+                    </div>
                     <p className="completion-waiting">
                         Đang chờ các người chơi khác...
                     </p>
@@ -47,7 +49,7 @@ const CompletionPopup = ({ onClose }) => {
 
                 {onClose && (
                     <button className="completion-close" onClick={onClose}>
-                        ✕
+                        <MdClose size={24} />
                     </button>
                 )}
             </div>
@@ -56,4 +58,3 @@ const CompletionPopup = ({ onClose }) => {
 };
 
 export default CompletionPopup;
-

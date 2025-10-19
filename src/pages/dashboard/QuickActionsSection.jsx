@@ -3,7 +3,7 @@ import authStore from '../../stores/authStore';
 import '../../styles/pages/dashboard/QuickActionsSection.css';
 
 const quickActions = [
-    { title: 'Chơi ngay', desc: 'Bắt đầu trò chơi mới', action: (navigate) => navigate('/games') },
+    { title: 'Chơi ngay', desc: 'Bắt đầu trò chơi mới', action: (navigate) => navigate('/rooms') },
     { title: 'Xem bảng xếp hạng', desc: 'Top người chơi', action: (navigate) => navigate('/leaderboard') },
     { title: 'Hồ sơ cá nhân', desc: 'Xem thống kê của bạn', action: (navigate) => navigate('/profile') },
 ];

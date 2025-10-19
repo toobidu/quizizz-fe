@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import App from "../App";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 import Welcome from "../pages/Welcome";
 import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
@@ -11,11 +13,10 @@ import AboutPage from "../pages/footer/AboutPage";
 import BlogPage from "../pages/footer/BlogPage";
 import ContactPage from "../pages/footer/ContactPage";
 import HelpPage from "../pages/footer/HelpPage";
-import FaqPage from "../pages/footer/FaqPage";
+import FaqPage from "../pages/footer/FAQPage";
 import PrivacyPage from "../pages/footer/PrivacyPage";
 import TermsPage from "../pages/footer/TermsPage";
 import FeedbackPage from "../pages/footer/FeedbackPage";
-import ForgotPassword from "../pages/auth/ForgotPassword";
 import RoomsPage from "../pages/room/RoomPage";
 import WaitingRoom from "../components/room/WaitingRoom";
 import GameRoom from "../components/room/GameRoom";
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
       { path: "forgot-password", element: <ForgotPassword /> },
+      { path: "verify-email", element: <VerifyEmail /> },
       { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
       { path: "profile", element: <ProtectedRoute><Profile /></ProtectedRoute> },
       { path: "rooms", element: <ProtectedRoute><RoomsPage /></ProtectedRoute> },

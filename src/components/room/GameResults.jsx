@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MdCelebration } from 'react-icons/md';
 import useGameStore from '../../stores/useGameStore';
 import '../../styles/components/room/GameResults.css';
 
@@ -16,7 +17,6 @@ const GameResults = ({ onExit, gameResults }) => {
         players
     } = useGameStore();
 
-    // ✅ FIXED: Sử dụng dữ liệu từ backend nếu có, fallback về store
     const leaderboard = gameResults?.ranking || storeLeaderboard;
     const totalQs = gameResults?.totalQuestions || totalQuestions;
 
@@ -78,7 +78,7 @@ const GameResults = ({ onExit, gameResults }) => {
 
             {/* Header */}
             <div className="results-header">
-                <h1>🎉 Trò chơi kết thúc!</h1>
+                <h1><MdCelebration size={40} color="#FFD700" style={{verticalAlign: 'middle'}} /> Trò chơi kết thúc!</h1>
                 <p className="game-stats">
                     Tổng số câu: {totalQs} | Người chơi: {leaderboard.length}
                 </p>
@@ -164,10 +164,10 @@ const GameResults = ({ onExit, gameResults }) => {
             {/* Action buttons */}
             <div className="results-actions">
                 <button className="btn-primary" onClick={handlePlayAgain}>
-                    🎮 Chơi lại
+                    Chơi lại
                 </button>
                 <button className="btn-secondary" onClick={onExit}>
-                    🏠 Về trang chủ
+                    Về trang chủ
                 </button>
             </div>
         </div>

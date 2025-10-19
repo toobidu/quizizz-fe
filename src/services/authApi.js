@@ -83,16 +83,16 @@ const forgotPassword = async (email) => {
     const res = await api.post('/auth/reset-password', { email });
     return {
       status: res.status,
-      message: res.data.message || 'Gửi email reset password thành công',
+      message: res.data.message || 'Mật khẩu mới đã được gửi đến email của bạn',
       data: res.data.data,
-      isSuccess: res.data.isSuccess,
+      isSuccess: res.status === 200,
       timestamp: res.data.timestamp || new Date().toISOString(),
     };
   } catch (error) {
     const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        'Email không tồn tại hoặc không thể gửi email reset password';
+        'Email không tồn tại hoặc không thể gửi email';
     throw new Error(errorMessage);
   }
 };
@@ -161,6 +161,21 @@ const getAvatar = async () => {
   }
 };
 
+const verifyEmail = async (token) => {
+  try {
+    const res = await api.get(`/auth/verify-email?token=${token}`);
+    return {
+      status: res.status,
+      message: res.data.message || 'Xác thực email thành công',
+      data: res.data.data,
+      isSuccess: res.status === 200,
+      timestamp: res.data.timestamp || new Date().toISOString(),
+    };
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Xác thực email thất bại');
+  }
+};
+
 export default {
   login,
   register,
@@ -169,4 +184,5 @@ export default {
   getUser,
   refreshToken,
   getAvatar,
+  verifyEmail,
 };

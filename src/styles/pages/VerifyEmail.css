@@ -1,0 +1,199 @@
+/* Verify Email Styles with Dark/Light Mode Support */
+
+.verify-email-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--verify-bg, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  padding: 20px;
+  transition: background 0.3s ease;
+}
+
+[data-theme='dark'] .verify-email-container {
+  background: var(--verify-bg-dark, linear-gradient(135deg, #4a5fc1 0%, #5a3a7a 100%));
+}
+
+.verify-email-card {
+  background: var(--card-bg, #fff);
+  border-radius: 20px;
+  padding: 60px 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+[data-theme='dark'] .verify-email-card {
+  background: var(--card-bg-dark, #1e1e2e);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.verify-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.verify-content .icon {
+  font-size: 80px;
+  margin-bottom: 10px;
+}
+
+.verify-content.loading .icon {
+  color: #667eea;
+}
+
+[data-theme='dark'] .verify-content.loading .icon {
+  color: #8b9dff;
+}
+
+.verify-content.success .icon {
+  color: #4caf50;
+}
+
+[data-theme='dark'] .verify-content.success .icon {
+  color: #66bb6a;
+}
+
+.verify-content.error .icon {
+  color: #f44336;
+}
+
+[data-theme='dark'] .verify-content.error .icon {
+  color: #ef5350;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.verify-content h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #333);
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+[data-theme='dark'] .verify-content h2 {
+  color: var(--text-primary-dark, #e0e0e0);
+}
+
+.verify-content p {
+  font-size: 16px;
+  color: var(--text-secondary, #666);
+  line-height: 1.6;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+[data-theme='dark'] .verify-content p {
+  color: var(--text-secondary-dark, #aaa);
+}
+
+.redirect-message {
+  font-size: 14px;
+  color: var(--text-muted, #999);
+  font-style: italic;
+}
+
+[data-theme='dark'] .redirect-message {
+  color: var(--text-muted-dark, #777);
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 14px 32px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+[data-theme='dark'] .btn-primary {
+  background: linear-gradient(135deg, #4a5fc1 0%, #5a3a7a 100%);
+  box-shadow: 0 4px 15px rgba(74, 95, 193, 0.5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+[data-theme='dark'] .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(74, 95, 193, 0.7);
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg, #fff);
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: var(--btn-secondary-bg-dark, transparent);
+  color: #8b9dff;
+  border: 2px solid #8b9dff;
+}
+
+.btn-secondary:hover {
+  background: #667eea;
+  color: #fff;
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background: #8b9dff;
+  color: #1e1e2e;
+}
+
+.error-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .verify-email-card {
+    padding: 40px 30px;
+  }
+
+  .verify-content .icon {
+    font-size: 60px;
+  }
+
+  .verify-content h2 {
+    font-size: 24px;
+  }
+
+  .verify-content p {
+    font-size: 14px;
+  }
+
+  .error-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}

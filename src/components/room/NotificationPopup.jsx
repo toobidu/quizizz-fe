@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdCheckCircle, MdError, MdWarning, MdInfo, MdClose } from 'react-icons/md';
 import '../../styles/components/room/NotificationPopup.css';
 
 /**
@@ -19,26 +20,26 @@ const NotificationPopup = ({ type = 'info', message, onClose, autoClose = true }
         switch (type) {
             case 'success':
                 return {
-                    icon: '✅',
+                    icon: <MdCheckCircle size={28} color="#fff" />,
                     bgColor: '#4CAF50',
                     title: 'Thành công!'
                 };
             case 'error':
                 return {
-                    icon: '❌',
+                    icon: <MdError size={28} color="#fff" />,
                     bgColor: '#f44336',
                     title: 'Lỗi!'
                 };
             case 'warning':
                 return {
-                    icon: '⚠️',
+                    icon: <MdWarning size={28} color="#fff" />,
                     bgColor: '#FF9800',
                     title: 'Cảnh báo!'
                 };
             case 'info':
             default:
                 return {
-                    icon: 'ℹ️',
+                    icon: <MdInfo size={28} color="#fff" />,
                     bgColor: '#2196F3',
                     title: 'Thông báo'
                 };
@@ -60,7 +61,7 @@ const NotificationPopup = ({ type = 'info', message, onClose, autoClose = true }
                 </div>
                 {onClose && (
                     <button className="notification-close" onClick={onClose}>
-                        ✕
+                        <MdClose size={20} color="#fff" />
                     </button>
                 )}
             </div>
@@ -69,4 +70,3 @@ const NotificationPopup = ({ type = 'info', message, onClose, autoClose = true }
 };
 
 export default NotificationPopup;
-

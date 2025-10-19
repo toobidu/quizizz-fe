@@ -121,8 +121,9 @@ function Register() {
           confirm_password: formData.confirmPassword,
         });
 
-        setSubmitStatus({ success: true, message: 'Đăng ký thành công!' });
-        setTimeout(() => navigate('/login'), 1500);
+        setSubmitStatus({ success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.' });
+        // Không tự động chuyển trang, để user đọc thông báo
+        setTimeout(() => navigate('/login'), 5000);
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
         if (error.response?.status === 400) {

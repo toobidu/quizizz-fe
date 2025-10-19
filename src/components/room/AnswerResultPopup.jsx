@@ -1,4 +1,7 @@
 import React, { useEffect } from 'react';
+import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
+import { IoFlame } from 'react-icons/io5';
+import { GiMuscleUp } from 'react-icons/gi';
 import '../../styles/components/room/AnswerResultPopup.css';
 
 /**
@@ -24,14 +27,14 @@ const AnswerResultPopup = ({ result, onClose }) => {
     const getResultInfo = () => {
         if (isCorrect) {
             return {
-                icon: '✅',
+                icon: <FaCheckCircle />,
                 title: 'Đúng rồi!',
                 bgColor: '#4CAF50',
                 animation: 'popup-bounce-in'
             };
         } else {
             return {
-                icon: '❌',
+                icon: <FaTimesCircle />,
                 title: 'Sai rồi!',
                 bgColor: '#f44336',
                 animation: 'popup-shake'
@@ -45,19 +48,19 @@ const AnswerResultPopup = ({ result, onClose }) => {
 
         if (streak >= 10) {
             return {
-                text: '🔥🔥🔥 UNSTOPPABLE!',
+                text: <><IoFlame /><IoFlame /><IoFlame /> UNSTOPPABLE!</>,
                 color: '#FF1744',
                 label: 'x2.0 Bonus'
             };
         } else if (streak >= 5) {
             return {
-                text: '🔥🔥 ON FIRE!',
+                text: <><IoFlame /><IoFlame /> ON FIRE!</>,
                 color: '#FF6F00',
                 label: 'x1.5 Bonus'
             };
         } else if (streak >= 3) {
             return {
-                text: '🔥 FIRE STREAK!',
+                text: <><IoFlame /> FIRE STREAK!</>,
                 color: '#FFC400',
                 label: 'x1.2 Bonus'
             };
@@ -96,12 +99,12 @@ const AnswerResultPopup = ({ result, onClose }) => {
 
                 {!isCorrect && (
                     <div className="popup-message">
-                        Đừng lo! Cố gắng ở câu tiếp theo nhé! 💪
+                        Đừng lo! Cố gắng ở câu tiếp theo nhé! <GiMuscleUp />
                     </div>
                 )}
 
                 <button className="popup-close-btn" onClick={onClose}>
-                    ✕
+                    <FaTimes />
                 </button>
             </div>
         </div>
