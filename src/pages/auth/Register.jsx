@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaExclamationCircle, FaExclamationTriangle, FaHome, FaLock, FaPhoneAlt, FaUser, FaCalendarAlt } from 'react-icons/fa';
+import { FaEnvelope, FaExclamationCircle, FaHome, FaLock, FaPhoneAlt, FaUser, FaCalendarAlt } from 'react-icons/fa';
 import { FaBrain } from 'react-icons/fa6';
 import authApi from '../../services/authApi.js';
 import authStore from '../../stores/authStore.js';
 import Decoration from '../../components/Decoration.jsx';
+import Toast from '../../components/Toast.jsx';
 import '../../styles/pages/auth/Register.css';
 
 function Register() {
@@ -21,7 +22,7 @@ function Register() {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState({ success: false, message: '' });
+  const [toast, setToast] = useState(null);
   const firstErrorInputRef = useRef(null);
   const { isAuthenticated } = authStore();
 
@@ -35,7 +36,6 @@ function Register() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
-    setSubmitStatus({ success: false, message: '' });
   }, []);
 
   const validateField = useCallback((name, value) => {
@@ -86,14 +86,6 @@ function Register() {
     return Object.keys(newErrors).length === 0;
   }, [formData, validateField]);
 
-  // useEffect(() => {
-  //   const firstErrorKey = Object.keys(errors)[0];
-  //   if (firstErrorKey) {
-  //     firstErrorInputRef.current = document.getElementById(firstErrorKey);
-  //     firstErrorInputRef.current?.focus();
-  //   }
-  // }, [errors]);
-
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -107,7 +99,6 @@ function Register() {
       }
 
       setIsSubmitting(true);
-      setSubmitStatus({ success: false, message: '' });
 
       try {
         await authApi.register({
@@ -121,9 +112,8 @@ function Register() {
           confirm_password: formData.confirmPassword,
         });
 
-        setSubmitStatus({ success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.' });
-        // Không tự động chuyển trang, để user đọc thông báo
-        setTimeout(() => navigate('/login'), 5000);
+        setToast({ type: 'success', message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.' });
+        setTimeout(() => navigate('/login'), 3000);
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
         if (error.response?.status === 400) {
@@ -135,12 +125,12 @@ function Register() {
             newErrors.username = 'Tên người dùng đã tồn tại';
             firstErrorInputRef.current = document.getElementById('username');
           } else {
-            setSubmitStatus({ success: false, message: errorMessage });
+            setToast({ type: 'error', message: errorMessage });
           }
           setErrors((prev) => ({ ...prev, ...newErrors }));
           firstErrorInputRef.current?.focus();
         } else {
-          setSubmitStatus({ success: false, message: errorMessage });
+          setToast({ type: 'error', message: errorMessage });
         }
       } finally {
         setIsSubmitting(false);
@@ -152,6 +142,7 @@ function Register() {
   return (
     <div className="register-container">
       <Decoration />
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
       <div className="register-card">
         <div className="register-header">
           <div className="register-logo">
@@ -162,17 +153,6 @@ function Register() {
           </div>
           <h1 className="register-title">Đăng ký</h1>
         </div>
-
-        {submitStatus.message && (
-          <div className={`register-error ${submitStatus.success ? 'register-success' : ''}`}>
-            {submitStatus.success ? (
-              <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
-            ) : (
-              <FaExclamationTriangle size={20} color="#dc2626" />
-            )}
-            <span>{submitStatus.message}</span>
-          </div>
-        )}
 
         <form className="register-form" onSubmit={handleSubmit}>
           {[

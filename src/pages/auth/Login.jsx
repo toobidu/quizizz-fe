@@ -1,17 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaExclamationCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
+import { FaExclamationCircle, FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 import authApi from '../../services/authApi.js';
 import '../../styles/pages/auth/Login.css';
 import { FaBrain } from "react-icons/fa6";
 import Decoration from '../../components/Decoration.jsx';
+import Toast from '../../components/Toast.jsx';
 import authStore from '../../stores/authStore.js';
 
 function Login() {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [loginError, setLoginError] = useState('');
+    const [toast, setToast] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
@@ -48,7 +49,6 @@ function Login() {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
         setErrors((prev) => ({ ...prev, [name]: '' }));
-        setLoginError('');
     }, []);
 
     const handleSubmit = useCallback(
@@ -59,22 +59,17 @@ function Login() {
             }
 
             setIsSubmitting(true);
-            setLoginError('');
 
             try {
-                const response = await authApi.login({
+                await authApi.login({
                     username: formData.username,
                     password: formData.password,
                 });
-                // authApi.login đã xử lý việc lưu token và set user trong authStore
-                // Chỉ cần navigate đến dashboard
-                navigate('/dashboard', { replace: true });
+                setToast({ type: 'success', message: 'Đăng nhập thành công!' });
+                setTimeout(() => navigate('/dashboard', { replace: true }), 1000);
             } catch (error) {
-                const errorMessage =
-                    error.response?.data?.message ||
-                    error.message ||
-                    'Đăng nhập thất bại. Vui lòng kiểm tra tên đăng nhập và mật khẩu.';
-                setLoginError(errorMessage);
+                const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
+                setToast({ type: 'error', message: errorMessage });
             } finally {
                 setIsSubmitting(false);
             }
@@ -89,6 +84,7 @@ function Login() {
     return (
         <div className="login-container">
             <Decoration />
+            {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
             <div className="login-card">
                 <div className="login-header">
                     <div className="login-logo">
@@ -97,13 +93,6 @@ function Login() {
                     </div>
                     <h1 className="login-title">Đăng nhập</h1>
                 </div>
-
-                {loginError && (
-                    <div className="login-error">
-                        <FaExclamationTriangle size={20} color="#dc2626" />
-                        <span className="error-text">{loginError}</span>
-                    </div>
-                )}
 
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="form-group">

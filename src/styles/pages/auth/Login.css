@@ -245,9 +245,10 @@
 }
 
 .submit-button:disabled {
-    opacity: 0.7;
+    opacity: 0.8;
     cursor: not-allowed;
     transform: none;
+    pointer-events: none;
 }
 
 .submit-button::before {
@@ -299,12 +300,18 @@
 
 /* Submit Button Loading State */
 .submit-button.loading {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    box-shadow: 0 4px 15px rgba(var(--primary), 0.5);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.5);
+    opacity: 1;
 }
 
 .submit-button.loading .button-text {
     animation: pulse 1.5s infinite;
+}
+
+.submit-button.loading:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.5);
 }
 
 /* Login Error */

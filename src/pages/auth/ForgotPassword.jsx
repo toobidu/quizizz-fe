@@ -1,17 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaEnvelope, FaExclamationCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEnvelope, FaExclamationCircle } from 'react-icons/fa';
 import { IoArrowBackSharp } from 'react-icons/io5';
 import { FaBrain } from 'react-icons/fa6';
 import authApi from '../../services/authApi';
 import authStore from '../../stores/authStore';
 import Decoration from '../../components/Decoration';
+import Toast from '../../components/Toast';
 import '../../styles/pages/auth/ForgotPassword.css';
 
 function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated } = authStore();
@@ -54,12 +56,13 @@ function ForgotPassword() {
       setSuccessMessage('');
 
       try {
-        const response = await authApi.forgotPassword(email);
-        setSuccessMessage('Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và sử dụng mật khẩu mới để đăng nhập!');
+        await authApi.forgotPassword(email);
+        setSuccessMessage('Mật khẩu mới đã được gửi đến email của bạn!');
+        setToast({ type: 'success', message: 'Vui lòng kiểm tra hộp thư để lấy mật khẩu mới.' });
       } catch (error) {
-        const errorMessage =
-          error.response?.data?.message || error.message || 'Có lỗi xảy ra, vui lòng thử lại';
+        const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra, vui lòng thử lại';
         setError(errorMessage);
+        setToast({ type: 'error', message: errorMessage });
       } finally {
         setIsSubmitting(false);
       }
@@ -70,6 +73,7 @@ function ForgotPassword() {
   return (
     <div className="fp-container">
       <Decoration />
+      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
       <div className="fp-card">
         {!successMessage && (
           <Link to="/login" className="fp-back-button" aria-label="Quay lại trang đăng nhập">
@@ -91,8 +95,8 @@ function ForgotPassword() {
 
         {successMessage && (
           <div className="fp-success-container">
-            <div className="fp-error fp-success">
-              <span style={{ color: '#16a34a', fontWeight: 700 }}>✓</span>
+            <div className="fp-success-message">
+              <span className="fp-success-icon">✓</span>
               <span>{successMessage}</span>
             </div>
             <div className="fp-success-actions">
@@ -105,12 +109,6 @@ function ForgotPassword() {
 
         {!successMessage && (
           <>
-            {error && (
-              <div className="fp-error">
-                <FaExclamationTriangle size={18} />
-                <span>{error}</span>
-              </div>
-            )}
 
             <form className="fp-form" onSubmit={handleSubmit}>
               <div className="fp-form-group">

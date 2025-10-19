@@ -176,9 +176,19 @@
 }
 
 .submit-button:disabled {
-    opacity: 0.7;
+    opacity: 0.8;
     cursor: not-allowed;
     transform: none;
+    pointer-events: none;
+}
+
+.submit-button.loading {
+    opacity: 1;
+}
+
+.submit-button.loading:hover {
+    transform: none;
+    box-shadow: var(--shadow);
 }
 
 .loading-spinner {
