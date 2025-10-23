@@ -1,4 +1,5 @@
 @import './styles/responsive.css';
+@import './styles/pages/footer/FooterCommon.css';
 
 :root {
   /* Base colors */
@@ -52,6 +53,12 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   /* Shadow nhẹ, tinh tế */
   --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  /* RGB values for rgba usage */
+  --primary-rgb: 79, 70, 229;
+  --success-rgb: 16, 185, 129;
+  --danger-rgb: 220, 38, 38;
+  --warning-rgb: 249, 115, 22;
   /* Shadow đậm hơn khi hover */
 
   /* Spacing */
@@ -154,4 +161,10 @@ button, input, textarea, select {
   /* Xám đậm, không quá nổi bật */
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   /* Bóng đậm hơn cho dark mode */
+
+  /* RGB values for dark mode */
+  --primary-rgb: 165, 180, 252;
+  --success-rgb: 52, 211, 153;
+  --danger-rgb: 248, 113, 113;
+  --warning-rgb: 251, 146, 60;
 }

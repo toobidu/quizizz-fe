@@ -2,6 +2,11 @@ import React from 'react';
 import {FaBrain, FaChartLine, FaHistory, FaLightbulb, FaMedal, FaUsers} from 'react-icons/fa';
 import '../../styles/pages/footer/AboutPage.css';
 
+import ceoImg from '../../assets/images/ceo.jpg';
+import grokImg from '../../assets/images/grok.png';
+import claudeImg from '../../assets/images/claude.png';
+import qwenImg from '../../assets/images/qwen.png';
+
 function AboutPage() {
     return (<div className="about-page">
         {/* Hero Section */}
@@ -40,7 +45,7 @@ function AboutPage() {
                     </div>
                 </div>
                 <div className="mission-image">
-                    <img src="/images/about/mission.jpg" alt="Sứ mệnh BrainGame" onError={(e) => {
+                    <img src={'https://via.placeholder.com/500x350/5c6bc0/ffffff?text=BrainGame'} alt="Sứ mệnh BrainGame" onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://via.placeholder.com/500x350/5c6bc0/ffffff?text=BrainGame'
                     }}/>
@@ -50,7 +55,7 @@ function AboutPage() {
             {/* Story Section */}
             <section className="about-story">
                 <div className="story-image">
-                    <img src="/images/about/story.jpg" alt="Câu chuyện BrainGame" onError={(e) => {
+                    <img src={'https://via.placeholder.com/500x350/3f51b5/ffffff?text=Our+Story'} alt="Câu chuyện BrainGame" onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://via.placeholder.com/500x350/3f51b5/ffffff?text=Our+Story'
                     }}/>
@@ -142,26 +147,26 @@ function AboutPage() {
                 <div className="team-grid">
                     <div className="team-member">
                         <div className="member-photo"
-                             style={{backgroundImage: 'url(https://via.placeholder.com/200x200/5c6bc0/ffffff?text=NT)'}}></div>
-                        <h3>Nguyễn Thành</h3>
+                             style={{backgroundImage: `url(${ceoImg})`}}></div>
+                        <h3>Tô Tiến Dũng</h3>
                         <p className="member-title">Nhà sáng lập & CEO</p>
                     </div>
                     <div className="team-member">
                         <div className="member-photo"
-                             style={{backgroundImage: 'url(https://via.placeholder.com/200x200/3f51b5/ffffff?text=TL)'}}></div>
-                        <h3>Trần Linh</h3>
+                             style={{backgroundImage: `url(${grokImg})`}}></div>
+                        <h3>Grok</h3>
                         <p className="member-title">Giám đốc sản phẩm</p>
                     </div>
                     <div className="team-member">
                         <div className="member-photo"
-                             style={{backgroundImage: 'url(https://via.placeholder.com/200x200/303f9f/ffffff?text=LH)'}}></div>
-                        <h3>Lê Hương</h3>
+                             style={{backgroundImage: `url(${claudeImg})`}}></div>
+                        <h3>Claude</h3>
                         <p className="member-title">Trưởng nhóm thiết kế</p>
                     </div>
                     <div className="team-member">
                         <div className="member-photo"
-                             style={{backgroundImage: 'url(https://via.placeholder.com/200x200/1a237e/ffffff?text=PM)'}}></div>
-                        <h3>Phạm Minh</h3>
+                             style={{backgroundImage: `url(${qwenImg})`}}></div>
+                        <h3>Qwen</h3>
                         <p className="member-title">Trưởng nhóm phát triển</p>
                     </div>
                 </div>

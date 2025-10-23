@@ -1,4 +1,6 @@
 import '../../styles/pages/dashboard/StatsSection.css';
+import { formatScore, formatRank } from '../../utils/statsUtils';
+
 function StatsSection({ stats, loading }) {
     const safeValue = (value, formatter = null) => {
         if (loading) return '...';
@@ -8,9 +10,8 @@ function StatsSection({ stats, loading }) {
 
     const formattedStats = {
         gamesPlayed: safeValue(stats?.gamesPlayed),
-        highScore: safeValue(stats?.highScore, (val) => val.toLocaleString()),
-        rank: safeValue(stats?.rank, (val) => `#${val}`),
-        medals: safeValue(stats?.medals),
+        highScore: safeValue(stats?.highestScore, formatScore),
+        rank: safeValue(stats?.highestRank, formatRank)
     };
 
     return (
@@ -28,10 +29,7 @@ function StatsSection({ stats, loading }) {
                     <div className="ds-stat-value">{formattedStats.rank}</div>
                     <div className="ds-stat-label">Xếp hạng</div>
                 </div>
-                <div className="ds-stat-card">
-                    <div className="ds-stat-value">{formattedStats.medals}</div>
-                    <div className="ds-stat-label">Huy chương</div>
-                </div>
+
             </div>
         </div>
     );
