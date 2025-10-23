@@ -11,10 +11,6 @@ import { useStats } from '../hooks/useStats';
 function Dashboard() {
     const { user, isAuthenticated, isLoading } = authStore();
     const { stats: apiStats, loading: statsLoading, error: statsError } = useStats('dashboard');
-    
-    console.log('[Dashboard] apiStats:', apiStats);
-    console.log('[Dashboard] statsLoading:', statsLoading);
-    console.log('[Dashboard] statsError:', statsError);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -36,8 +32,6 @@ function Dashboard() {
         highScore: 0,
         rank: 0
     };
-    
-    console.log('[Dashboard] Final stats object:', stats);
 
     return (
         <div className="mp-main-layout">

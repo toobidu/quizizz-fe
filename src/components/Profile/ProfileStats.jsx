@@ -1,5 +1,5 @@
 import { FiTarget, FiUsers, FiTrendingUp, FiAward, FiClock } from 'react-icons/fi';
-import { FaRunning, FaTrophy } from 'react-icons/fa';
+import { FaRunning } from 'react-icons/fa';
 import '../../styles/components/profile/ProfileStats.css';
 import '../../styles/components/profile/ProfileStatsLoading.css';
 import { useStats, useAchievements } from '../../hooks/useStats';
@@ -7,14 +7,8 @@ import { formatScore, formatRank, formatTime } from '../../utils/statsUtils';
 
 const ProfileStats = ({ profileData }) => {
     const { stats, loading: statsLoading, error: statsError } = useStats('profile');
-    const { achievements, loading: achievementsLoading } = useAchievements();
-
-    console.log('[ProfileStats] stats:', stats);
-    console.log('[ProfileStats] statsLoading:', statsLoading);
-    console.log('[ProfileStats] statsError:', statsError);
     
     const displayStats = stats || {};
-    console.log('[ProfileStats] displayStats:', displayStats);
 
     return (
         <>
@@ -60,39 +54,7 @@ const ProfileStats = ({ profileData }) => {
                     </>
                 )}
 
-                {/* Achievements Section */}
-                <div className="pf-achievements-container">
-                    <h3 className="pf-achievements-title">
-                        <FaTrophy className="pf-section-icon" />
-                        Thành tích
-                    </h3>
-                    {achievementsLoading ? (
-                        <div className="pf-stats-loading">Đang tải thành tích...</div>
-                    ) : (
-                        <div className="pf-achievements-grid">
-                            {achievements?.length > 0 ? (
-                                achievements.map((achievement, index) => (
-                                    <div
-                                        key={achievement.id || index}
-                                        className={`pf-achievement-card ${achievement.earned ? 'earned' : 'locked'}`}
-                                    >
-                                        <div className="pf-achievement-icon">
-                                            <FaTrophy />
-                                        </div>
-                                        <h4>{achievement.name}</h4>
-                                        <p>{achievement.description}</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="pf-no-achievements">
-                                    <FaTrophy className="pf-empty-icon" />
-                                    <p>Chưa có thành tích nào</p>
-                                    <span className="pf-empty-subtitle">Hãy tham gia các bài quiz để đạt được thành tích!</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+
             </div>
         </>
     );

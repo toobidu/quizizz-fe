@@ -1,17 +1,21 @@
 /**
  * Format time in seconds to display format
- * @param {number} seconds - Time in seconds
+ * @param {number|string} seconds - Time in seconds (number or string)
  * @returns {string} Formatted time string
  */
 export const formatTime = (seconds) => {
-    if (!seconds || seconds === 0) return 'N/A';
+    // Convert to number if string
+    const numSeconds = typeof seconds === 'string' ? parseInt(seconds, 10) : seconds;
     
-    if (seconds < 60) {
-        return `${seconds}s`;
+    // Check for invalid values
+    if (!numSeconds || isNaN(numSeconds) || numSeconds === 0) return 'N/A';
+    
+    if (numSeconds < 60) {
+        return `${numSeconds}s`;
     }
     
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    const minutes = Math.floor(numSeconds / 60);
+    const remainingSeconds = numSeconds % 60;
     
     if (remainingSeconds === 0) {
         return `${minutes} phút`;
