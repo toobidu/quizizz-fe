@@ -43,13 +43,36 @@ const teacherApi = {
     },
     
     // Question CRUD
+    searchQuestions: async (keyword = '', topicId = null, questionType = null, page = 0, size = 10, sort = 'id,desc') => {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            size: size.toString(),
+            sort: sort
+        });
+        
+        if (keyword && keyword.trim()) {
+            params.append('keyword', keyword.trim());
+        }
+        
+        if (topicId) {
+            params.append('topicId', topicId.toString());
+        }
+        
+        if (questionType && questionType !== 'ALL') {
+            params.append('questionType', questionType);
+        }
+        
+        const res = await apiInstance.get(`/questions?${params.toString()}`);
+        return res.data;
+    },
+    
     getQuestionById: async (id) => {
         const res = await apiInstance.get(`/questions/${id}`);
         return res.data;
     },
     
     getQuestionsByTopic: async (topicId) => {
-        const res = await apiInstance.get(`/questions/topic/${topicId}`);
+        const res = await apiInstance.get(`/questions?topicId=${topicId}&size=1000`);
         return res.data;
     },
     
