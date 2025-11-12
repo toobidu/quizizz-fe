@@ -7,6 +7,21 @@ const teacherApi = {
         return res.data;
     },
     
+    searchTopics: async (keyword = '', page = 0, size = 10, sort = 'id,desc') => {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            size: size.toString(),
+            sort: sort
+        });
+        
+        if (keyword && keyword.trim()) {
+            params.append('keyword', keyword.trim());
+        }
+        
+        const res = await apiInstance.get(`/topics/search?${params.toString()}`);
+        return res.data;
+    },
+    
     getTopicById: async (id) => {
         const res = await apiInstance.get(`/topics/${id}`);
         return res.data;

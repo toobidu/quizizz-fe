@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
+import { useState, useEffect, useCallback } from 'react';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import teacherApi from '../services/teacherApi';
 import '../../../styles/features/teacher/Management.css';
@@ -11,22 +11,37 @@ const TopicManagement = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingTopic, setEditingTopic] = useState(null);
     const [formData, setFormData] = useState({ name: '', description: '' });
+    
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const [sortOrder, setSortOrder] = useState('asc');
 
     useEffect(() => {
         loadTopics();
-    }, []);
+    }, [currentPage, sortOrder, searchTerm]);
 
-    const loadTopics = async () => {
+    const loadTopics = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await teacherApi.getAllTopics();
-            setTopics(response.data || []);
+            const sortParam = `name,${sortOrder}`;
+            const response = await teacherApi.searchTopics(searchTerm, currentPage, 10, sortParam);
+            
+            if (response.data) {
+                const pageData = response.data;
+                setTopics(pageData.content || []);
+                setTotalPages(pageData.totalPages || 0);
+                setTotalElements(pageData.totalElements || 0);
+            }
         } catch (error) {
+            console.error('Error loading topics:', error);
             toast.error('Không thể tải danh sách chủ đề');
+            setTopics([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, sortOrder, searchTerm]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,9 +56,27 @@ const TopicManagement = () => {
             setShowModal(false);
             setFormData({ name: '', description: '' });
             setEditingTopic(null);
+            // Reset về trang đầu sau khi tạo/cập nhật
+            setCurrentPage(0);
             loadTopics();
         } catch (error) {
             toast.error(editingTopic ? 'Không thể cập nhật chủ đề' : 'Không thể tạo chủ đề');
+        }
+    };
+
+    const handleSearch = useCallback((value) => {
+        setSearchTerm(value);
+        setCurrentPage(0); // Reset về trang đầu khi search
+    }, []);
+
+    const handleSort = () => {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        setCurrentPage(0);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            setCurrentPage(newPage);
         }
     };
 
@@ -64,11 +97,15 @@ const TopicManagement = () => {
         }
     };
 
-    const filteredTopics = topics.filter(topic =>
-        topic.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const getSortIcon = () => {
+        return sortOrder === 'asc' ? '↑' : '↓';
+    };
 
-    if (loading) return <div className="loading">Đang tải...</div>;
+    const getRowNumber = (index) => {
+        return currentPage * 10 + index + 1;
+    };
+
+    if (loading && topics.length === 0) return <div className="loading">Đang tải...</div>;
 
     return (
         <div className="management-page">
@@ -79,47 +116,116 @@ const TopicManagement = () => {
                 </button>
             </div>
 
-            <div className="search-bar">
-                <FiSearch />
-                <input
-                    type="text"
-                    placeholder="Tìm kiếm chủ đề..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="filter-section">
+                <div className="search-bar-compact">
+                    <FiSearch />
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm theo tên hoặc mô tả..."
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className="table-info">
+                <span>Hiển thị {topics.length > 0 ? currentPage * 10 + 1 : 0} - {Math.min((currentPage + 1) * 10, totalElements)} trong tổng số {totalElements} chủ đề</span>
             </div>
 
             <div className="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Tên chủ đề</th>
+                            <th style={{ width: '80px' }}>STT</th>
+                            <th style={{ cursor: 'pointer' }} onClick={handleSort}>
+                                Tên chủ đề {getSortIcon()}
+                            </th>
                             <th>Mô tả</th>
-                            <th>Thao tác</th>
+                            <th style={{ width: '120px' }}>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredTopics.map(topic => (
-                            <tr key={topic.id}>
-                                <td>{topic.id}</td>
-                                <td>{topic.name}</td>
-                                <td>{topic.description}</td>
-                                <td>
-                                    <div className="action-buttons">
-                                        <button className="btn-edit" onClick={() => handleEdit(topic)}>
-                                            <FiEdit2 />
-                                        </button>
-                                        <button className="btn-delete" onClick={() => handleDelete(topic.id)}>
-                                            <FiTrash2 />
-                                        </button>
-                                    </div>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                                    <div className="spinner-small"></div>
+                                    Đang tải...
                                 </td>
                             </tr>
-                        ))}
+                        ) : topics.length === 0 ? (
+                            <tr>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                                    {searchTerm ? 'Không tìm thấy chủ đề phù hợp' : 'Chưa có chủ đề nào'}
+                                </td>
+                            </tr>
+                        ) : (
+                            topics.map((topic, index) => (
+                                <tr key={topic.id}>
+                                    <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                                        {getRowNumber(index)}
+                                    </td>
+                                    <td style={{ fontWeight: '600' }}>{topic.name}</td>
+                                    <td style={{ maxWidth: '400px' }}>{topic.description}</td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <button className="btn-edit" onClick={() => handleEdit(topic)} title="Sửa">
+                                                <FiEdit2 />
+                                            </button>
+                                            <button className="btn-delete" onClick={() => handleDelete(topic.id)} title="Xóa">
+                                                <FiTrash2 />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button 
+                        className="pagination-btn" 
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 0}
+                    >
+                        <FiChevronLeft /> Trước
+                    </button>
+                    
+                    <div className="pagination-pages">
+                        {[...Array(totalPages)].map((_, index) => {
+                            // Hiển thị trang đầu, cuối và các trang xung quanh trang hiện tại
+                            if (
+                                index === 0 || 
+                                index === totalPages - 1 || 
+                                (index >= currentPage - 1 && index <= currentPage + 1)
+                            ) {
+                                return (
+                                    <button
+                                        key={index}
+                                        className={`pagination-page ${index === currentPage ? 'active' : ''}`}
+                                        onClick={() => handlePageChange(index)}
+                                    >
+                                        {index + 1}
+                                    </button>
+                                );
+                            } else if (index === currentPage - 2 || index === currentPage + 2) {
+                                return <span key={index} className="pagination-ellipsis">...</span>;
+                            }
+                            return null;
+                        })}
+                    </div>
+                    
+                    <button 
+                        className="pagination-btn" 
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages - 1}
+                    >
+                        Sau <FiChevronRight />
+                    </button>
+                </div>
+            )}
 
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
