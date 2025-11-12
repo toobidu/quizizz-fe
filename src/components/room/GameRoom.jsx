@@ -401,7 +401,7 @@ const GameRoom = () => {
                         <button onClick={() => navigate('/dashboard')} className="btn-primary">
                             Về Dashboard
                         </button>
-                        <button onClick={() => navigate('/rooms')} className="btn-secondary">
+                        <button onClick={() => navigate('/rooms')} className="btn-primary">
                             Tìm phòng khác
                         </button>
                     </div>

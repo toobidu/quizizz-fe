@@ -1,0 +1,77 @@
+.statistics-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    min-height: 100vh;
+}
+
+.statistics-page > h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.stats-section {
+    margin-bottom: 3rem;
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+}
+
+.stats-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--primary);
+}
+
+.stats-section table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.stats-section th,
+.stats-section td {
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+}
+
+.stats-section th {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-section tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.stats-section tbody tr:hover {
+    background: var(--surface-elevated);
+    transform: scale(1.01);
+}
+
+.stats-section tbody tr:last-child {
+    border-bottom: none;
+}
+
+.stats-section td {
+    color: var(--text-secondary);
+}
+
+.stats-section td:first-child {
+    font-weight: 500;
+    color: var(--text-color);
+}

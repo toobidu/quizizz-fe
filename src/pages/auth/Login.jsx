@@ -7,6 +7,7 @@ import { FaBrain } from "react-icons/fa6";
 import Decoration from '../../components/Decoration.jsx';
 import Toast from '../../components/Toast.jsx';
 import authStore from '../../stores/authStore.js';
+import { jwtDecode } from 'jwt-decode';
 
 function Login() {
     const [formData, setFormData] = useState({ username: '', password: '' });
@@ -17,12 +18,14 @@ function Login() {
     const navigate = useNavigate();
 
     const isAuthenticated = authStore((state) => state.isAuthenticated);
+    const user = authStore((state) => state.user);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate('/dashboard', { replace: true });
+        if (isAuthenticated && user) {
+            const redirectPath = user.role === 'TEACHER' ? '/teacher/dashboard' : '/dashboard';
+            navigate(redirectPath, { replace: true });
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, user, navigate]);
 
     const validateForm = useCallback(() => {
         const newErrors = {};
@@ -54,6 +57,7 @@ function Login() {
     const handleSubmit = useCallback(
         async (e) => {
             e.preventDefault();
+            
             if (!validateForm()) {
                 return;
             }
@@ -61,16 +65,24 @@ function Login() {
             setIsSubmitting(true);
 
             try {
-                await authApi.login({
+                const response = await authApi.login({
                     username: formData.username,
                     password: formData.password,
                 });
+                
+                const userData = response.data;
+                const accessToken = userData?.accessToken;
+                
+                // Decode JWT to get typeAccount
+                const decoded = jwtDecode(accessToken);
+                const userRole = decoded?.typeAccount;
+                
                 setToast({ type: 'success', message: 'Đăng nhập thành công!' });
-                setTimeout(() => navigate('/dashboard', { replace: true }), 1000);
+                const redirectPath = userRole === 'TEACHER' ? '/teacher/dashboard' : '/dashboard';
+                setTimeout(() => navigate(redirectPath, { replace: true }), 1000);
             } catch (error) {
                 const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
                 setToast({ type: 'error', message: errorMessage });
-            } finally {
                 setIsSubmitting(false);
             }
         },
@@ -169,12 +181,7 @@ function Login() {
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? (
-                            <>
-                                <div className="loading-spinner-container">
-                                    <div className="loading-spinner"></div>
-                                </div>
-                                <span className="button-text">Đang đăng nhập...</span>
-                            </>
+                            <span className="button-text">Đang đăng nhập...</span>
                         ) : (
                             <span>Đăng nhập</span>
                         )}
@@ -184,7 +191,7 @@ function Login() {
                 <div className="divider">
                     <span>hoặc</span>
                 </div>
-
+                
                 <div className="register-link">
                     <span>Chưa có tài khoản? </span>
                     <Link to="/register">Đăng ký ngay</Link>

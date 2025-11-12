@@ -286,7 +286,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                         <option value="" disabled>
                           {loadingTopics ? 'Đang tải chủ đề...' : 'Chọn chủ đề'}
                         </option>
-                        {topics.map((topic) => (
+                        {Array.isArray(topics) && topics.map((topic) => (
                             <option key={`topic-${topic.id}`} value={topic.id}>
                               {topic.name}
                             </option>

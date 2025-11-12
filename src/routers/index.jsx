@@ -23,10 +23,18 @@ import GameRoom from "../components/room/GameRoom";
 import Leaderboard from "../pages/Leaderboard";
 import authStore from "../stores/authStore";
 
+// Teacher imports
+import TeacherDashboard from "../features/teacher/pages/TeacherDashboard";
+import AIQuestionGenerator from "../features/teacher/pages/AIQuestionGenerator";
+import Statistics from "../features/teacher/pages/Statistics";
+import TopicManagement from "../features/teacher/pages/TopicManagement";
+import QuestionManagement from "../features/teacher/pages/QuestionManagement";
+
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requireTeacher = false }) => {
   const isAuthenticated = authStore((state) => state.isAuthenticated);
   const isLoading = authStore((state) => state.isLoading);
+  const user = authStore((state) => state.user);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -62,6 +70,10 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" replace />;
   }
 
+  if (requireTeacher && user?.role !== 'TEACHER') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return children;
 };
 
@@ -89,6 +101,14 @@ const router = createBrowserRouter([
       { path: "privacy", element: <PrivacyPage /> },
       { path: "terms", element: <TermsPage /> },
       { path: "feedback", element: <FeedbackPage /> },
+      
+      // Teacher routes
+      { path: "teacher/dashboard", element: <ProtectedRoute requireTeacher={true}><TeacherDashboard /></ProtectedRoute> },
+      { path: "teacher/topics", element: <ProtectedRoute requireTeacher={true}><TopicManagement /></ProtectedRoute> },
+      { path: "teacher/questions", element: <ProtectedRoute requireTeacher={true}><QuestionManagement /></ProtectedRoute> },
+      { path: "teacher/ai-generator", element: <ProtectedRoute requireTeacher={true}><AIQuestionGenerator /></ProtectedRoute> },
+      { path: "teacher/statistics", element: <ProtectedRoute requireTeacher={true}><Statistics /></ProtectedRoute> },
+      
       { path: "*", element: <ErrorPage /> }
     ]
   }

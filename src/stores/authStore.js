@@ -77,9 +77,19 @@ const authStore = create((set) => ({
         token = newAccessToken;
       }
 
-      set({ isLoading: true });
-      const response = await authApi.getUser();
-      set({ user: response.data, isAuthenticated: true, isLoading: false });
+      // Set role from decoded token immediately
+      const userWithRole = { role: decoded.typeAccount };
+      set({ user: userWithRole, isAuthenticated: true, isLoading: true });
+      
+      // Then fetch full user data
+      try {
+        const response = await authApi.getUser();
+        const fullUserWithRole = { ...response.data, role: decoded.typeAccount };
+        set({ user: fullUserWithRole, isAuthenticated: true, isLoading: false });
+      } catch (getUserError) {
+        // If getUser fails, keep the basic user with role
+        set({ isLoading: false });
+      }
     } catch (error) {
       // Nếu refresh thất bại, clear token và chuyển về login
       Cookies.remove('accessToken');
@@ -101,13 +111,17 @@ const authStore = create((set) => ({
       const response = await authApi.login({ username, password });
       const { accessToken, refreshToken, ...user } = response.data.data;
 
+      // Decode token to get typeAccount
+      const decoded = jwtDecode(accessToken);
+      const userWithRole = { ...user, role: decoded.typeAccount };
+
       // Lưu token vào Cookies và sessionStorage để persist khi reload
       Cookies.set('accessToken', accessToken, { expires: 7, secure: true, sameSite: 'strict' });
       Cookies.set('refreshToken', refreshToken, { expires: 7, secure: true, sameSite: 'strict' });
       sessionStorage.setItem('accessToken', accessToken);
       sessionStorage.setItem('refreshToken', refreshToken);
 
-      set({ user, isAuthenticated: true, isLoading: false });
+      set({ user: userWithRole, isAuthenticated: true, isLoading: false });
       return response;
     } catch (error) {
       set({ isLoading: false, error: error.message });

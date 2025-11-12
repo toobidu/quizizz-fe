@@ -24,12 +24,21 @@ export const useTopics = () => {
             setError('');
             const result = await topicApi.getAll();
 
-            if (result.success) {
-                setTopics(result.data);
+            if (result.success && Array.isArray(result.data)) {
+                if (result.data.length > 0) {
+                    console.log('Loaded topics from API:', result.data.length);
+                    setTopics(result.data);
+                } else {
+                    console.warn('API returned empty array, using mock data');
+                    setTopics(mockTopics);
+                }
             } else {
+                console.warn('Topics API returned invalid format, using mock data:', result);
                 setTopics(mockTopics);
             }
         } catch (err) {
+            console.error('Error loading topics:', err);
+            setError('Không thể tải danh sách chủ đề');
             setTopics(mockTopics);
         } finally {
             setLoading(false);
@@ -43,9 +52,20 @@ export const useTopics = () => {
     const searchTopics = async (query) => {
         try {
             const result = await topicApi.search(query);
-            return result.success ? result.data : [];
+            return result.success && Array.isArray(result.data) ? result.data : [];
         } catch (err) {
+            console.error('Error searching topics:', err);
             return [];
+        }
+    };
+
+    const searchTopicsPaginated = async (keyword = '', page = 0, size = 10, sort = 'id,desc') => {
+        try {
+            const result = await topicApi.searchPaginated(keyword, page, size, sort);
+            return result.success ? result.data : { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
+        } catch (err) {
+            console.error('Error searching topics with pagination:', err);
+            return { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
         }
     };
 
@@ -63,6 +83,7 @@ export const useTopics = () => {
         error,
         getTopicById,
         searchTopics,
+        searchTopicsPaginated,
         refreshTopics,
         setError
     };

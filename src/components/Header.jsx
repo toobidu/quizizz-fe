@@ -175,7 +175,8 @@ function Header() {
         setIsMenuOpen(false);
     };
 
-    const homePath = isAuthenticated ? '/dashboard' : '/';
+    const isTeacher = user?.role === 'TEACHER';
+    const homePath = isAuthenticated ? (isTeacher ? '/teacher/dashboard' : '/dashboard') : '/';
     const gamesPath = isAuthenticated ? '/games' : '/login';
     const leaderboardPath = isAuthenticated ? '/leaderboard' : '/login';
 
