@@ -6,16 +6,18 @@ export const useAIGenerator = () => {
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
     const [error, setError] = useState(null);
 
-    const generateQuestions = async (prompt) => {
+    const generateQuestions = async (topicId, prompt) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await aiApi.generateQuestions(prompt);
-            setGeneratedQuestions(response.data || response.questions || []);
-            return { success: true, data: response.data || response.questions };
+            const response = await aiApi.generateQuestions(topicId, prompt);
+            const questions = response.data?.questions || response.questions || [];
+            setGeneratedQuestions(questions);
+            return { success: true, data: questions };
         } catch (err) {
-            setError(err.message);
-            return { success: false, error: err.message };
+            const errorMessage = err.response?.data?.message || err.message || 'Lỗi không xác định';
+            setError(errorMessage);
+            return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
         }

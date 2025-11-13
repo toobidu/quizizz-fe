@@ -36,10 +36,19 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Ví dụ: Tạo 5 câu hỏi trắc nghiệm về lịch sử Việt Nam, mỗi câu có 4 đáp án..."
-                            rows={6}
+                            placeholder="Ví dụ: Tạo 5 câu hỏi trắc nghiệm về lịch sử Việt Nam thời kỳ Lý-Trần, mỗi câu có 4 đáp án, độ khó trung bình. Câu hỏi cần bao gồm cả sự kiện lịch sử, nhân vật quan trọng và ý nghĩa lịch sử."
+                            rows={8}
                             disabled={loading}
                         />
+                        <div className="ai-prompt-tips">
+                            <strong>💡 Mẹo viết prompt hiệu quả:</strong>
+                            <ul>
+                                <li>Chỉ rõ số lượng câu hỏi cần tạo</li>
+                                <li>Mô tả rõ nội dung, phạm vi kiến thức</li>
+                                <li>Nêu rõ độ khó mong muốn</li>
+                                <li>Yêu cầu thêm chi tiết về định dạng đáp án</li>
+                            </ul>
+                        </div>
                         <button
                             onClick={() => onConfirm(prompt)}
                             disabled={!prompt.trim() || loading}
@@ -47,11 +56,11 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                         >
                             {loading ? (
                                 <>
-                                    <FiLoader className="spin" /> Đang tạo...
+                                    <FiLoader className="spin" /> Đang tạo câu hỏi...
                                 </>
                             ) : (
                                 <>
-                                    <FiSend /> Tạo câu hỏi
+                                    <FiSend /> Tạo câu hỏi bằng AI
                                 </>
                             )}
                         </button>
