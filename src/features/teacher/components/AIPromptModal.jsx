@@ -24,7 +24,7 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
         <div className="ai-modal-overlay" onClick={onClose}>
             <div className="ai-modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="ai-modal-header">
-                    <h2>Tạo câu hỏi bằng AI</h2>
+                    <h2>✨ Tạo câu hỏi bằng AI</h2>
                     <button onClick={onClose} className="ai-close-btn">
                         <FiX />
                     </button>
@@ -41,11 +41,11 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                             disabled={loading}
                         />
                         <div className="ai-prompt-tips">
-                            <strong>💡 Mẹo viết prompt hiệu quả:</strong>
+                            <strong>Mẹo viết prompt hiệu quả:</strong>
                             <ul>
                                 <li>Chỉ rõ số lượng câu hỏi cần tạo</li>
                                 <li>Mô tả rõ nội dung, phạm vi kiến thức</li>
-                                <li>Nêu rõ độ khó mong muốn</li>
+                                <li>Nêu rõ độ khó mong muốn (dễ/trung bình/khó)</li>
                                 <li>Yêu cầu thêm chi tiết về định dạng đáp án</li>
                             </ul>
                         </div>
@@ -68,6 +68,9 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                 ) : (
                     <div className="ai-results-section">
                         <h3>Câu hỏi đã tạo ({generatedQuestions.length})</h3>
+                        <p className="ai-results-note">
+                            Câu hỏi đã được lưu thành công. Bạn có thể xem lại trong phần Quản lý câu hỏi.
+                        </p>
                         <div className="ai-questions-list">
                             {generatedQuestions.map((q, idx) => (
                                 <div key={idx} className="ai-question-item">
@@ -82,10 +85,14 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                                             {editedQuestion.answers?.map((ans, aIdx) => (
                                                 <div key={aIdx} className="ai-answer-edit">
                                                     <input
-                                                        value={ans.text}
+                                                        value={ans.answerText || ans.text}
                                                         onChange={(e) => {
                                                             const newAnswers = [...editedQuestion.answers];
-                                                            newAnswers[aIdx].text = e.target.value;
+                                                            newAnswers[aIdx] = { 
+                                                                ...newAnswers[aIdx],
+                                                                answerText: e.target.value,
+                                                                text: e.target.value 
+                                                            };
                                                             setEditedQuestion({ ...editedQuestion, answers: newAnswers });
                                                         }}
                                                     />
@@ -114,17 +121,17 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                                                 <div className="ai-answers">
                                                     {q.answers?.map((ans, aIdx) => (
                                                         <div key={aIdx} className={ans.isCorrect ? 'correct' : ''}>
-                                                            {String.fromCharCode(65 + aIdx)}. {ans.text}
+                                                            {String.fromCharCode(65 + aIdx)}. {ans.answerText || ans.text}
                                                             {ans.isCorrect && ' ✓'}
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                             <div className="ai-question-actions">
-                                                <button onClick={() => handleEdit(idx)}>
+                                                <button onClick={() => handleEdit(idx)} title="Chỉnh sửa">
                                                     <FiEdit2 />
                                                 </button>
-                                                <button onClick={() => onDelete(idx)}>
+                                                <button onClick={() => onDelete(idx)} title="Xóa">
                                                     <FiTrash2 />
                                                 </button>
                                             </div>
@@ -134,8 +141,8 @@ const AIPromptModal = ({ isOpen, onClose, onConfirm, loading, generatedQuestions
                             ))}
                         </div>
                         <div className="ai-confirm-actions">
-                            <button onClick={() => onConfirm(generatedQuestions)} className="ai-confirm-btn">
-                                Xác nhận sử dụng
+                            <button onClick={onConfirm} className="ai-confirm-btn">
+                                Xác nhận & Đóng
                             </button>
                             <button onClick={onClose} className="ai-cancel-btn">
                                 Hủy

@@ -47,7 +47,6 @@ const QuestionManagement = () => {
             const topicsRes = await teacherApi.getAllTopics();
             setTopics(topicsRes.data || []);
         } catch (error) {
-            console.error('Error loading topics:', error);
             toast.error('Không thể tải danh sách chủ đề');
         }
     };
@@ -105,7 +104,6 @@ const QuestionManagement = () => {
             setCurrentPage(0);
             loadQuestions();
         } catch (error) {
-            console.error('Error saving question:', error);
             toast.error(editingQuestion ? 'Không thể cập nhật câu hỏi' : 'Không thể tạo câu hỏi');
         }
     };

@@ -26,18 +26,14 @@ export const useTopics = () => {
 
             if (result.success && Array.isArray(result.data)) {
                 if (result.data.length > 0) {
-                    console.log('Loaded topics from API:', result.data.length);
                     setTopics(result.data);
                 } else {
-                    console.warn('API returned empty array, using mock data');
                     setTopics(mockTopics);
                 }
             } else {
-                console.warn('Topics API returned invalid format, using mock data:', result);
                 setTopics(mockTopics);
             }
         } catch (err) {
-            console.error('Error loading topics:', err);
             setError('Không thể tải danh sách chủ đề');
             setTopics(mockTopics);
         } finally {
@@ -64,7 +60,6 @@ export const useTopics = () => {
             const result = await topicApi.searchPaginated(keyword, page, size, sort);
             return result.success ? result.data : { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
         } catch (err) {
-            console.error('Error searching topics with pagination:', err);
             return { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0 };
         }
     };

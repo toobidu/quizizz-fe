@@ -2,11 +2,17 @@ import apiInstance from '../../../services/apiInstance';
 
 const aiApi = {
     generateQuestions: async (topicId, userPrompt) => {
-        const res = await apiInstance.post('/ai/generate-questions', { 
-            topicId: parseInt(topicId), 
-            userPrompt 
-        });
-        return res.data;
+        try {
+            const res = await apiInstance.post('/ai/generate-questions', { 
+                topicId: parseInt(topicId), 
+                userPrompt 
+            });
+            
+            return res.data.data; 
+            
+        } catch (error) {
+            throw error;
+        }
     },
     
     checkGenerationStatus: async (taskId) => {

@@ -19,32 +19,11 @@ const AIQuestionGenerator = () => {
     useEffect(() => {
         const loadTopics = async () => {
             try {
-                // teacherApi.getAllTopics() returns: res.data
-                // Backend returns: ResponseEntity<ApiResponse<List<TopicResponse>>>
-                // So res.data = { data: [...topics...], message: "...", status: "..." }
                 const response = await teacherApi.getAllTopics();
-                
-                console.log('📡 Full Topics API Response:', response);
-                console.log('📋 Response.data:', response?.data);
-                
-                // The topics array is in response.data (the ApiResponse.data field)
-                const topicsData = response?.data || [];
-                
-                console.log('📚 Parsed topics array:', topicsData);
-                console.log('🔢 Topics count:', topicsData.length);
+                const topicsData = response?.data || []
                 
                 setTopics(topicsData);
-                
-                if (topicsData.length === 0) {
-                    toast.warning('⚠️ Chưa có chủ đề nào. Vui lòng tạo chủ đề trước!', {
-                        autoClose: 5000
-                    });
-                } else {
-                    toast.success(`✅ Đã tải ${topicsData.length} chủ đề`);
-                }
             } catch (error) {
-                console.error('❌ Error loading topics:', error);
-                console.error('Error details:', error.response?.data);
                 toast.error('Không thể tải danh sách chủ đề: ' + (error.response?.data?.message || error.message || 'Lỗi không xác định'));
             } finally {
                 setLoadingTopics(false);
@@ -58,39 +37,21 @@ const AIQuestionGenerator = () => {
             toast.error('Vui lòng chọn chủ đề trước');
             return;
         }
+        
         const result = await generateQuestions(selectedTopic, prompt);
-        if (!result.success) {
+        
+        if (result.success) {
+            toast.success(`${result.message || `Đã tạo ${result.totalGenerated} câu hỏi thành công!`}`);
+        } else {
             toast.error('Không thể tạo câu hỏi: ' + result.error);
         }
     };
 
-    const handleConfirm = async (questions) => {
-        if (!selectedTopic) {
-            toast.error('Vui lòng chọn chủ đề');
-            return;
-        }
-
-        try {
-            // Tạo bulk questions với format đúng
-            const questionsWithAnswers = questions.map(q => ({
-                topicId: parseInt(selectedTopic),
-                questionText: q.questionText,
-                questionType: q.questionType || 'MULTIPLE_CHOICE',
-                answers: q.answers.map(ans => ({
-                    answerText: ans.text || ans.answerText,
-                    isCorrect: ans.isCorrect
-                }))
-            }));
-
-            await teacherApi.createBulkQuestions({ questions: questionsWithAnswers });
-            toast.success(`Đã thêm ${questions.length} câu hỏi thành công!`);
-            setIsModalOpen(false);
-            setGeneratedQuestions([]);
-            navigate('/teacher/questions');
-        } catch (error) {
-            console.error('Error saving questions:', error);
-            toast.error('Lỗi khi lưu câu hỏi: ' + (error.response?.data?.message || error.message));
-        }
+    const handleConfirm = () => {
+        toast.success(`Đã lưu ${generatedQuestions.length} câu hỏi thành công!`);
+        setIsModalOpen(false);
+        setGeneratedQuestions([]);
+        navigate('/teacher/questions');
     };
 
     const handleEdit = (index, editedQuestion) => {
@@ -100,7 +61,9 @@ const AIQuestionGenerator = () => {
     };
 
     const handleDelete = (index) => {
-        setGeneratedQuestions(generatedQuestions.filter((_, i) => i !== index));
+        const updated = generatedQuestions.filter((_, i) => i !== index);
+        setGeneratedQuestions(updated);
+        toast.info(`Đã xóa câu hỏi. Còn lại ${updated.length} câu hỏi.`);
     };
 
     // Prompt examples
@@ -123,11 +86,17 @@ const AIQuestionGenerator = () => {
     ];
 
     const handleUseExample = (exampleText) => {
+        if (!selectedTopic) {
+            toast.warning('Vui lòng chọn chủ đề trước');
+            return;
+        }
+        
         const topicName = topics.find(t => t.id === parseInt(selectedTopic))?.name || '[chủ đề]';
         const filledText = exampleText.replace('[chủ đề]', topicName);
+        
         // Copy to clipboard
         navigator.clipboard.writeText(filledText);
-        toast.success('Đã copy mẫu prompt, hãy dán vào ô nhập!');
+        toast.success('Đã copy mẫu prompt!');
         setIsModalOpen(true);
     };
 
@@ -158,17 +127,17 @@ const AIQuestionGenerator = () => {
                         className={topics.length === 0 && !loadingTopics ? 'empty' : ''}
                     >
                         <option value="">
-                            {loadingTopics ? '⏳ Đang tải chủ đề...' : topics.length === 0 ? '⚠️ Chưa có chủ đề nào' : '📚 -- Chọn chủ đề --'}
+                            {loadingTopics ? 'Đang tải chủ đề...' : topics.length === 0 ? 'Chưa có chủ đề nào' : '-- Chọn chủ đề --'}
                         </option>
                         {topics.map(topic => (
                             <option key={topic.id} value={topic.id}>
-                                📖 {topic.name}
+                                {topic.name}
                             </option>
                         ))}
                     </select>
                     {topics.length === 0 && !loadingTopics && (
                         <div className="topic-warning">
-                            <span>⚠️ Bạn cần tạo ít nhất một chủ đề trước khi sử dụng AI Generator.</span>
+                            <span>Bạn cần tạo ít nhất một chủ đề trước khi sử dụng AI Generator.</span>
                             <button 
                                 onClick={() => navigate('/teacher/topics')}
                                 className="btn-create-topic"
@@ -210,7 +179,7 @@ const AIQuestionGenerator = () => {
                         <FiZap /> Mở AI Generator
                     </button>
                     {!selectedTopic && (
-                        <p className="ai-hint">💡 Vui lòng chọn chủ đề trước khi tạo câu hỏi</p>
+                        <p className="ai-hint">Vui lòng chọn chủ đề trước khi tạo câu hỏi</p>
                     )}
                 </div>
             </div>
@@ -219,10 +188,7 @@ const AIQuestionGenerator = () => {
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
-                    // Clear generated questions khi đóng modal
-                    if (generatedQuestions.length === 0) {
-                        setGeneratedQuestions([]);
-                    }
+                    setGeneratedQuestions([]);
                 }}
                 onConfirm={generatedQuestions.length ? handleConfirm : handleGenerate}
                 loading={loading}

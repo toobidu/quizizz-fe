@@ -10,10 +10,23 @@ export const useAIGenerator = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await aiApi.generateQuestions(topicId, prompt);
-            const questions = response.data?.questions || response.questions || [];
+            
+            // aiApi.generateQuestions now returns AIGenerateResponse directly
+            const aiResponse = await aiApi.generateQuestions(topicId, prompt);
+            const questions = aiResponse.questions || [];
+            
+            if (questions.length === 0) {
+                throw new Error('AI không tạo được câu hỏi. Vui lòng thử lại.');
+            }
+            
             setGeneratedQuestions(questions);
-            return { success: true, data: questions };
+            return { 
+                success: true, 
+                data: questions,
+                totalGenerated: aiResponse.totalGenerated,
+                message: aiResponse.message 
+            };
+            
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Lỗi không xác định';
             setError(errorMessage);

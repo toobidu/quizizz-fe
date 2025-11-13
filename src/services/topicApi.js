@@ -51,7 +51,6 @@ const topicApi = {
                 message: response.data?.message || 'Thành công'
             };
         } catch (error) {
-            console.error('Error searching topics:', error);
             return {
                 success: false,
                 error: error.response?.data?.message || 'Không thể tìm kiếm chủ đề',
