@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiBook, FiHelpCircle, FiBarChart2, FiCpu } from 'react-icons/fi';
+import { FiBook, FiHelpCircle, FiCpu } from 'react-icons/fi';
 import '../../../styles/features/teacher/TeacherDashboard.css';
 
 const TeacherDashboard = () => {
@@ -7,7 +7,7 @@ const TeacherDashboard = () => {
         <div className="teacher-dashboard">
             <div className="teacher-header">
                 <h1>Bảng điều khiển Giáo viên</h1>
-                <p>Quản lý chủ đề, câu hỏi và theo dõi thống kê</p>
+                <p>Quản lý chủ đề, câu hỏi và tạo câu hỏi bằng AI</p>
             </div>
 
             <div className="teacher-cards">
@@ -33,14 +33,6 @@ const TeacherDashboard = () => {
                     </div>
                     <h3>Tạo câu hỏi AI</h3>
                     <p>Sử dụng AI để tạo câu hỏi tự động</p>
-                </Link>
-
-                <Link to="/teacher/statistics" className="teacher-card">
-                    <div className="card-icon">
-                        <FiBarChart2 />
-                    </div>
-                    <h3>Thống kê</h3>
-                    <p>Xem thống kê người chơi và câu hỏi</p>
                 </Link>
             </div>
         </div>

@@ -24,7 +24,6 @@ const ProfileStats = ({ profileData }) => {
                 ) : statsError ? (
                     <div className="pf-stats-error">
                         <p>Lỗi: {statsError}</p>
-                        <p>Kiểm tra console để biết chi tiết</p>
                     </div>
                 ) : (
                     <>

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoClose, IoAdd, IoEnter, IoSearch, IoRefresh } from 'react-icons/io5';
-import CreateRoomModal from '../../components/room/CreateRoomModal.jsx';
-import RoomCard from '../../components/room/RoomCard.jsx';
-import JoinByCodeModal from '../../components/room/JoinByCodeModal.jsx';
-import PlayerList from '../../components/room/PlayerList.jsx';
-import useRoomStore from '../../stores/useRoomStore.js';
-import authStore from '../../stores/authStore.js';
-import useWebSocketCleanup from '../../hooks/useWebSocketCleanup.js';
-import '../../styles/pages/room/RoomPage.css';
-import Decoration from '../../components/Decoration.jsx';
-import SimpleBackground from '../../components/SimpleBackground.jsx';
+import CreateRoomModal from '../../../../components/room/CreateRoomModal.jsx';
+import RoomCard from '../../../../components/room/RoomCard.jsx';
+import JoinByCodeModal from '../../../../components/room/JoinByCodeModal.jsx';
+import PlayerList from '../../../../components/room/PlayerList.jsx';
+import useRoomStore from '../../../../stores/useRoomStore.js';
+import authStore from '../../../../stores/authStore.js';
+import useWebSocketCleanup from '../../../../hooks/useWebSocketCleanup.js';
+import '../../../../styles/pages/room/RoomPage.css';
+import Decoration from '../../../../components/Decoration.jsx';
+import SimpleBackground from '../../../../components/SimpleBackground.jsx';
 
 const RoomsPage = () => {
     // Navigation and user management

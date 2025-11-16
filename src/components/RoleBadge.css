@@ -1,0 +1,44 @@
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition: transform 0.2s;
+}
+
+.role-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Sizes */
+.role-badge--small {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  gap: 0.25rem;
+}
+
+.role-badge--medium {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+}
+
+.role-badge--large {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  gap: 0.5rem;
+}
+
+.role-badge__icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.role-badge__text {
+  line-height: 1;
+}

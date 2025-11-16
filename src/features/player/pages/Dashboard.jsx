@@ -1,12 +1,12 @@
-import "../styles/pages/Dashboard.css";
+import "../../../styles/pages/Dashboard.css";
 import { useEffect } from 'react';
-import HeroSection from './dashboard/HeroSection';
-import StatsSection from './dashboard/StatsSection';
-import QuickActionsSection from './dashboard/QuickActionsSection';
-import authStore from '../stores/authStore';
-import profileApi from '../services/profileApi';
-import Decoration from "../components/Decoration";
-import { useStats } from '../hooks/useStats';
+import HeroSection from '../../../pages/dashboard/HeroSection';
+import StatsSection from '../../../pages/dashboard/StatsSection';
+import QuickActionsSection from '../../../pages/dashboard/QuickActionsSection';
+import authStore from '../../../stores/authStore';
+import profileApi from '../../../services/profileApi';
+import Decoration from "../../../components/Decoration";
+import { useStats } from '../../../hooks/useStats';
 
 function Dashboard() {
     const { user, isAuthenticated, isLoading } = authStore();

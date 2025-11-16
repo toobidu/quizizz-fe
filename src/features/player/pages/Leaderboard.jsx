@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FiTarget } from 'react-icons/fi';
 import { FaTrophy, FaMedal } from 'react-icons/fa';
-import leaderboardApi from '../services/leaderboardApi';
-import topicApi from '../services/topicApi';
-import Decoration from '../components/Decoration';
-import '../styles/pages/Leaderboard.css';
+import leaderboardApi from '../../../services/leaderboardApi';
+import topicApi from '../../../services/topicApi';
+import Decoration from '../../../components/Decoration';
+import '../../../styles/pages/Leaderboard.css';
 
 function Leaderboard() {
     const [topics, setTopics] = useState([]);

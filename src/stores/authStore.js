@@ -8,12 +8,14 @@ const authStore = create((set) => ({
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  typeAccount: null, // PLAYER, TEACHER, ADMIN
 
   setUser: (user) =>
       set((state) => {
         return {
           user,
           isAuthenticated: !!user,
+          typeAccount: user?.role || null,
           error: null,
         };
       }),
@@ -22,6 +24,7 @@ const authStore = create((set) => ({
       set({
         user: null,
         isAuthenticated: false,
+        typeAccount: null,
         error: null,
       }),
 
@@ -79,13 +82,23 @@ const authStore = create((set) => ({
 
       // Set role from decoded token immediately
       const userWithRole = { role: decoded.typeAccount };
-      set({ user: userWithRole, isAuthenticated: true, isLoading: true });
+      set({ 
+        user: userWithRole, 
+        isAuthenticated: true, 
+        typeAccount: decoded.typeAccount,
+        isLoading: true 
+      });
       
       // Then fetch full user data
       try {
         const response = await authApi.getUser();
         const fullUserWithRole = { ...response.data, role: decoded.typeAccount };
-        set({ user: fullUserWithRole, isAuthenticated: true, isLoading: false });
+        set({ 
+          user: fullUserWithRole, 
+          isAuthenticated: true, 
+          typeAccount: decoded.typeAccount,
+          isLoading: false 
+        });
       } catch (getUserError) {
         // If getUser fails, keep the basic user with role
         set({ isLoading: false });
@@ -121,7 +134,12 @@ const authStore = create((set) => ({
       sessionStorage.setItem('accessToken', accessToken);
       sessionStorage.setItem('refreshToken', refreshToken);
 
-      set({ user: userWithRole, isAuthenticated: true, isLoading: false });
+      set({ 
+        user: userWithRole, 
+        isAuthenticated: true, 
+        typeAccount: decoded.typeAccount,
+        isLoading: false 
+      });
       return response;
     } catch (error) {
       set({ isLoading: false, error: error.message });
@@ -137,7 +155,12 @@ const authStore = create((set) => ({
       Cookies.remove('refreshToken');
       sessionStorage.removeItem('accessToken');
       sessionStorage.removeItem('refreshToken');
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        typeAccount: null,
+        isLoading: false 
+      });
     } catch (error) {
       set({ isLoading: false, error: error.message });
       throw error;
