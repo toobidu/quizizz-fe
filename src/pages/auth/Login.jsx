@@ -21,8 +21,11 @@ function Login() {
     const user = authStore((state) => state.user);
 
     useEffect(() => {
-        if (isAuthenticated && user) {
-            const redirectPath = user.role === 'TEACHER' ? '/teacher/dashboard' : '/dashboard';
+        if (isAuthenticated && user?.role) {
+            let redirectPath = '/dashboard';
+            if (user.role === 'ADMIN') redirectPath = '/admin/dashboard';
+            else if (user.role === 'TEACHER') redirectPath = '/teacher/dashboard';
+            else if (user.role === 'PLAYER') redirectPath = '/dashboard';
             navigate(redirectPath, { replace: true });
         }
     }, [isAuthenticated, user, navigate]);
@@ -78,7 +81,12 @@ function Login() {
                 const userRole = decoded?.typeAccount;
                 
                 setToast({ type: 'success', message: 'Đăng nhập thành công!' });
-                const redirectPath = userRole === 'TEACHER' ? '/teacher/dashboard' : '/dashboard';
+                
+                let redirectPath = '/dashboard';
+                if (userRole === 'ADMIN') redirectPath = '/admin/dashboard';
+                else if (userRole === 'TEACHER') redirectPath = '/teacher/dashboard';
+                else if (userRole === 'PLAYER') redirectPath = '/dashboard';
+                
                 setTimeout(() => navigate(redirectPath, { replace: true }), 1000);
             } catch (error) {
                 const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';

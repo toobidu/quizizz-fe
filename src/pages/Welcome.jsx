@@ -25,10 +25,15 @@ function Welcome() {
         initializeAuth();
     }, []);
 
-    // Redirect to dashboard if user is authenticated
+    // Redirect based on role if user is authenticated
     useEffect(() => {
         if (isInitialized && isAuthenticated && !isLoading) {
-            navigate('/dashboard', { replace: true });
+            const user = authStore.getState().user;
+            let redirectPath = '/dashboard';
+            if (user?.role === 'ADMIN') redirectPath = '/admin/dashboard';
+            else if (user?.role === 'TEACHER') redirectPath = '/teacher/dashboard';
+            else if (user?.role === 'PLAYER') redirectPath = '/dashboard';
+            navigate(redirectPath, { replace: true });
         }
     }, [isInitialized, isAuthenticated, isLoading, navigate]);
 

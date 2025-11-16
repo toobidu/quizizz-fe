@@ -175,10 +175,16 @@ function Header() {
         setIsMenuOpen(false);
     };
 
-    const isTeacher = user?.role === 'TEACHER';
-    const homePath = isAuthenticated ? (isTeacher ? '/teacher/dashboard' : '/dashboard') : '/';
-    const gamesPath = isAuthenticated ? '/games' : '/login';
-    const leaderboardPath = isAuthenticated ? '/leaderboard' : '/login';
+    const getHomePath = () => {
+        if (!isAuthenticated) return '/';
+        if (user?.role === 'ADMIN') return '/admin/dashboard';
+        if (user?.role === 'TEACHER') return '/teacher/dashboard';
+        if (user?.role === 'PLAYER') return '/dashboard';
+        return '/';
+    };
+    const homePath = getHomePath();
+    const gamesPath = isAuthenticated && user?.role === 'PLAYER' ? '/games' : '/login';
+    const leaderboardPath = isAuthenticated && user?.role === 'PLAYER' ? '/leaderboard' : '/login';
 
     return (
         <header className="hd-header">
