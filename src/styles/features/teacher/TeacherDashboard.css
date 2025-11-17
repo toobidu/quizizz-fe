@@ -1,42 +1,54 @@
 .teacher-dashboard {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 3rem 2rem;
+    padding: 2rem 1.5rem;
     min-height: 100vh;
 }
 
 .teacher-header {
-    text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 2.5rem;
 }
 
 .teacher-header h1 {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary), #667eea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .teacher-header p {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
 }
 
-.teacher-cards {
+.teacher-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr 400px;
     gap: 2rem;
-    padding: 0 1rem;
+    align-items: start;
+}
+
+.teacher-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .teacher-card {
     background: var(--surface);
-    padding: 2.5rem;
-    border-radius: 20px;
+    padding: 2rem;
+    border-radius: 16px;
     text-decoration: none;
     color: var(--text-color);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -44,39 +56,170 @@
 .teacher-card::before {
     content: '';
     position: absolute;
-    top: 0;
     left: 0;
-    width: 100%;
-    height: 4px;
+    top: 0;
+    bottom: 0;
+    width: 5px;
     background: var(--primary);
-    transform: scaleX(0);
+    transform: scaleY(0);
     transition: transform 0.3s ease;
 }
 
 .teacher-card:hover::before {
-    transform: scaleX(1);
+    transform: scaleY(1);
 }
 
 .teacher-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    transform: translateX(8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: var(--primary);
 }
 
 .card-icon {
-    font-size: 3.5rem;
+    font-size: 3rem;
     color: var(--primary);
-    margin-bottom: 1.5rem;
-    display: inline-block;
+    flex-shrink: 0;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    border-radius: 12px;
+}
+
+.card-content {
+    flex: 1;
 }
 
 .teacher-card h3 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
 }
 
 .teacher-card p {
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.5;
     font-size: 0.95rem;
+    margin: 0;
+}
+
+.teacher-sidebar {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 2rem;
+}
+
+.sidebar-section {
+    margin-bottom: 2rem;
+}
+
+.sidebar-section:last-child {
+    margin-bottom: 0;
+}
+
+.sidebar-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sidebar-section h3 svg {
+    color: var(--primary);
+}
+
+.quick-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.quick-tips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.quick-tips li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.quick-tips li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.quick-tips li::before {
+    content: '💡';
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+    .teacher-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .teacher-sidebar {
+        position: static;
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .teacher-dashboard {
+        padding: 1.5rem 1rem;
+    }
+    
+    .teacher-header h1 {
+        font-size: 2rem;
+    }
+    
+    .teacher-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2.5rem;
+    }
+    
+    .teacher-sidebar {
+        padding: 1.5rem;
+    }
 }

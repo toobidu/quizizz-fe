@@ -1,10 +1,10 @@
 import apiInstance from '../../../services/apiInstance';
 
 const aiApi = {
-    generateQuestions: async (topicId, userPrompt) => {
+    generateQuestions: async (examId, userPrompt) => {
         try {
             const res = await apiInstance.post('/ai/generate-questions', { 
-                topicId: parseInt(topicId), 
+                examId: parseInt(examId), 
                 userPrompt 
             });
             

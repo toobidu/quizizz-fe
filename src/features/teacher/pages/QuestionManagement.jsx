@@ -6,10 +6,10 @@ import '../../../styles/features/teacher/Management.css';
 
 const QuestionManagement = () => {
     const [questions, setQuestions] = useState([]);
-    const [topics, setTopics] = useState([]);
+    const [exams, setExams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTopic, setSelectedTopic] = useState('');
+    const [selectedExam, setSelectedExam] = useState('');
     const [selectedType, setSelectedType] = useState('ALL');
     const [showModal, setShowModal] = useState(false);
     const [showAnswersModal, setShowAnswersModal] = useState(false);
@@ -25,7 +25,7 @@ const QuestionManagement = () => {
     const [formData, setFormData] = useState({
         questionText: '',
         questionType: 'MULTIPLE_CHOICE',
-        topicId: '',
+        examId: '',
         answers: [
             { answerText: '', isCorrect: false },
             { answerText: '', isCorrect: false },
@@ -35,19 +35,26 @@ const QuestionManagement = () => {
     });
 
     useEffect(() => {
-        loadTopics();
+        loadExams();
     }, []);
 
     useEffect(() => {
-        loadQuestions();
-    }, [selectedTopic, selectedType, currentPage, sortOrder, searchTerm]);
+        const timer = setTimeout(() => {
+            loadQuestions();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
-    const loadTopics = async () => {
+    useEffect(() => {
+        loadQuestions();
+    }, [selectedExam, selectedType, currentPage, sortOrder]);
+
+    const loadExams = async () => {
         try {
-            const topicsRes = await teacherApi.getAllTopics();
-            setTopics(topicsRes.data || []);
+            const examsRes = await teacherApi.getAllExams();
+            setExams(examsRes.data || []);
         } catch (error) {
-            toast.error('Không thể tải danh sách chủ đề');
+            toast.error('Không thể tải danh sách bộ đề');
         }
     };
 
@@ -55,12 +62,12 @@ const QuestionManagement = () => {
         try {
             setLoading(true);
             const sortParam = `id,${sortOrder}`;
-            const topicIdParam = selectedTopic && selectedTopic !== '' ? parseInt(selectedTopic) : null;
+            const examIdParam = selectedExam && selectedExam !== '' ? parseInt(selectedExam) : null;
             const typeParam = selectedType === 'ALL' ? null : selectedType;
             
             const response = await teacherApi.searchQuestions(
                 searchTerm,
-                topicIdParam,
+                examIdParam,
                 typeParam,
                 currentPage,
                 10,
@@ -80,7 +87,7 @@ const QuestionManagement = () => {
         } finally {
             setLoading(false);
         }
-    }, [searchTerm, selectedTopic, selectedType, currentPage, sortOrder]);
+    }, [searchTerm, selectedExam, selectedType, currentPage, sortOrder]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -88,7 +95,7 @@ const QuestionManagement = () => {
             const payload = {
                 questionText: formData.questionText,
                 questionType: formData.questionType,
-                topicId: parseInt(formData.topicId),
+                examId: parseInt(formData.examId),
                 answers: formData.answers.filter(a => a.answerText.trim())
             };
 
@@ -108,13 +115,13 @@ const QuestionManagement = () => {
         }
     };
 
-    const handleSearch = useCallback((value) => {
+    const handleSearch = (value) => {
         setSearchTerm(value);
         setCurrentPage(0);
-    }, []);
+    };
 
-    const handleTopicFilter = (value) => {
-        setSelectedTopic(value);
+    const handleExamFilter = (value) => {
+        setSelectedExam(value);
         setCurrentPage(0);
     };
 
@@ -138,7 +145,7 @@ const QuestionManagement = () => {
         setFormData({
             questionText: '',
             questionType: 'MULTIPLE_CHOICE',
-            topicId: '',
+            examId: '',
             answers: [
                 { answerText: '', isCorrect: false },
                 { answerText: '', isCorrect: false },
@@ -154,7 +161,7 @@ const QuestionManagement = () => {
         setFormData({
             questionText: question.questionText,
             questionType: question.questionType,
-            topicId: question.topicId,
+            examId: question.examId,
             answers: question.answers?.length ? question.answers : [
                 { answerText: '', isCorrect: false },
                 { answerText: '', isCorrect: false },
@@ -188,7 +195,7 @@ const QuestionManagement = () => {
             setFormData({
                 questionText: editingQuestion.questionText,
                 questionType: editingQuestion.questionType,
-                topicId: editingQuestion.topicId,
+                examId: editingQuestion.examId,
                 answers: editingQuestion.answers?.length ? editingQuestion.answers.map(a => ({
                     answerText: a.answerText || a.text || '',
                     isCorrect: a.isCorrect || false,
@@ -252,13 +259,13 @@ const QuestionManagement = () => {
                 <div className="filter-group">
                     <FiFilter style={{ color: 'var(--primary)' }} />
                     <select 
-                        value={selectedTopic} 
-                        onChange={(e) => handleTopicFilter(e.target.value)}
+                        value={selectedExam} 
+                        onChange={(e) => handleExamFilter(e.target.value)}
                         className="filter-select"
                     >
-                        <option value="">Tất cả chủ đề</option>
-                        {topics.map(topic => (
-                            <option key={topic.id} value={topic.id}>{topic.name}</option>
+                        <option value="">Tất cả bộ đề</option>
+                        {exams.map(exam => (
+                            <option key={exam.id} value={exam.id}>{exam.title}</option>
                         ))}
                     </select>
                     
@@ -285,7 +292,7 @@ const QuestionManagement = () => {
                             <th style={{ width: '60px' }}>STT</th>
                             <th style={{ minWidth: '300px' }}>Câu hỏi</th>
                             <th style={{ width: '120px' }}>Loại</th>
-                            <th style={{ width: '150px' }}>Chủ đề</th>
+                            <th style={{ width: '150px' }}>Bộ đề</th>
                             <th style={{ width: '100px' }}>Đáp án</th>
                             <th style={{ width: '150px' }}>Thao tác</th>
                         </tr>
@@ -301,7 +308,7 @@ const QuestionManagement = () => {
                         ) : questions.length === 0 ? (
                             <tr>
                                 <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
-                                    {searchTerm || selectedTopic || selectedType !== 'ALL' 
+                                    {searchTerm || selectedExam || selectedType !== 'ALL' 
                                         ? 'Không tìm thấy câu hỏi phù hợp' 
                                         : 'Chưa có câu hỏi nào'}
                                 </td>
@@ -320,7 +327,7 @@ const QuestionManagement = () => {
                                     <td>
                                         <span className="badge-type">{getQuestionTypeName(question.questionType)}</span>
                                     </td>
-                                    <td>{topics.find(t => t.id === question.topicId)?.name || '-'}</td>
+                                    <td>{exams.find(e => e.id === question.examId)?.title || '-'}</td>
                                     <td style={{ textAlign: 'center' }}>
                                         <span className="badge-count">{question.answers?.length || 0}</span>
                                     </td>
@@ -439,15 +446,15 @@ const QuestionManagement = () => {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Chủ đề *</label>
+                                    <label>Bộ đề *</label>
                                     <select
-                                        value={formData.topicId}
-                                        onChange={(e) => setFormData({ ...formData, topicId: e.target.value })}
+                                        value={formData.examId}
+                                        onChange={(e) => setFormData({ ...formData, examId: e.target.value })}
                                         required
                                     >
-                                        <option value="">Chọn chủ đề</option>
-                                        {topics.map(topic => (
-                                            <option key={topic.id} value={topic.id}>{topic.name}</option>
+                                        <option value="">Chọn bộ đề</option>
+                                        {exams.map(exam => (
+                                            <option key={exam.id} value={exam.id}>{exam.title}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -514,7 +521,7 @@ const QuestionManagement = () => {
                                 <p className="question-text">{editingQuestion.questionText}</p>
                                 <div className="question-meta">
                                     <span className="meta-badge">{getQuestionTypeName(editingQuestion.questionType)}</span>
-                                    <span className="meta-badge">{topics.find(t => t.id === editingQuestion.topicId)?.name}</span>
+                                    <span className="meta-badge">{exams.find(e => e.id === editingQuestion.examId)?.title}</span>
                                 </div>
                             </div>
                         )}

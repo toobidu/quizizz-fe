@@ -43,7 +43,7 @@ const teacherApi = {
     },
     
     // Question CRUD
-    searchQuestions: async (keyword = '', topicId = null, questionType = null, page = 0, size = 10, sort = 'id,desc') => {
+    searchQuestions: async (keyword = '', examId = null, questionType = null, page = 0, size = 10, sort = 'id,desc') => {
         const params = new URLSearchParams({
             page: page.toString(),
             size: size.toString(),
@@ -54,8 +54,8 @@ const teacherApi = {
             params.append('keyword', keyword.trim());
         }
         
-        if (topicId) {
-            params.append('topicId', topicId.toString());
+        if (examId) {
+            params.append('examId', examId.toString());
         }
         
         if (questionType && questionType !== 'ALL') {
@@ -118,6 +118,66 @@ const teacherApi = {
         return res.data;
     },
     
+    // Exam CRUD
+    getAllExams: async () => {
+        const res = await apiInstance.get('/exams');
+        return res.data;
+    },
+    
+    searchExams: async (keyword = '', topicId = null, page = 0, size = 10, sort = 'id,desc') => {
+        const params = new URLSearchParams({
+            page: page.toString(),
+            size: size.toString(),
+            sort: sort
+        });
+        
+        if (keyword && keyword.trim()) {
+            params.append('keyword', keyword.trim());
+        }
+        
+        if (topicId) {
+            params.append('topicId', topicId.toString());
+        }
+        
+        const res = await apiInstance.get(`/exams/search?${params.toString()}`);
+        return res.data;
+    },
+    
+    getExamById: async (id) => {
+        const res = await apiInstance.get(`/exams/${id}`);
+        return res.data;
+    },
+    
+    getExamsByTopic: async (topicId) => {
+        const res = await apiInstance.get(`/exams/topic/${topicId}`);
+        return res.data;
+    },
+    
+    createExam: async (data) => {
+        const res = await apiInstance.post('/exams', data);
+        return res.data;
+    },
+    
+    updateExam: async (id, data) => {
+        const res = await apiInstance.put(`/exams/${id}`, data);
+        return res.data;
+    },
+    
+    deleteExam: async (id) => {
+        const res = await apiInstance.delete(`/exams/${id}`);
+        return res.data;
+    },
+    
+    countExams: async () => {
+        const res = await apiInstance.get('/exams/count');
+        return res.data;
+    },
+    
+    countQuestions: async () => {
+        const res = await apiInstance.get('/questions/count');
+        return res.data;
+    },
+    
     // Answer CRUD
     getAnswerById: async (id) => {
         const res = await apiInstance.get(`/answers/${id}`);
@@ -147,6 +207,17 @@ const teacherApi = {
     deleteAnswer: async (id) => {
         const res = await apiInstance.delete(`/answers/${id}`);
         return res.data;
+    },
+    
+    getStatistics: async () => {
+        const [examsRes, questionsRes] = await Promise.all([
+            apiInstance.get('/exams/count'),
+            apiInstance.get('/questions/count')
+        ]);
+        return {
+            exams: examsRes.data.data,
+            questions: questionsRes.data.data
+        };
     }
 };
 

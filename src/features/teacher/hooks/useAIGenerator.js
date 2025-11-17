@@ -6,13 +6,13 @@ export const useAIGenerator = () => {
     const [generatedQuestions, setGeneratedQuestions] = useState([]);
     const [error, setError] = useState(null);
 
-    const generateQuestions = async (topicId, prompt) => {
+    const generateQuestions = async (examId, prompt) => {
         setLoading(true);
         setError(null);
         try {
             
             // aiApi.generateQuestions now returns AIGenerateResponse directly
-            const aiResponse = await aiApi.generateQuestions(topicId, prompt);
+            const aiResponse = await aiApi.generateQuestions(examId, prompt);
             const questions = aiResponse.questions || [];
             
             if (questions.length === 0) {

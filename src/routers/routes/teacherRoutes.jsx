@@ -1,7 +1,7 @@
 // Routes dành cho Teacher (giáo viên)
 import TeacherDashboard from "../../features/teacher/pages/TeacherDashboard";
 import AIQuestionGenerator from "../../features/teacher/pages/AIQuestionGenerator";
-import TopicManagement from "../../features/teacher/pages/TopicManagement";
+import ExamManagement from "../../features/teacher/pages/ExamManagement";
 import QuestionManagement from "../../features/teacher/pages/QuestionManagement";
 import { RoleBasedRoute } from "../guards";
 
@@ -15,10 +15,10 @@ const teacherRoutes = [
     ),
   },
   {
-    path: "teacher/topics",
+    path: "teacher/exams",
     element: (
       <RoleBasedRoute allowedRoles={["TEACHER"]}>
-        <TopicManagement />
+        <ExamManagement />
       </RoleBasedRoute>
     ),
   },

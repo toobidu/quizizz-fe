@@ -1,7 +1,7 @@
 .ai-generator-page {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2rem 1.5rem;
     min-height: 100vh;
     background: var(--background);
     position: relative;
@@ -24,9 +24,9 @@
 .ai-page-header {
     position: relative;
     z-index: 1;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
-    padding: 2rem 0;
+    padding: 1rem 0;
 }
 
 .ai-page-header h1 {
@@ -75,88 +75,72 @@
     position: relative;
     z-index: 1;
     background: var(--surface);
-    padding: 3rem;
-    border-radius: 24px;
-    box-shadow: 
-        0 20px 60px rgba(0,0,0,0.08), 
-        0 8px 16px rgba(0,0,0,0.04),
-        0 0 0 1px var(--border);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border: 1px solid var(--border);
 }
 
 /* Topic Selection */
+.ai-selection-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
 .ai-topic-selection {
     position: relative;
     z-index: 2;
-    margin-bottom: 3rem;
-    padding: 2.5rem;
+    padding: 1.5rem;
     background: var(--surface-elevated);
-    border-radius: 20px;
+    border-radius: 12px;
     border: 2px solid var(--border);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 
 .ai-topic-selection:hover {
     border-color: var(--primary);
-    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.12);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
 }
 
 .ai-topic-selection label {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    font-size: 1.2rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
     color: var(--text-color);
-    letter-spacing: -0.01em;
 }
 
 .ai-topic-selection label svg {
-    width: 28px;
-    height: 28px;
-    color: white;
-    padding: 6px;
-    background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    width: 20px;
+    height: 20px;
+    color: var(--primary);
 }
 
 .ai-topic-selection select {
     width: 100%;
-    padding: 1.5rem 1.75rem;
-    border: 3px solid var(--border);
-    border-radius: 16px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
     background: var(--surface);
     color: var(--text-color);
     cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1.25rem center;
-    background-size: 24px;
-    padding-right: 4rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .ai-topic-selection select:hover:not(:disabled) {
     border-color: var(--primary);
-    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.15);
-    transform: translateY(-1px);
 }
 
 .ai-topic-selection select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 
-        0 0 0 5px rgba(124, 58, 237, 0.15), 
-        0 8px 24px rgba(124, 58, 237, 0.2);
-    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
 .ai-topic-selection select:disabled {
@@ -282,7 +266,7 @@
 .ai-prompt-suggestions {
     position: relative;
     z-index: 1;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .ai-prompt-suggestions h3 {
@@ -311,8 +295,8 @@
 
 .prompt-examples-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
 }
 
 .prompt-example-card {
@@ -436,8 +420,8 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    padding-top: 2.5rem;
-    margin-top: 2rem;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
     border-top: 2px solid var(--border);
 }
 
@@ -530,8 +514,12 @@
         font-size: 2.3rem;
     }
 
+    .ai-selection-row {
+        grid-template-columns: 1fr;
+    }
+
     .prompt-examples-grid {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 }
