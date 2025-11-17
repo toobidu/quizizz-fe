@@ -74,6 +74,12 @@ const RoomCard = ({ room, onJoinPublic }) => {
               <span className="room-card-detail-label">Chủ đề:</span>
               <span className="room-card-detail-value">{room.topicName || 'Chưa xác định'}</span>
             </div>
+            {room.examTitle && (
+              <div className="room-card-detail-item">
+                <span className="room-card-detail-label">Bộ đề:</span>
+                <span className="room-card-detail-value">{room.examTitle}</span>
+              </div>
+            )}
             <div className="room-card-detail-item">
               <span className="room-card-detail-label">Chế độ:</span>
               <span className="room-card-detail-value">{getGameModeText(room.roomMode)}</span>

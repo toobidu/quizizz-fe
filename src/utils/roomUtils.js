@@ -19,6 +19,10 @@ export const mapRoomFromBackend = (backendRoom) => {
         topicName: backendRoom.topicName,
         TopicName: backendRoom.topicName,
 
+        // Exam information
+        examId: backendRoom.examId,
+        examTitle: backendRoom.examTitle,
+
         // Owner/Host information
         ownerId: backendRoom.ownerId,
         hostId: backendRoom.ownerId, // alias for consistency
@@ -66,6 +70,7 @@ export const mapCreateRoomRequest = (frontendData) => {
         roomName: frontendData.roomName,
         roomMode: frontendData.roomMode || frontendData.gameMode,
         topicId: parseInt(frontendData.topicId),
+        examId: parseInt(frontendData.examId),
         isPrivate: frontendData.isPrivate || false,
         maxPlayers: parseInt(frontendData.maxPlayers),
         questionCount: parseInt(frontendData.questionCount),

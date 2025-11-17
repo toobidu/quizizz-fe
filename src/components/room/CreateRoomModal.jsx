@@ -21,6 +21,7 @@ import {
 import { useTheme } from '../../contexts/ThemeContext';
 import useRoomStore from '../../stores/useRoomStore';
 import useTopics from '../../hooks/useTopics';
+import examApi from '../../services/examApi';
 import '../../styles/components/room/CreateRoomModal.css';
 
 function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
@@ -36,8 +37,11 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     timeLimit: 60,
     questionCount: 10,
     topicId: '',
+    examId: '',
     gameMode: 'ONE_VS_ONE'
   });
+  const [exams, setExams] = useState([]);
+  const [loadingExams, setLoadingExams] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -72,6 +76,38 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     };
   }, [onClose]);
 
+  // Load exams when topic changes
+  useEffect(() => {
+    const loadExams = async () => {
+      if (!roomData.topicId) {
+        setExams([]);
+        setRoomData(prev => ({ ...prev, examId: '' }));
+        return;
+      }
+
+      setLoadingExams(true);
+      const result = await examApi.getExamsByTopicId(roomData.topicId);
+      
+      if (result.success) {
+        setExams(result.data || []);
+        // Auto-select first exam if available
+        if (result.data && result.data.length > 0) {
+          setRoomData(prev => ({ ...prev, examId: result.data[0].id }));
+        } else {
+          setRoomData(prev => ({ ...prev, examId: '' }));
+        }
+      } else {
+        setExams([]);
+        setRoomData(prev => ({ ...prev, examId: '' }));
+        setError(result.error || 'Không thể tải danh sách bộ đề');
+      }
+      
+      setLoadingExams(false);
+    };
+
+    loadExams();
+  }, [roomData.topicId]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -104,7 +140,10 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       });
     } else if (name === 'topicId') {
       const numValue = parseInt(value) || '';
-      setRoomData({ ...roomData, topicId: numValue });
+      setRoomData({ ...roomData, topicId: numValue, examId: '' });
+    } else if (name === 'examId') {
+      const numValue = parseInt(value) || '';
+      setRoomData({ ...roomData, examId: numValue });
     } else {
       setRoomData({
         ...roomData,
@@ -126,6 +165,10 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       setError('Vui lòng chọn chủ đề câu hỏi');
       return;
     }
+    if (!roomData.examId) {
+      setError('Vui lòng chọn bộ đề');
+      return;
+    }
     if (!roomData.questionCount || roomData.questionCount < 5) {
       setError('Số câu hỏi phải từ 5 trở lên');
       return;
@@ -143,6 +186,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
         maxPlayers: parseInt(roomData.maxPlayers),
         countdownTime: roomData.timeLimit,
         topicId: parseInt(roomData.topicId),
+        examId: parseInt(roomData.examId),
         roomMode: roomData.gameMode,
         questionCount: parseInt(roomData.questionCount)
       });
@@ -176,8 +220,10 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       timeLimit: 60,
       questionCount: 10,
       topicId: '',
+      examId: '',
       gameMode: 'ONE_VS_ONE'
     });
+    setExams([]);
     setError('');
     onClose?.();
   };
@@ -298,6 +344,49 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                           <FiChevronDown className="crm-select-icon" />
                       )}
                     </div>
+                  </div>
+
+                  <div className="crm-form-group">
+                    <label htmlFor="examId">
+                      <FiBookOpen style={{ marginRight: '8px' }} />
+                      Bộ đề thi
+                    </label>
+                    <div className="crm-select-wrapper">
+                      <select
+                          id="examId"
+                          name="examId"
+                          value={roomData.examId}
+                          onChange={handleChange}
+                          className="crm-input crm-select"
+                          required
+                          disabled={!roomData.topicId || loadingExams}
+                      >
+                        <option value="" disabled>
+                          {!roomData.topicId 
+                            ? 'Vui lòng chọn chủ đề trước' 
+                            : loadingExams 
+                              ? 'Đang tải bộ đề...' 
+                              : exams.length === 0 
+                                ? 'Chủ đề này chưa có bộ đề' 
+                                : 'Chọn bộ đề'}
+                        </option>
+                        {Array.isArray(exams) && exams.map((exam) => (
+                            <option key={`exam-${exam.id}`} value={exam.id}>
+                              {exam.title} {exam.description ? `- ${exam.description}` : ''}
+                            </option>
+                        ))}
+                      </select>
+                      {loadingExams ? (
+                          <FiLoader className="crm-select-icon crm-loading" />
+                      ) : (
+                          <FiChevronDown className="crm-select-icon" />
+                      )}
+                    </div>
+                    {roomData.topicId && exams.length === 0 && !loadingExams && (
+                      <div className="crm-input-hint" style={{ color: '#f59e0b' }}>
+                        Chủ đề này chưa có bộ đề nào. Vui lòng chọn chủ đề khác hoặc liên hệ giáo viên.
+                      </div>
+                    )}
                   </div>
 
                   <div className="crm-form-group">
