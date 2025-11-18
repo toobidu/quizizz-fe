@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiEye, FiChevronLeft, FiChevronRight, FiFilter } from 'react-icons/fi';
-import { toast } from 'react-toastify';
+import PopupNotification from '../../../components/PopupNotification';
+import { usePopup } from '../../../hooks/usePopup';
 import teacherApi from '../services/teacherApi';
 import '../../../styles/features/teacher/Management.css';
 
 const QuestionManagement = () => {
+    const { popup, showSuccess, showError, showConfirm, hidePopup } = usePopup();
     const [questions, setQuestions] = useState([]);
     const [exams, setExams] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ const QuestionManagement = () => {
             const examsRes = await teacherApi.getAllExams();
             setExams(examsRes.data || []);
         } catch (error) {
-            toast.error('Không thể tải danh sách bộ đề');
+            showError('Không thể tải danh sách bộ đề');
         }
     };
 
@@ -82,7 +84,7 @@ const QuestionManagement = () => {
             }
         } catch (error) {
             console.error('Error loading questions:', error);
-            toast.error('Không thể tải danh sách câu hỏi');
+            showError('Không thể tải danh sách câu hỏi');
             setQuestions([]);
         } finally {
             setLoading(false);
@@ -101,17 +103,17 @@ const QuestionManagement = () => {
 
             if (editingQuestion) {
                 await teacherApi.updateQuestion(editingQuestion.id, payload);
-                toast.success('Cập nhật câu hỏi thành công');
+                showSuccess('Cập nhật câu hỏi thành công');
             } else {
                 await teacherApi.createQuestion(payload);
-                toast.success('Tạo câu hỏi thành công');
+                showSuccess('Tạo câu hỏi thành công');
             }
             setShowModal(false);
             resetForm();
             setCurrentPage(0);
             loadQuestions();
         } catch (error) {
-            toast.error(editingQuestion ? 'Không thể cập nhật câu hỏi' : 'Không thể tạo câu hỏi');
+            showError(editingQuestion ? 'Không thể cập nhật câu hỏi' : 'Không thể tạo câu hỏi');
         }
     };
 
@@ -173,15 +175,22 @@ const QuestionManagement = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Bạn có chắc muốn xóa câu hỏi này?')) return;
-        try {
-            await teacherApi.deleteQuestion(id);
-            toast.success('Xóa câu hỏi thành công');
-            loadQuestions();
-        } catch (error) {
-            console.error('Error deleting question:', error);
-            toast.error('Không thể xóa câu hỏi');
-        }
+        showConfirm(
+            'Bạn có chắc muốn xóa câu hỏi này? Hành động này không thể hoàn tác.',
+            async () => {
+                try {
+                    await teacherApi.deleteQuestion(id);
+                    showSuccess('Xóa câu hỏi thành công');
+                    loadQuestions();
+                } catch (error) {
+                    console.error('Error deleting question:', error);
+                    showError('Không thể xóa câu hỏi');
+                }
+            },
+            'Xác nhận xóa',
+            'Xóa',
+            'Hủy'
+        );
     };
 
     const handleViewAnswers = (question) => {
@@ -550,6 +559,19 @@ const QuestionManagement = () => {
                     </div>
                 </div>
             )}
+            
+            <PopupNotification
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                isVisible={popup.isVisible}
+                onClose={hidePopup}
+                showConfirm={popup.showConfirm}
+                onConfirm={popup.onConfirm}
+                onCancel={popup.onCancel}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+            />
         </div>
     );
 };

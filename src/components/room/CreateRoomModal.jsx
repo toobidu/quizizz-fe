@@ -33,12 +33,12 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
   const [roomData, setRoomData] = useState({
     name: '',
     isPrivate: false,
-    maxPlayers: 2,
+    maxPlayers: 3,
     timeLimit: 60,
     questionCount: 10,
     topicId: '',
     examId: '',
-    gameMode: 'ONE_VS_ONE'
+    gameMode: 'BATTLE_ROYAL'
   });
   const [exams, setExams] = useState([]);
   const [loadingExams, setLoadingExams] = useState(false);
@@ -50,10 +50,12 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
     {
       value: 'ONE_VS_ONE',
       label: '1vs1',
-      description: 'Đấu một đối một',
+      description: 'Đấu một đối một (Tạm thời bảo trì)',
       icon: FiUsers,
       maxPlayers: 2,
-      minPlayers: 2
+      minPlayers: 2,
+      disabled: true,
+      error: true
     },
     {
       value: 'BATTLE_ROYAL',
@@ -61,7 +63,9 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       description: 'Nhiều người chơi cùng lúc',
       icon: FiZap,
       maxPlayers: 999,
-      minPlayers: 3
+      minPlayers: 3,
+      disabled: false,
+      error: false
     }
   ];
 
@@ -221,7 +225,7 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
       questionCount: 10,
       topicId: '',
       examId: '',
-      gameMode: 'ONE_VS_ONE'
+      gameMode: 'BATTLE_ROYAL'
     });
     setExams([]);
     setError('');
@@ -403,15 +407,15 @@ function CreateRoomModal({ onClose, onSuccess, onNavigateToRoom }) {
                           className="crm-input crm-select"
                       >
                         {roomModes.map((mode) => (
-                            <option key={mode.value} value={mode.value}>
-                              {mode.label}
+                            <option key={mode.value} value={mode.value} disabled={mode.disabled}>
+                              {mode.label} {mode.error ? '⚠️ (Lỗi)' : ''}
                             </option>
                         ))}
                       </select>
                       <FiChevronDown className="crm-select-icon" />
                     </div>
                     {roomData.gameMode && (
-                        <div className="crm-input-hint">
+                        <div className={`crm-input-hint ${roomModes.find(m => m.value === roomData.gameMode)?.error ? 'crm-error-hint' : ''}`}>
                           {roomModes.find(m => m.value === roomData.gameMode)?.description}
                         </div>
                     )}

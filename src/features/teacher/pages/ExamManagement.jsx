@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { toast } from 'react-toastify';
+import PopupNotification from '../../../components/PopupNotification';
+import { usePopup } from '../../../hooks/usePopup';
 import teacherApi from '../services/teacherApi';
 import '../../../styles/features/teacher/Management.css';
 
 const ExamManagement = () => {
+    const { popup, showSuccess, showError, showConfirm, hidePopup } = usePopup();
     const [exams, setExams] = useState([]);
     const [topics, setTopics] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,7 +41,7 @@ const ExamManagement = () => {
             const response = await teacherApi.getAllTopics();
             setTopics(response.data || []);
         } catch (error) {
-            toast.error('Không thể tải danh sách chủ đề');
+            showError('Không thể tải danh sách chủ đề');
         }
     };
 
@@ -58,7 +60,7 @@ const ExamManagement = () => {
             }
         } catch (error) {
             console.error('Error loading exams:', error);
-            toast.error('Không thể tải danh sách bộ đề');
+            showError('Không thể tải danh sách bộ đề');
             setExams([]);
         } finally {
             setLoading(false);
@@ -76,10 +78,10 @@ const ExamManagement = () => {
 
             if (editingExam) {
                 await teacherApi.updateExam(editingExam.id, payload);
-                toast.success('Cập nhật bộ đề thành công');
+                showSuccess('Cập nhật bộ đề thành công');
             } else {
                 await teacherApi.createExam(payload);
-                toast.success('Tạo bộ đề thành công');
+                showSuccess('Tạo bộ đề thành công');
             }
             setShowModal(false);
             setFormData({ title: '', description: '', topicId: '' });
@@ -87,7 +89,7 @@ const ExamManagement = () => {
             setCurrentPage(0);
             loadExams();
         } catch (error) {
-            toast.error(editingExam ? 'Không thể cập nhật bộ đề' : 'Không thể tạo bộ đề');
+            showError(editingExam ? 'Không thể cập nhật bộ đề' : 'Không thể tạo bộ đề');
         }
     };
 
@@ -123,14 +125,21 @@ const ExamManagement = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Bạn có chắc muốn xóa bộ đề này? Tất cả câu hỏi trong bộ đề cũng sẽ bị xóa.')) return;
-        try {
-            await teacherApi.deleteExam(id);
-            toast.success('Xóa bộ đề thành công');
-            loadExams();
-        } catch (error) {
-            toast.error('Không thể xóa bộ đề');
-        }
+        showConfirm(
+            'Bạn có chắc muốn xóa bộ đề này? Tất cả câu hỏi trong bộ đề cũng sẽ bị xóa.',
+            async () => {
+                try {
+                    await teacherApi.deleteExam(id);
+                    showSuccess('Xóa bộ đề thành công');
+                    loadExams();
+                } catch (error) {
+                    showError('Không thể xóa bộ đề');
+                }
+            },
+            'Xác nhận xóa',
+            'Xóa',
+            'Hủy'
+        );
     };
 
     const getSortIcon = () => {
@@ -325,6 +334,19 @@ const ExamManagement = () => {
                     </div>
                 </div>
             )}
+            
+            <PopupNotification
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                isVisible={popup.isVisible}
+                onClose={hidePopup}
+                showConfirm={popup.showConfirm}
+                onConfirm={popup.onConfirm}
+                onCancel={popup.onCancel}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+            />
         </div>
     );
 };

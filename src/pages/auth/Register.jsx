@@ -5,7 +5,8 @@ import { FaBrain } from 'react-icons/fa6';
 import authApi from '../../services/authApi.js';
 import authStore from '../../stores/authStore.js';
 import Decoration from '../../components/Decoration.jsx';
-import Toast from '../../components/Toast.jsx';
+import PopupNotification from '../../components/PopupNotification.jsx';
+import { usePopup } from '../../hooks/usePopup.js';
 import '../../styles/pages/auth/Register.css';
 
 function Register() {
@@ -22,7 +23,7 @@ function Register() {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { popup, showSuccess, showError, hidePopup } = usePopup();
   const firstErrorInputRef = useRef(null);
   const { isAuthenticated } = authStore();
 
@@ -112,7 +113,7 @@ function Register() {
           confirm_password: formData.confirmPassword,
         });
 
-        setToast({ type: 'success', message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.' });
+        showSuccess('Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.');
         setTimeout(() => navigate('/login'), 3000);
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
@@ -125,12 +126,12 @@ function Register() {
             newErrors.username = 'Tên người dùng đã tồn tại';
             firstErrorInputRef.current = document.getElementById('username');
           } else {
-            setToast({ type: 'error', message: errorMessage });
+            showError(errorMessage);
           }
           setErrors((prev) => ({ ...prev, ...newErrors }));
           firstErrorInputRef.current?.focus();
         } else {
-          setToast({ type: 'error', message: errorMessage });
+          showError(errorMessage);
         }
       } finally {
         setIsSubmitting(false);
@@ -142,7 +143,18 @@ function Register() {
   return (
     <div className="register-container">
       <Decoration />
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      <PopupNotification
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.isVisible}
+        onClose={hidePopup}
+        showConfirm={popup.showConfirm}
+        onConfirm={popup.onConfirm}
+        onCancel={popup.onCancel}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+      />
       <div className="register-card">
         <div className="register-header">
           <div className="register-logo">

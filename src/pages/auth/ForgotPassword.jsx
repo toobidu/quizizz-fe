@@ -6,14 +6,15 @@ import { FaBrain } from 'react-icons/fa6';
 import authApi from '../../services/authApi';
 import authStore from '../../stores/authStore';
 import Decoration from '../../components/Decoration';
-import Toast from '../../components/Toast';
+import PopupNotification from '../../components/PopupNotification';
+import { usePopup } from '../../hooks/usePopup';
 import '../../styles/pages/auth/ForgotPassword.css';
 
 function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
-  const [toast, setToast] = useState(null);
+  const { popup, showSuccess, showError, hidePopup } = usePopup();
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated } = authStore();
@@ -58,11 +59,11 @@ function ForgotPassword() {
       try {
         await authApi.forgotPassword(email);
         setSuccessMessage('Mật khẩu mới đã được gửi đến email của bạn!');
-        setToast({ type: 'success', message: 'Vui lòng kiểm tra hộp thư để lấy mật khẩu mới.' });
+        showSuccess('Vui lòng kiểm tra hộp thư để lấy mật khẩu mới.');
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra, vui lòng thử lại';
         setError(errorMessage);
-        setToast({ type: 'error', message: errorMessage });
+        showError(errorMessage);
       } finally {
         setIsSubmitting(false);
       }
@@ -73,7 +74,18 @@ function ForgotPassword() {
   return (
     <div className="fp-container">
       <Decoration />
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      <PopupNotification
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.isVisible}
+        onClose={hidePopup}
+        showConfirm={popup.showConfirm}
+        onConfirm={popup.onConfirm}
+        onCancel={popup.onCancel}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+      />
       <div className="fp-card">
         {!successMessage && (
           <Link to="/login" className="fp-back-button" aria-label="Quay lại trang đăng nhập">

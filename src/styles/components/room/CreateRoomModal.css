@@ -847,3 +847,18 @@
         letter-spacing: 2px;
     }
 }
+
+.crm-error-hint {
+    color: #ef4444 !important;
+    font-weight: 500;
+}
+
+.crm-select option:disabled {
+    color: #9ca3af;
+    background-color: #f3f4f6;
+}
+
+.crm-overlay.dark .crm-select option:disabled {
+    color: #6b7280;
+    background-color: #1f2937;
+}

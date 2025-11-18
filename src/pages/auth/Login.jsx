@@ -5,7 +5,8 @@ import authApi from '../../services/authApi.js';
 import '../../styles/pages/auth/Login.css';
 import { FaBrain } from "react-icons/fa6";
 import Decoration from '../../components/Decoration.jsx';
-import Toast from '../../components/Toast.jsx';
+import PopupNotification from '../../components/PopupNotification.jsx';
+import { usePopup } from '../../hooks/usePopup.js';
 import authStore from '../../stores/authStore.js';
 import { jwtDecode } from 'jwt-decode';
 
@@ -13,7 +14,7 @@ function Login() {
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [toast, setToast] = useState(null);
+    const { popup, showSuccess, showError, showWarning, hidePopup } = usePopup();
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
@@ -80,7 +81,7 @@ function Login() {
                 const decoded = jwtDecode(accessToken);
                 const userRole = decoded?.typeAccount;
                 
-                setToast({ type: 'success', message: 'Đăng nhập thành công!' });
+                showSuccess('Đăng nhập thành công!');
                 
                 let redirectPath = '/dashboard';
                 if (userRole === 'ADMIN') redirectPath = '/admin/dashboard';
@@ -89,8 +90,15 @@ function Login() {
                 
                 setTimeout(() => navigate(redirectPath, { replace: true }), 1000);
             } catch (error) {
+                const status = error.response?.status;
                 const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
-                setToast({ type: 'error', message: errorMessage });
+                
+                // Xử lý trường hợp email chưa được xác thực
+                if (status === 403 && errorMessage.includes('Email not verified')) {
+                    showWarning('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
+                } else {
+                    showError(errorMessage);
+                }
                 setIsSubmitting(false);
             }
         },
@@ -104,7 +112,18 @@ function Login() {
     return (
         <div className="login-container">
             <Decoration />
-            {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+            <PopupNotification
+                type={popup.type}
+                title={popup.title}
+                message={popup.message}
+                isVisible={popup.isVisible}
+                onClose={hidePopup}
+                showConfirm={popup.showConfirm}
+                onConfirm={popup.onConfirm}
+                onCancel={popup.onCancel}
+                confirmText={popup.confirmText}
+                cancelText={popup.cancelText}
+            />
             <div className="login-card">
                 <div className="login-header">
                     <div className="login-logo">
