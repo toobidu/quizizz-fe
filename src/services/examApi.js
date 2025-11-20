@@ -61,8 +61,8 @@ const examApi = {
   },
 
   /**
-   * Search exams with pagination
-   * GET /api/v1/exams/search?keyword={keyword}&topicId={topicId}&page={page}&size={size}&sort={sort}
+   * Search exams with pagination (Admin sees all, Teacher sees only their exams)
+   * GET /api/v1/exams/search or /api/v1/exams/my-exams/search
    * @param {string} keyword - Search keyword (optional)
    * @param {number} topicId - Topic ID filter (optional)
    * @param {number} page - Page number (default: 0)
@@ -80,7 +80,14 @@ const examApi = {
       if (keyword) params.append('keyword', keyword);
       if (topicId) params.append('topicId', topicId.toString());
 
-      const response = await apiInstance.get(`/exams/search?${params}`);
+      // Get user role from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const isAdmin = user.typeAccount === 'ADMIN';
+      
+      // Use appropriate endpoint based on role
+      const endpoint = isAdmin ? '/exams/search' : '/exams/my-exams/search';
+      const response = await apiInstance.get(`${endpoint}?${params}`);
+      
       return {
         success: true,
         data: response.data.data
