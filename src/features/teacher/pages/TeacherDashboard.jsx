@@ -64,7 +64,7 @@ const TeacherDashboard = () => {
 
                 <div className="teacher-sidebar">
                     <div className="sidebar-section">
-                        <h3><FiBarChart2 /> Thống kê nhanh</h3>
+                        <h3><FiBarChart2 /> Thống kê nhanh trên hệ thống</h3>
                         <div className="quick-stats">
                             <div className="stat-item">
                                 <span className="stat-label">Bộ đề</span>
