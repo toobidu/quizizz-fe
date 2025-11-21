@@ -61,9 +61,7 @@ const RoleManagement = () => {
         try {
             setLoading(true);
             const response = await adminApi.searchRoles(searchTerm, currentPage, 10);
-            console.log('Roles response:', response);
             if (response.data) {
-                console.log('Roles data:', response.data.content);
                 setRoles(response.data.content || []);
                 setTotalPages(response.data.totalPages || 0);
                 setTotalElements(response.data.totalElements || 0);
@@ -221,7 +219,6 @@ const RoleManagement = () => {
                             </tr>
                         ) : (
                             roles.map((role, index) => {
-                                console.log('Role item:', role);
                                 return (
                                 <tr key={role.id}>
                                     <td>{currentPage * 10 + index + 1}</td>

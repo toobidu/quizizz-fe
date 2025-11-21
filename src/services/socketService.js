@@ -26,7 +26,11 @@ class SocketService {
                 return reject(new Error('No authentication token found'));
             }
 
-            this.socket = io('http://localhost:9093', {
+            const socketUrl = window.location.hostname === 'localhost'
+                ? 'http://localhost:9093'
+                : 'https://socket.dungmetri.io.vn';
+            
+            this.socket = io(socketUrl, {
                 transports: ['polling', 'websocket'],
                 query: { token: authToken },
                 reconnection: true,

@@ -43,9 +43,7 @@ const PermissionManagement = () => {
         try {
             setLoading(true);
             const response = await adminApi.searchPermissions(searchTerm, currentPage, 10);
-            console.log('Permissions response:', response);
             if (response.data) {
-                console.log('Permissions data:', response.data.content);
                 setPermissions(response.data.content || []);
                 setTotalPages(response.data.totalPages || 0);
                 setTotalElements(response.data.totalElements || 0);
@@ -164,7 +162,6 @@ const PermissionManagement = () => {
                             </tr>
                         ) : (
                             permissions.map((permission, index) => {
-                                console.log('Permission item:', permission);
                                 return (
                                 <tr key={permission.id}>
                                     <td>{currentPage * 10 + index + 1}</td>
